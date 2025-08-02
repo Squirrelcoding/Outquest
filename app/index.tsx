@@ -1,10 +1,11 @@
 // app/profile.tsx or any screen
-import { View, Text, Button } from 'react-native'
+import { View, Text } from 'react-native'
 // import AsyncStorage from '@react-native-async-storage/async-storage'
 // import { supabase } from '@/lib/supabase'
 import Auth from '../components/Auth';
 import { useAuth } from '../context/Auth';
 import { router } from 'expo-router';
+import { Button } from '@ui-kitten/components';
 
 export default function Profile() {
 	const { session, loading } = useAuth();	
@@ -20,9 +21,11 @@ export default function Profile() {
 		<View>
 			<Text>Welcome, {session.user.email}</Text>
 			<Text>Home</Text>
-			<Button title="Go to Settings" onPress={() => router.push('/settings')} />
-			<Button title="Make a quest" onPress={() => router.push('/create')} />
-			<Button title="Browse quests" onPress={() => router.push('/browse')} />
+			<Button onPress={() => router.push('/settings')}>Go to Settings</Button>
+
+			<Button onPress={() => router.push('/create')}>Make a quest</Button>
+			
+			<Button onPress={() => router.push('/browse')}>Browse quests</Button>
 		</View>
 	)
 }

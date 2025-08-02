@@ -4,12 +4,15 @@ import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import {
 	Alert,
-	Text,
+	ScrollView,
 	View,
-} from 'react-native'
-import { Avatar, Button, Card, Text as RNText } from 'react-native-paper';
+} from 'react-native';
+import { Card, Text } from '@ui-kitten/components';
+import { router } from 'expo-router';
 
-const LeftContent = (props: any) => <Avatar.Icon {...props} icon="folder" />
+// import { Avatar, Button, Card, Text as RNText } from 'react-native-paper';
+
+// const LeftContent = (props: any) => <Avatar.Icon {...props} icon="folder" />
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
@@ -39,20 +42,18 @@ export default function BrowseQuests() {
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Auth />
 
-	return <View>
-		{quests ? <Text>{JSON.stringify(quests)}</Text> : <Text>Loading...</Text>}
+	return <ScrollView>
+		{quests ? <View>
+			{quests.map((quest: any, idx: number) => {
+				return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
+					<Text>{quest.title}</Text>
+					<Text>By {quest.author}</Text>
+					<Text>{quest.description}</Text>
+					<Text>Created {new Date(quest.created_at).toDateString()}</Text>
+					<Text>Ends {new Date(quest.deadline).toDateString()}</Text>
+				</Card>
+			})}
+		</View> : <Text>Loading...</Text>}
 
-		<Card>
-			<Card.Title title="Card Title" subtitle="Card Subtitle" left={LeftContent} />
-			<Card.Content>
-				<RNText variant="titleLarge">Card title</RNText>
-				<RNText variant="bodyMedium">Card content</RNText>
-			</Card.Content>
-			<Card.Cover source={{ uri: 'https://picsum.photos/700' }} />
-			<Card.Actions>
-				<Button>Cancel</Button>
-				<Button>Ok</Button>
-			</Card.Actions>
-		</Card>
-	</View>
+	</ScrollView>
 }

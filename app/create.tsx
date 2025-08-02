@@ -5,11 +5,13 @@ import {
 	TextInput,
 	StyleSheet,
 	Button,
+	Alert,
 } from 'react-native'
 import { supabase } from '../lib/supabase'
 import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import {Calendar} from "react-native-calendars";
+import { router } from 'expo-router';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
@@ -45,6 +47,9 @@ export default function CreateQuest() {
 			num_photos: photoQuantity
 		});
 		if (error) console.error(error);
+
+		Alert.alert("Your quest is live!");
+		router.back();
 	}
 
 	return (
