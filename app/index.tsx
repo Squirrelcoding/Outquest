@@ -26,6 +26,7 @@ export default function Profile() {
 			<Button onPress={() => router.push('/create')}>Make a quest</Button>
 			
 			<Button onPress={() => router.push('/browse')}>Browse quests</Button>
+			<Button onPress={() => router.push('/test')}>Test</Button>
 		</View>
 	)
 }

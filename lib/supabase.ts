@@ -2,12 +2,12 @@ import { AppState, Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient, processLock } from '@supabase/supabase-js'
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../env';
+// import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../env';
 
 // Import from an env.ts file because a regular .env file is ridiculously hard to implement correctly in react native
 
-const supabaseUrl = SUPABASE_URL;
-const supabaseAnonKey = SUPABASE_ANON_KEY; 
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL as string;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string; 
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 	auth: {

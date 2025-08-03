@@ -41,6 +41,14 @@ export default function PostDetail() {
 		}
 	};
 
+	const submitEntry = async () => {
+		// Upload it to the AI judge first
+
+		// If the judge validates it, then let the user know that it passed
+		
+		// Otherwise, deny it and clear the image
+	};
+
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Auth />
 
@@ -62,6 +70,8 @@ export default function PostDetail() {
 			<Text>Loading...</Text>
 		}
 		{image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }}  />}
+
+		<Button>Submit entry</Button>
 	</View>
 }
 const styles = StyleSheet.create({
