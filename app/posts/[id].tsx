@@ -1,12 +1,14 @@
 // app/posts/[id].tsx
 import { useLocalSearchParams } from 'expo-router';
-import { Button, Text } from "@ui-kitten/components";
+import { Button, Card, Text } from "@ui-kitten/components";
 import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { decode } from 'base64-arraybuffer'
 
 
 export default function PostDetail() {
@@ -14,6 +16,10 @@ export default function PostDetail() {
 	const { id } = useLocalSearchParams();
 	const [post, setPost] = useState<any>(null);
 	const [image, setImage] = useState<string | null>(null);
+	const [judging, setJudging] = useState<boolean>(false);
+	const [uploading, setUploading] = useState<boolean>(false);
+	const [output, setOutput] = useState<any>(null);
+	const [validSubmission, setValidSubmission] = useState<boolean>(false);
 
 	console.log(id);
 
@@ -42,11 +48,43 @@ export default function PostDetail() {
 	};
 
 	const submitEntry = async () => {
-		// Upload it to the AI judge first
+		if (!image) return;
+		setUploading(true);
 
-		// If the judge validates it, then let the user know that it passed
-		
-		// Otherwise, deny it and clear the image
+		const base64 = await FileSystem.readAsStringAsync(image, {
+			encoding: FileSystem.EncodingType.Base64,
+		});
+
+		const fileName = `img-${Date.now()}.jpg`;
+		let { error } = await supabase
+			.storage
+			.from('quest-upload')
+			.upload(fileName, decode(base64), {
+				contentType: 'image/jpeg',
+				upsert: true
+			});
+
+		setUploading(false);
+		if (error) {
+			console.error(error);
+			return;
+		}
+
+		setJudging(true);
+
+		let { data: edgeData, error: edgeError } = await supabase.functions.invoke('replicate-call', {
+			body: { image: fileName, question: "Does the image match the following description? Reply YES or NO. " + post.photo_prompt },
+		});
+
+		if (edgeError) {
+			console.error(edgeError);
+		}
+		setJudging(false);
+		setOutput(edgeData);
+		console.log(edgeData);
+		if (edgeData === "YES") {
+			setValidSubmission(true);
+		}
 	};
 
 	if (loading) return <Text>Loading...</Text>
@@ -59,19 +97,39 @@ export default function PostDetail() {
 				<View style={styles.imageContainer}>
 					<Image source={require("../../assets/images/react-logo.png")} />
 				</View>
-				<Text>By {post.author}</Text>
-				<Text>{post.description}</Text>
+				<Text>Author ID:  {post.author}{"\n"}</Text>
+				<Text>Task: {post.description}{"\n"}</Text>
 				<Text>Created {new Date(post.created_at).toDateString()}</Text>
 				<Text>Ends {new Date(post.deadline).toDateString()}</Text>
 
 				<Button onPress={pickImage}>Pick an image from camera roll</Button>
-				<Text>{image}</Text>
 			</View> :
 			<Text>Loading...</Text>
 		}
-		{image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }}  />}
+		{image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
 
-		<Button>Submit entry</Button>
+		<Button onPress={submitEntry}>Submit entry</Button>
+
+		{uploading && <Text>Uploading...</Text>}
+		{judging && <Text>Judging...</Text>}
+		{output && <View>
+			{validSubmission ?
+
+				<Card>
+					<Text>
+						Success!
+					</Text>
+				</Card>
+				:
+				<Card>
+					<Text>
+						Submission did not pass🫩
+					</Text>
+				</Card>
+			}
+		</View>}
+
+
 	</View>
 }
 const styles = StyleSheet.create({
@@ -91,5 +149,5 @@ const styles = StyleSheet.create({
 	imageContainer: {
 		justifyContent: 'center',
 		alignItems: 'center',
-	}
+	},
 });

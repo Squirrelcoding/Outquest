@@ -5,6 +5,12 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Replicate from "npm:replicate@1.0.1";
+import { createClient } from "npm:@supabase/supabase-js@2.53.0";
+
+const supabase = createClient(
+  	Deno.env.get("SUPABASE_URL") || "",
+  	Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",	
+);
 
 const replicateApiKey = Deno.env.get("REPLICATE_API_KEY");
 const model = "andreasjansson/blip-2:f677695e5e89f8b236e52ecd1d3f01beb44c34606419bcc19345e046d8f786f9";
@@ -13,20 +19,18 @@ const replicate = new Replicate({
   	auth: replicateApiKey 
 });
 
-interface Blip2Output {
-	type: string;
-	title: string;
-}
-
 Deno.serve(async (req) => {
 	const { image, question } = await req.json();
-	const input = { image, question};
-
+	
+	const { data } = supabase.storage.from('quest-upload').getPublicUrl(image);
+	
+	const input = { image: data.publicUrl, question };
 	const replicateOutput = await replicate.run(model, { input });
 
+	console.log(data.publicUrl, question)
 	console.log(replicateOutput);
 
-	return new Response(JSON.stringify({}), {
+	return new Response(JSON.stringify(replicateOutput), {
 		headers: { "Content-Type": "application/json" },
 	});
 });

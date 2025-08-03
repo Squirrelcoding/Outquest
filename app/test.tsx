@@ -1,20 +1,22 @@
-import { supabase } from "@/lib/supabase";
-import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
 import { View } from "react-native";
-import {Text} from "@ui-kitten/components";
+import { Button, Text } from "@ui-kitten/components";
+import { useState } from "react";
 
 export default function Test() {
-	useEffect(() => {
-		(async () => {
-			const { data, error } = await supabase.functions.invoke('replicate-call', {
-				body: { image: "https://upload.wikimedia.org/wikipedia/commons/1/15/EasternGraySquirrel_GAm.jpg", question: "What is the animal shown here?" },
-			});
-			console.log("CALLED FUNCTION!");
-			if (error) console.error(error);
-			console.log(data);
-		})();
-	});
+	const [ddata, setDdata] = useState(null);
+
+	const makeRequest = async () => {
+		const { data, error } = await supabase.functions.invoke('replicate-call', {
+			body: { image: "https://upload.wikimedia.org/wikipedia/commons/1/15/EasternGraySquirrel_GAm.jpg", question: "What is the animal shown here?" },
+		});
+		console.log("CALLED FUNCTION!");
+		if (error) console.error(error);
+		setDdata(data);
+	};
+
 	return <View>
-		<Text>Hello!</Text>	
+		<Button onPress={makeRequest}>Make request</Button>
+		<Text>{JSON.stringify(ddata)}</Text>
 	</View>
 }
