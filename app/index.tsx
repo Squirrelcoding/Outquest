@@ -11,6 +11,8 @@ export default function Home() {
 	const [completedQuests, setCompletedQuests] = useState<any[]>([]);
 	const [leaderboardID, setLeaderboardID] = useState<string>('');
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
+	const [userLeaderboards, setUserLeaderboards] = useState<any[]>([]);
+	const [loadingLeaderboards, setLoadingLeaderboards] = useState<boolean>(false);
 
 	// Load user's completed quests
 	useEffect(() => {
@@ -58,6 +60,54 @@ export default function Home() {
 		};
 
 		loadCompletedQuests();
+	}, [session]);
+
+	// Load user's leaderboards
+	useEffect(() => {
+		if (!session) return;
+
+		const loadUserLeaderboards = async () => {
+			try {
+				setLoadingLeaderboards(true);
+
+				// Get all leaderboards the user is in
+				const { data: userLeaderboardData, error: leaderboardError } = await supabase
+					.from('leaderboard')
+					.select('leaderboard_id')
+					.eq('user_id', session.user.id);
+
+				if (leaderboardError) {
+					console.error('Error loading user leaderboards:', leaderboardError);
+					return;
+				}
+
+				if (!userLeaderboardData || userLeaderboardData.length === 0) {
+					setUserLeaderboards([]);
+					return;
+				}
+
+				// Get leaderboard metadata for each leaderboard
+				const leaderboardIDs = userLeaderboardData.map((lb) => lb.leaderboard_id);
+				const { data: leaderboardMetaData, error: metaError } = await supabase
+					.from('leaderboard meta')
+					.select('*')
+					.in('leaderboard_id', leaderboardIDs);
+
+				if (metaError) {
+					console.error('Error loading leaderboard metadata:', metaError);
+					return;
+				}
+
+				setUserLeaderboards(leaderboardMetaData || []);
+			} catch (error) {
+				console.error('Error loading user leaderboards:', error);
+				Alert.alert('Error', 'Failed to load your leaderboards');
+			} finally {
+				setLoadingLeaderboards(false);
+			}
+		};
+
+		loadUserLeaderboards();
 	}, [session]);
 
 	// Navigation handlers
@@ -122,10 +172,67 @@ export default function Home() {
 				</View>
 			</Card>
 
-			{/* Leaderboard Section */}
+			{/* User's Leaderboards Section */}
 			<Card style={styles.section}>
 				<Text category="h6" style={styles.sectionTitle}>
-					Leaderboards
+					Your Leaderboards ({userLeaderboards.length})
+				</Text>
+				
+				{loadingLeaderboards ? (
+					<View style={styles.loadingSection}>
+						<Text category="s1">Loading your leaderboards...</Text>
+					</View>
+				) : userLeaderboards.length === 0 ? (
+					<View style={styles.emptySection}>
+						<Text category="s1" style={styles.emptyText}>
+							You haven&apos;t joined any leaderboards yet.
+						</Text>
+						<View style={styles.emptyButtons}>
+							<Button 
+								style={styles.emptyButton}
+								onPress={() => router.push('/leaderboard/make')}
+							>
+								Create Leaderboard
+							</Button>
+							<Button 
+								style={styles.emptyButton}
+								onPress={() => router.push('/leaderboard/join')}
+							>
+								Join Leaderboard
+							</Button>
+						</View>
+					</View>
+				) : (
+					<View style={styles.leaderboardsList}>
+						{userLeaderboards.map((leaderboard, idx) => (
+							<Card 
+								key={idx} 
+								style={styles.leaderboardCard}
+								onPress={() => router.push(`/leaderboard/show/${leaderboard.leaderboard_id}`)}
+							>
+								<Text category="h6" style={styles.leaderboardTitle}>
+									{leaderboard.title}
+								</Text>
+								<View style={styles.leaderboardInfo}>
+									<Text category="s1" style={styles.leaderboardDate}>
+										Created: {new Date(leaderboard.created_at).toLocaleDateString()}
+									</Text>
+									{leaderboard.owner_id === session.user.id && (
+										<Text category="c1" style={styles.ownerBadge}>
+											👑 Owner
+										</Text>
+									)}
+								</View>
+							</Card>
+						))}
+					</View>
+				)}
+			</Card>
+
+			{/* Leaderboard Actions Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Leaderboard Actions
 				</Text>
 				<View style={styles.leaderboardSection}>
 					<View style={styles.leaderboardButtons}>
@@ -198,7 +305,7 @@ export default function Home() {
 									{quest.title}
 								</Text>
 								<Text category="s1" style={styles.questAuthor}>
-									By {quest.author}
+									By {quest.author_username || quest.author}
 								</Text>
 								<Text category="p2" style={styles.questDescription}>
 									{quest.description}
@@ -300,8 +407,40 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 		color: '#666',
 	},
+	emptyButtons: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		width: '100%',
+	},
+	emptyButton: {
+		width: '48%',
+	},
 	browseButton: {
 		width: '100%',
+	},
+	leaderboardsList: {
+		gap: 10,
+	},
+	leaderboardCard: {
+		marginBottom: 10,
+	},
+	leaderboardTitle: {
+		fontWeight: 'bold',
+		marginBottom: 8,
+	},
+	leaderboardInfo: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	leaderboardDate: {
+		color: '#666',
+		fontSize: 12,
+	},
+	ownerBadge: {
+		color: '#007AFF',
+		fontWeight: 'bold',
+		fontSize: 12,
 	},
 	questsList: {
 		gap: 10,

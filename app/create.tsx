@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
 	View,
-	Text,
 	TextInput,
 	StyleSheet,
-	Button,
 	Alert,
+	ScrollView,
 } from 'react-native'
 import { supabase } from '../lib/supabase'
 import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
-import {Calendar} from "react-native-calendars";
+import { Button, Card, Text, Layout } from '@ui-kitten/components';
+import { Calendar } from 'react-native-calendars';
 import { router } from 'expo-router';
 
 export default function CreateQuest() {
@@ -21,144 +21,309 @@ export default function CreateQuest() {
 	const [location, setLocation] = useState<string>('');
 	const [prompt, setPrompt] = useState<string>('');
 	const [photoQuantity, setPhotoQuantity] = useState<number>(1);
-	let [selected, setSelected] = useState('');
+	const [deadline, setDeadline] = useState<Date>(new Date());
+	const [selectedDate, setSelectedDate] = useState<string>('');
+	const [submitting, setSubmitting] = useState<boolean>(false);
 
+	if (loading) return (
+		<Layout style={styles.loadingContainer}>
+			<Text category="h6">Loading...</Text>
+		</Layout>
+	);
+	
+	if (!session) return <Auth />;
 
-	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth/>
+	const submitQuest = async () => {
+		// Validate required fields
+		if (!title.trim()) {
+			Alert.alert('Error', 'Please enter a quest title');
+			return;
+		}
+		if (!description.trim()) {
+			Alert.alert('Error', 'Please enter a quest description');
+			return;
+		}
+		if (!prompt.trim()) {
+			Alert.alert('Error', 'Please enter photo requirements');
+			return;
+		}
+		if (photoQuantity < 1) {
+			Alert.alert('Error', 'Please enter a valid number of photos (minimum 1)');
+			return;
+		}
 
-	async function submitQuest() {
-		// Convert selected to a Date format.
-		selected = selected.replace("-", "");
-		const year = selected.substring(0,4);
-		const month = selected.substring(4,6);
-		const day = selected.substring(6,8);
-		const deadline = new Date(year, month-1, day);
+		// Validate deadline is in the future
+		const now = new Date();
+		if (deadline <= now) {
+			Alert.alert('Error', 'Deadline must be in the future');
+			return;
+		}
 
-		console.log("Submitting quest...");
-		const { error } = await supabase.from('quest').insert({
-			author: session?.user.id,
-			location: location,
-			created_at: new Date(),
-			deadline,
-			title: title,
-			description: description,
-			photo_prompt: prompt,
-			num_photos: photoQuantity
-		});
-		if (error) console.error(error);
+		try {
+			setSubmitting(true);
+			
+			const { error } = await supabase.from('quest').insert({
+				author: session.user.id,
+				location: location.trim() || null,
+				created_at: new Date(),
+				deadline: deadline,
+				title: title.trim(),
+				description: description.trim(),
+				photo_prompt: prompt.trim(),
+				num_photos: photoQuantity
+			});
 
-		Alert.alert("Your quest is live!");
-		router.back();
-	}
+			if (error) {
+				console.error('Error creating quest:', error);
+				Alert.alert('Error', 'Failed to create quest. Please try again.');
+				return;
+			}
+
+			Alert.alert('Success!', 'Your quest has been created and is now live!');
+			router.back();
+		} catch (error) {
+			console.error('Error submitting quest:', error);
+			Alert.alert('Error', 'Failed to create quest. Please try again.');
+		} finally {
+			setSubmitting(false);
+		}
+	};
 
 	return (
-		<View>
-			<Text style={styles.label}>Quest Title</Text>
-			<TextInput
-				onChangeText={setTitle}
-				placeholder="Find three black bikes"
-				style={styles.input}
-			/>
+		<ScrollView style={styles.container}>
+			<Layout style={styles.header}>
+				<Text category="h4" style={styles.headerTitle}>
+					Create New Quest
+				</Text>
+				<Text category="s1" style={styles.headerSubtitle}>
+					Design a challenge for other adventurers
+				</Text>
+			</Layout>
 
-			<Text style={styles.label}>Location</Text>
-			<TextInput
-				onChangeText={setLocation}
-				placeholder="Chicago, IL"
-				style={styles.input}
-			/>
+			{/* Quest Details */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Quest Information
+				</Text>
+				
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Quest Title *
+					</Text>
+					<TextInput
+						value={title}
+						onChangeText={setTitle}
+						placeholder="Find three black bikes"
+						style={styles.input}
+					/>
+				</View>
 
-			<Text style={styles.label}>Description</Text>
-			<TextInput
-				multiline
-				style={styles.input}
-				onChangeText={setDescription}
-				placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
-				numberOfLines={4}
-			/>
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Location (Optional)
+					</Text>
+					<TextInput
+						value={location}
+						onChangeText={setLocation}
+						placeholder="Chicago, IL"
+						style={styles.input}
+					/>
+				</View>
 
-			<Text style={styles.label}>Photos to upload</Text>
-			<TextInput
-				style={styles.input}
-				value={photoQuantity.toString()}
-				onChangeText={(str) => setPhotoQuantity(Number(str.replace(/[^0-9]/g, '')))}
-				placeholder="1"
-			/>
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Description *
+					</Text>
+					<TextInput
+						value={description}
+						onChangeText={setDescription}
+						multiline
+						style={[styles.input, styles.textArea]}
+						placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
+						numberOfLines={4}
+					/>
+				</View>
+			</Card>
 
-			<Text style={styles.label}>Required photo qualities</Text>
-			<TextInput
-				style={styles.input}
-				value={prompt}
-				onChangeText={setPrompt}
-				placeholder="Must be a black bike."
-			/>
+			{/* Photo Requirements */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Photo Requirements
+				</Text>
+				
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Number of Photos Required
+					</Text>
+					<TextInput
+						value={photoQuantity.toString()}
+						onChangeText={(str) => {
+							const num = parseInt(str.replace(/[^0-9]/g, '')) || 1;
+							setPhotoQuantity(Math.max(1, num));
+						}}
+						placeholder="1"
+						style={styles.input}
+						keyboardType="numeric"
+					/>
+				</View>
 
-			<Calendar
-				onDayPress={day => {
-					setSelected(day.dateString);
-				}}
-				markedDates={{
-					[selected]: {selected: true, disableTouchEvent: true, selectedDotColor: 'orange'}
-				}}
-			/>
-			<Button title={'Create Quest!'} onPress={submitQuest}/>
-		</View>
-	)
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Photo Requirements *
+					</Text>
+					<TextInput
+						value={prompt}
+						onChangeText={setPrompt}
+						multiline
+						style={[styles.input, styles.textArea]}
+						placeholder="Must be a black bike with visible wheels and frame."
+						numberOfLines={3}
+					/>
+				</View>
+			</Card>
+
+			{/* Deadline Selection */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Quest Deadline
+				</Text>
+				
+				<View style={styles.dateContainer}>
+					<Text category="s1" style={styles.inputLabel}>
+						When should this quest end?
+					</Text>
+					
+					<Calendar
+						onDayPress={(day) => {
+							const selectedDate = new Date(day.timestamp);
+							setDeadline(selectedDate);
+							setSelectedDate(day.dateString);
+						}}
+						markedDates={{
+							[selectedDate]: {
+								selected: true,
+								selectedColor: '#007AFF',
+								selectedTextColor: 'white'
+							}
+						}}
+						minDate={new Date().toISOString().split('T')[0]}
+						theme={{
+							selectedDayBackgroundColor: '#007AFF',
+							selectedDayTextColor: '#ffffff',
+							todayTextColor: '#007AFF',
+							dayTextColor: '#2d4150',
+							textDisabledColor: '#d9e1e8',
+							dotColor: '#007AFF',
+							selectedDotColor: '#ffffff',
+							arrowColor: '#007AFF',
+							monthTextColor: '#2d4150',
+							indicatorColor: '#007AFF',
+							textDayFontWeight: '300',
+							textMonthFontWeight: 'bold',
+							textDayHeaderFontWeight: '300',
+							textDayFontSize: 16,
+							textMonthFontSize: 16,
+							textDayHeaderFontSize: 13
+						}}
+						style={styles.calendar}
+					/>
+					
+					<Text category="c1" style={styles.dateInfo}>
+						Selected: {deadline.toLocaleDateString()}
+					</Text>
+				</View>
+			</Card>
+
+			{/* Submit Button */}
+			<Card style={styles.section}>
+				<Button 
+					style={styles.submitButton}
+					onPress={submitQuest}
+					disabled={submitting || !title.trim() || !description.trim() || !prompt.trim()}
+				>
+					{submitting ? 'Creating Quest...' : 'Create Quest!'}
+				</Button>
+				
+				<Text category="c1" style={styles.helpText}>
+					* Required fields
+				</Text>
+			</Card>
+		</ScrollView>
+	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		marginTop: 40,
-		padding: 16,
+		flex: 1,
+		backgroundColor: '#f5f5f5',
 	},
-	verticallySpaced: {
-		marginBottom: 16,
+	loadingContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
-	label: {
-		fontSize: 16,
+	header: {
+		padding: 20,
+		alignItems: 'center',
+		backgroundColor: '#fff',
+		marginBottom: 10,
+	},
+	headerTitle: {
 		fontWeight: 'bold',
-		marginBottom: 4,
+		marginBottom: 5,
+	},
+	headerSubtitle: {
+		color: '#666',
+		textAlign: 'center',
+	},
+	section: {
+		margin: 10,
+		marginBottom: 10,
+	},
+	sectionTitle: {
+		fontWeight: 'bold',
+		marginBottom: 15,
+	},
+	inputGroup: {
+		marginBottom: 15,
+	},
+	inputLabel: {
+		fontWeight: 'bold',
+		marginBottom: 5,
+		color: '#333',
 	},
 	input: {
 		borderWidth: 1,
-		borderColor: '#ccc',
-		borderRadius: 6,
+		borderColor: '#ddd',
+		borderRadius: 8,
 		padding: 12,
 		fontSize: 16,
+		backgroundColor: '#fff',
 	},
-	disabledInput: {
-		padding: 12,
-		backgroundColor: '#eee',
-		borderRadius: 6,
-		fontSize: 16,
+	textArea: {
+		minHeight: 80,
+		textAlignVertical: 'top',
+	},
+	dateContainer: {
+		alignItems: 'center',
+	},
+	calendar: {
+		marginVertical: 10,
+		borderRadius: 8,
+		backgroundColor: '#fff',
+	},
+	dateInfo: {
 		color: '#666',
-	},
-	button: {
-		backgroundColor: '#007AFF',
-		padding: 12,
-		borderRadius: 6,
-		alignItems: 'center',
-		marginTop: 8,
-	},
-	buttonText: {
-		color: '#fff',
+		marginTop: 10,
 		fontWeight: 'bold',
-		fontSize: 16,
 	},
-	disabledButton: {
-		backgroundColor: '#aaa',
+	submitButton: {
+		width: '100%',
+		marginBottom: 10,
 	},
-	buttonOutline: {
-		padding: 12,
-		borderRadius: 6,
-		borderColor: '#007AFF',
-		borderWidth: 1,
-		alignItems: 'center',
-		marginTop: 12,
+	helpText: {
+		textAlign: 'center',
+		color: '#666',
+		fontStyle: 'italic',
 	},
-	buttonOutlineText: {
-		color: '#007AFF',
-		fontWeight: 'bold',
-		fontSize: 16,
-	},
-})
+});

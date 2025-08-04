@@ -1,49 +1,48 @@
 import { useState, useEffect } from 'react'
 import {
 	View,
-	Text,
 	TextInput,
-	TouchableOpacity,
 	StyleSheet,
 	Alert,
-	ActivityIndicator,
 	Image,
+	ScrollView,
 } from 'react-native'
 import { supabase } from '../lib/supabase'
 import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { Button } from '@ui-kitten/components';
+import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { decode } from 'base64-arraybuffer'
 
 export default function Settings() {
 	const { session, loading } = useAuth();
 
+	const [username, setUsername] = useState<string>('');
 	const [age, setAge] = useState<number>(0);
 	const [city, setCity] = useState<string>('');
 	const [image, setImage] = useState<string>('');
 	const [uploading, setUploading] = useState<boolean>(false);
+	const [saving, setSaving] = useState<boolean>(false);
 
 	useEffect(() => {
 		if (session) {
 			(async () => {
-				console.log("CALLED!")
 				try {
 					if (!session?.user) throw new Error('No user on the session!')
 
 					const { data, error, status } = await supabase
-						.from('profiles')
-						.select('city, age')
+						.from('profile')
+						.select('city, age, username')
 						.eq('id', session.user.id)
 						.single();
-					console.log(session.user.id);
 
 					if (error && status !== 406) throw error
 
 					if (data) {
-						setCity(data.city)
-						setAge(data.age)
+						setCity(data.city || '')
+						setAge(data.age || 0)
+						setUsername(data.username || '')
 					}
 				} catch (error) {
 					if (error instanceof Error) {
@@ -58,155 +57,287 @@ export default function Settings() {
 		if (!session) return;
 		if (!session?.user) throw new Error('No user on the session!')
 
-		const updates = {
-			id: session.user.id,
-			city,
-			age
-		}
+		try {
+			setSaving(true);
 
-		const { error: profileErr } = await supabase.from('profiles').upsert(updates)
-		if (!profileErr) console.error(profileErr);
+			const updates = {
+				id: session.user.id,
+				city: city.trim() || null,
+				age: age || null,
+				username: username.trim() || null,
+			}
 
-		setUploading(true);
+			const { error: profileErr } = await supabase.from('profile').upsert(updates)
+			if (profileErr) {
+				console.error(profileErr);
+				Alert.alert('Error', 'Failed to update profile.');
+				return;
+			}
 
-		const base64 = await FileSystem.readAsStringAsync(image, {
-			encoding: FileSystem.EncodingType.Base64,
-		});
-
-		const fileName = `${session.user.id}.jpg`;
-		let { error } = await supabase
-			.storage
-			.from('profile-pics')
-			.upload(fileName, decode(base64), {
-				contentType: 'image/jpeg',
-				upsert: true
-			});
-
-		setUploading(false);
-		if (error) {
-			console.error(error);
-			return;
+			if (image) {
+				setUploading(true);
+				const base64 = await FileSystem.readAsStringAsync(image, {
+					encoding: FileSystem.EncodingType.Base64,
+				});
+				const fileName = `${session.user.id}.jpg`;
+				let { error } = await supabase
+					.storage
+					.from('profile-pics')
+					.upload(fileName, decode(base64), {
+						contentType: 'image/jpeg',
+						upsert: true
+					});
+				setUploading(false);
+				if (error) {
+					console.error(error);
+					Alert.alert('Error', 'Failed to upload profile picture.');
+					return;
+				}
+			}
+			Alert.alert('Success', 'Profile updated successfully!');
+		} catch (error) {
+			console.error('Error updating profile:', error);
+			Alert.alert('Error', 'Failed to update profile.');
+		} finally {
+			setSaving(false);
 		}
 	}
 
-
 	const pickImage = async () => {
-		// No permissions request is necessary for launching the image library
-		let result = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ['images', 'videos'],
-			allowsEditing: true,
-			aspect: [4, 3],
-			quality: 1,
-		});
-		console.log(result);
-
-		if (!result.canceled) {
-			setImage(result.assets[0].uri);
+		try {
+			let result = await ImagePicker.launchImageLibraryAsync({
+				mediaTypes: ImagePicker.MediaTypeOptions.Images,
+				allowsEditing: true,
+				aspect: [1, 1],
+				quality: 0.8,
+			});
+			if (!result.canceled && result.assets[0]) {
+				setImage(result.assets[0].uri);
+			}
+		} catch (error) {
+			console.error('Error picking image:', error);
+			Alert.alert('Error', 'Failed to pick image.');
 		}
 	};
 
-	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth />
+	if (loading) return (
+		<Layout style={styles.loadingContainer}>
+			<Text category="h6">Loading...</Text>
+		</Layout>
+	);
+	
+	if (!session) return <Auth />;
 
 	return (
-		<View>
-			<View style={styles.verticallySpaced}>
-				<Text style={styles.label}>Email: {session?.user?.email}</Text>
-			</View>
+		<ScrollView style={styles.container}>
+			{/* Header */}
+			<Layout style={styles.header}>
+				<Text category="h4" style={styles.headerTitle}>
+					Settings
+				</Text>
+				<Text category="s1" style={styles.headerSubtitle}>
+					Manage your profile and preferences
+				</Text>
+			</Layout>
 
-			<View style={styles.verticallySpaced}>
-				<Text style={styles.label}>City</Text>
-				<TextInput
-					style={styles.input}
-					value={city}
-					onChangeText={(str) => setCity(str)}
-					placeholder="Los Angeles, California"
-				/>
-			</View>
+			{/* Profile Picture Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Profile Picture
+				</Text>
+				
+				<View style={styles.profileImageContainer}>
+					{image ? (
+						<Image source={{ uri: image }} style={styles.profileImage} />
+					) : (
+						<View style={styles.defaultAvatar}>
+							<Text style={styles.avatarText}>
+								{session.user.email?.charAt(0)?.toUpperCase() || 'U'}
+							</Text>
+						</View>
+					)}
+					
+					<Button 
+						style={styles.imageButton}
+						onPress={pickImage}
+						disabled={uploading}
+					>
+						{uploading ? 'Uploading...' : 'Change Photo'}
+					</Button>
+				</View>
+			</Card>
 
-			<View style={styles.verticallySpaced}>
-				<Text style={styles.label}>Age</Text>
-				<TextInput
-					style={styles.input}
-					value={age.toString()}
-					onChangeText={(str) => setAge(Number(str.replace(/[^0-9]/g, '')))}
-					placeholder="18"
-				/>
-			</View>
+			{/* Account Information */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Account Information
+				</Text>
+				
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Email
+					</Text>
+					<Text category="p1" style={styles.emailText}>
+						{session.user.email}
+					</Text>
+				</View>
 
-			<Button onPress={pickImage}>Pick an image from camera roll!!</Button>
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Username
+					</Text>
+					<TextInput
+						style={styles.input}
+						value={username}
+						onChangeText={setUsername}
+						placeholder="Enter your username"
+						autoCapitalize="none"
+						autoCorrect={false}
+					/>
+				</View>
+			</Card>
 
-			<TouchableOpacity
-				style={[styles.button, loading && styles.disabledButton]}
-				onPress={updateProfile}
-				disabled={loading}
-			>
-				{loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
-			</TouchableOpacity>
+			{/* Personal Information */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Personal Information
+				</Text>
+				
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						City
+					</Text>
+					<TextInput
+						style={styles.input}
+						value={city}
+						onChangeText={setCity}
+						placeholder="Enter your city"
+					/>
+				</View>
 
+				<View style={styles.inputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Age
+					</Text>
+					<TextInput
+						style={styles.input}
+						value={age.toString()}
+						onChangeText={(str) => setAge(Number(str.replace(/[^0-9]/g, '')) || 0)}
+						placeholder="Enter your age"
+						keyboardType="numeric"
+					/>
+				</View>
+			</Card>
 
-			{image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+			{/* Save Button */}
+			<Card style={styles.section}>
+				<Button 
+					style={styles.saveButton}
+					onPress={updateProfile}
+					disabled={saving || uploading}
+				>
+					{saving ? 'Saving...' : 'Save Changes'}
+				</Button>
+			</Card>
 
-			<TouchableOpacity style={styles.buttonOutline} onPress={() => supabase.auth.signOut()}>
-				<Text style={styles.buttonOutlineText}>Sign Out</Text>
-			</TouchableOpacity>
-		</View>
-	)
+			{/* Sign Out */}
+			<Card style={styles.section}>
+				<Button 
+					style={styles.signOutButton}
+					onPress={() => supabase.auth.signOut()}
+					status="danger"
+				>
+					Sign Out
+				</Button>
+			</Card>
+		</ScrollView>
+	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		marginTop: 40,
-		padding: 16,
+		flex: 1,
+		backgroundColor: '#f5f5f5',
 	},
-	verticallySpaced: {
-		marginBottom: 16,
+	loadingContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
-	label: {
-		fontSize: 16,
+	header: {
+		padding: 20,
+		alignItems: 'center',
+		backgroundColor: '#fff',
+		marginBottom: 10,
+	},
+	headerTitle: {
 		fontWeight: 'bold',
-		marginBottom: 4,
+		marginBottom: 5,
+	},
+	headerSubtitle: {
+		color: '#666',
+		textAlign: 'center',
+	},
+	section: {
+		margin: 10,
+		marginBottom: 10,
+	},
+	sectionTitle: {
+		fontWeight: 'bold',
+		marginBottom: 15,
+	},
+	profileImageContainer: {
+		alignItems: 'center',
+	},
+	profileImage: {
+		width: 100,
+		height: 100,
+		borderRadius: 50,
+		marginBottom: 15,
+	},
+	defaultAvatar: {
+		width: 100,
+		height: 100,
+		borderRadius: 50,
+		marginBottom: 15,
+		backgroundColor: '#f0f0f0',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	avatarText: {
+		fontSize: 40,
+		fontWeight: 'bold',
+		color: '#666',
+	},
+	imageButton: {
+		width: '100%',
+	},
+	inputGroup: {
+		marginBottom: 15,
+	},
+	inputLabel: {
+		fontWeight: 'bold',
+		marginBottom: 5,
+		color: '#333',
+	},
+	emailText: {
+		padding: 12,
+		backgroundColor: '#f0f0f0',
+		borderRadius: 8,
+		color: '#666',
 	},
 	input: {
 		borderWidth: 1,
-		borderColor: '#ccc',
-		borderRadius: 6,
+		borderColor: '#ddd',
+		borderRadius: 8,
 		padding: 12,
 		fontSize: 16,
+		backgroundColor: '#fff',
 	},
-	disabledInput: {
-		padding: 12,
-		backgroundColor: '#eee',
-		borderRadius: 6,
-		fontSize: 16,
-		color: '#666',
+	saveButton: {
+		width: '100%',
 	},
-	button: {
-		backgroundColor: '#007AFF',
-		padding: 12,
-		borderRadius: 6,
-		alignItems: 'center',
-		marginTop: 8,
+	signOutButton: {
+		width: '100%',
 	},
-	buttonText: {
-		color: '#fff',
-		fontWeight: 'bold',
-		fontSize: 16,
-	},
-	disabledButton: {
-		backgroundColor: '#aaa',
-	},
-	buttonOutline: {
-		padding: 12,
-		borderRadius: 6,
-		borderColor: '#007AFF',
-		borderWidth: 1,
-		alignItems: 'center',
-		marginTop: 12,
-	},
-	buttonOutlineText: {
-		color: '#007AFF',
-		fontWeight: 'bold',
-		fontSize: 16,
-	},
-})
+});

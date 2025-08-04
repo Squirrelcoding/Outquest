@@ -78,7 +78,7 @@ export default function Profile() {
 					) : (
 						<View style={styles.defaultAvatar}>
 							<Text style={styles.avatarText}>
-								{user?.id?.charAt(0)?.toUpperCase() || 'U'}
+								{(user?.username || user?.id || 'U').charAt(0).toUpperCase()}
 							</Text>
 						</View>
 					)}
@@ -87,7 +87,7 @@ export default function Profile() {
 				{/* User Info */}
 				<View style={styles.userInfo}>
 					<Text category="h5" style={styles.userId}>
-						{user?.id || 'Unknown User'}
+						{user?.username || user?.id || 'Unknown User'}
 					</Text>
 					
 					{user?.city && (
@@ -126,6 +126,9 @@ export default function Profile() {
 				<Card style={styles.infoCard}>
 					<Text category="h6" style={styles.infoTitle}>
 						Profile Information
+					</Text>
+					<Text category="p1" style={styles.infoText}>
+						Username: {user.username || 'N/A'}
 					</Text>
 					<Text category="p1" style={styles.infoText}>
 						User ID: {user.id}

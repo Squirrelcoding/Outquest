@@ -240,40 +240,42 @@ export default function QuestDetail() {
 					Photo Challenge
 				</Text>
 				<Text category="p1" style={styles.promptText}>
-					{quest.photo_prompt}
+					{quest.description}
 				</Text>
 			</Card>
 
-			{/* Image Selection */}
-			<Card style={styles.imageCard}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Your Submission
-				</Text>
-				
-				{selectedImage ? (
-					<View style={styles.selectedImageContainer}>
-						<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-						<Button 
-							style={styles.changeImageButton}
-							onPress={pickImage}
-						>
-							Change Image
-						</Button>
-					</View>
-				) : (
-					<View style={styles.imagePlaceholder}>
-						<Text category="s1" style={styles.placeholderText}>
-							No image selected
-						</Text>
-						<Button 
-							style={styles.pickImageButton}
-							onPress={pickImage}
-						>
-							Pick Image from Camera Roll
-						</Button>
-					</View>
-				)}
-			</Card>
+			{/* Image Selection - Only show if user hasn't submitted */}
+			{!hasSubmitted && (
+				<Card style={styles.imageCard}>
+					<Text category="h6" style={styles.sectionTitle}>
+						Your Submission
+					</Text>
+					
+					{selectedImage ? (
+						<View style={styles.selectedImageContainer}>
+							<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+							<Button 
+								style={styles.changeImageButton}
+								onPress={pickImage}
+							>
+								Change Image
+							</Button>
+						</View>
+					) : (
+						<View style={styles.imagePlaceholder}>
+							<Text category="s1" style={styles.placeholderText}>
+								No image selected
+							</Text>
+							<Button 
+								style={styles.pickImageButton}
+								onPress={pickImage}
+							>
+								Pick Image from Camera Roll
+							</Button>
+						</View>
+					)}
+				</Card>
+			)}
 
 			{/* Submission Status */}
 			{hasSubmitted && (
