@@ -1,133 +1,332 @@
-// app/profile.tsx or any screen
-import { View, Text, StyleSheet, TextInput } from 'react-native'
-// import AsyncStorage from '@react-native-async-storage/async-storage'
-// import { supabase } from '@/lib/supabase'
+import { View, StyleSheet, TextInput, ScrollView, Alert } from 'react-native'
 import Auth from '../components/Auth';
 import { useAuth } from '../context/Auth';
 import { router } from 'expo-router';
-import { Button, Card } from '@ui-kitten/components';
+import { Button, Card, Layout, Divider, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export default function Profile() {
+export default function Home() {
 	const { session, loading } = useAuth();
 	const [completedQuests, setCompletedQuests] = useState<any[]>([]);
-	const [leaderboardID, setLeaderboardID] = useState<string>();
+	const [leaderboardID, setLeaderboardID] = useState<string>('');
+	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 
+	// Load user's completed quests
 	useEffect(() => {
 		if (!session) return;
-		(async () => {
-			const { data: completedQuestData } = await supabase
-				.from("submission")
-				.select()
-				.eq('user_id', session.user.id);
-			console.log(completedQuestData);
-			const questIDs = completedQuestData?.map((quest) => quest.quest_id);
-			console.log(questIDs)
-			const { data: particularQuestData } = await supabase
-				.from("quest")
-				.select("*")
-				.in('id', questIDs!);
-			setCompletedQuests(particularQuestData!);
-		})();
+		
+		const loadCompletedQuests = async () => {
+			try {
+				setLoadingQuests(true);
+				
+				// Get user's completed quest submissions
+				const { data: completedQuestData, error: submissionError } = await supabase
+					.from("submission")
+					.select('quest_id')
+					.eq('user_id', session.user.id);
+				
+				if (submissionError) {
+					console.error('Error loading submissions:', submissionError);
+					return;
+				}
+
+				if (!completedQuestData || completedQuestData.length === 0) {
+					setCompletedQuests([]);
+					return;
+				}
+
+				// Get quest details for completed quests
+				const questIDs = completedQuestData.map((quest) => quest.quest_id);
+				const { data: questData, error: questError } = await supabase
+					.from("quest")
+					.select("*")
+					.in('id', questIDs);
+				
+				if (questError) {
+					console.error('Error loading quests:', questError);
+					return;
+				}
+
+				setCompletedQuests(questData || []);
+			} catch (error) {
+				console.error('Error loading completed quests:', error);
+				Alert.alert('Error', 'Failed to load your completed quests');
+			} finally {
+				setLoadingQuests(false);
+			}
+		};
+
+		loadCompletedQuests();
 	}, [session]);
 
-	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth />
+	// Navigation handlers
+	const navigateToLeaderboard = () => {
+		if (!leaderboardID.trim()) {
+			Alert.alert('Error', 'Please enter a leaderboard ID');
+			return;
+		}
+		router.push(`/leaderboard/show/${leaderboardID.trim()}`);
+	};
+
+	if (loading) return (
+		<Layout style={styles.loadingContainer}>
+			<Text category="h6">Loading...</Text>
+		</Layout>
+	);
+	
+	if (!session) return <Auth />;
 
 	return (
+		<ScrollView style={styles.container}>
+			{/* Header Section */}
+			<Layout style={styles.header}>
+				<Text category="h4" style={styles.welcomeText}>
+					Welcome back!
+				</Text>
+				<Text category="s1" style={styles.emailText}>
+					{session.user.email}
+				</Text>
+			</Layout>
 
-		<View>
-			<Text>Welcome, {session.user.email}</Text>
-			<Text>Home</Text>
-			<Button onPress={() => router.push('/settings')}>Go to Settings</Button>
+			{/* Quick Actions Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Quick Actions
+				</Text>
+				<View style={styles.buttonGrid}>
+					<Button 
+						style={styles.actionButton}
+						onPress={() => router.push('/browse')}
+					>
+						Browse Quests
+					</Button>
+					<Button 
+						style={styles.actionButton}
+						onPress={() => router.push('/create')}
+					>
+						Create Quest
+					</Button>
+					<Button 
+						style={styles.actionButton}
+						onPress={() => router.push('/settings')}
+					>
+						Settings
+					</Button>
+					<Button 
+						style={styles.actionButton}
+						onPress={() => router.push('/test')}
+					>
+						Test
+					</Button>
+				</View>
+			</Card>
 
-			<Button onPress={() => router.push('/create')}>Make a quest</Button>
+			{/* Leaderboard Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Leaderboards
+				</Text>
+				<View style={styles.leaderboardSection}>
+					<View style={styles.leaderboardButtons}>
+						<Button 
+							style={styles.leaderboardButton}
+							onPress={() => router.push('/leaderboard/make')}
+						>
+							Create Leaderboard
+						</Button>
+						<Button 
+							style={styles.leaderboardButton}
+							onPress={() => router.push('/leaderboard/join')}
+						>
+							Join Leaderboard
+						</Button>
+					</View>
+					
+					<View style={styles.leaderboardInputSection}>
+						<Text category="s1" style={styles.inputLabel}>
+							Enter Leaderboard ID:
+						</Text>
+						<TextInput 
+							value={leaderboardID}
+							onChangeText={setLeaderboardID}
+							placeholder="Leaderboard ID"
+							style={styles.leaderboardInput}
+						/>
+						<Button 
+							style={styles.goButton}
+							onPress={navigateToLeaderboard}
+							disabled={!leaderboardID.trim()}
+						>
+							Go to Leaderboard
+						</Button>
+					</View>
+				</View>
+			</Card>
 
-			<Button onPress={() => router.push('/browse')}>Browse quests</Button>
-			<Button onPress={() => router.push('/test')}>Test</Button>
-			<Button onPress={() => router.push('/leaderboard/make')}>Make leaderboard</Button>
-			<Button onPress={() => router.push('/leaderboard/join')}>Join a leaderboard</Button>
-
-			<View style={styles.container}>
-				<Text style={styles.questsTitle}>Your completed quests</Text>
-			</View>
-
-			<TextInput onChangeText={setLeaderboardID} placeholder="Leaderboard ID" style={styles.input} />
-			<Button onPress={() => router.push(`/leaderboard/show/${leaderboardID}`)}>Go</Button>
-			{completedQuests && <View>
-				{completedQuests.map((quest, idx: number) => {
-					return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
-						<Text>{quest.title}</Text>
-						<Text>By {quest.author}</Text>
-						<Text>{quest.description}</Text>
-						<Text>Created {new Date(quest.created_at).toDateString()}</Text>
-						<Text>Ends {new Date(quest.deadline).toDateString()}</Text>
-					</Card>
-				})}
-
-			</View>}
-		</View>
-	)
+			{/* Completed Quests Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Your Completed Quests ({completedQuests.length})
+				</Text>
+				
+				{loadingQuests ? (
+					<View style={styles.loadingSection}>
+						<Text category="s1">Loading your quests...</Text>
+					</View>
+				) : completedQuests.length === 0 ? (
+					<View style={styles.emptySection}>
+						<Text category="s1" style={styles.emptyText}>
+							You haven&apos;t completed any quests yet.
+						</Text>
+						<Button 
+							style={styles.browseButton}
+							onPress={() => router.push('/browse')}
+						>
+							Browse Available Quests
+						</Button>
+					</View>
+				) : (
+					<View style={styles.questsList}>
+						{completedQuests.map((quest, idx) => (
+							<Card 
+								key={idx} 
+								style={styles.questCard}
+								onPress={() => router.push(`/posts/${quest.id}`)}
+							>
+								<Text category="h6" style={styles.questTitle}>
+									{quest.title}
+								</Text>
+								<Text category="s1" style={styles.questAuthor}>
+									By {quest.author}
+								</Text>
+								<Text category="p2" style={styles.questDescription}>
+									{quest.description}
+								</Text>
+								<View style={styles.questDates}>
+									<Text category="c1" style={styles.questDate}>
+										Created: {new Date(quest.created_at).toLocaleDateString()}
+									</Text>
+									<Text category="c1" style={styles.questDate}>
+										Ends: {new Date(quest.deadline).toLocaleDateString()}
+									</Text>
+								</View>
+							</Card>
+						))}
+					</View>
+				)}
+			</Card>
+		</ScrollView>
+	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		marginTop: 40,
-		padding: 16,
+		flex: 1,
+		backgroundColor: '#f5f5f5',
 	},
-	verticallySpaced: {
-		marginBottom: 16,
+	loadingContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
-	label: {
-		fontSize: 16,
+	header: {
+		padding: 20,
+		alignItems: 'center',
+		backgroundColor: '#fff',
+		marginBottom: 10,
+	},
+	welcomeText: {
 		fontWeight: 'bold',
-		marginBottom: 4,
+		marginBottom: 5,
 	},
-	input: {
-		borderWidth: 1,
-		borderColor: '#ccc',
-		borderRadius: 6,
-		padding: 12,
-		fontSize: 16,
-	},
-	disabledInput: {
-		padding: 12,
-		backgroundColor: '#eee',
-		borderRadius: 6,
-		fontSize: 16,
+	emailText: {
 		color: '#666',
 	},
-	button: {
-		backgroundColor: '#007AFF',
-		padding: 12,
-		borderRadius: 6,
-		alignItems: 'center',
-		marginTop: 8,
+	section: {
+		margin: 10,
+		marginBottom: 10,
 	},
-	buttonText: {
-		color: '#fff',
+	sectionTitle: {
+		marginBottom: 15,
 		fontWeight: 'bold',
-		fontSize: 16,
 	},
-	disabledButton: {
-		backgroundColor: '#aaa',
+	buttonGrid: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		justifyContent: 'space-between',
 	},
-	buttonOutline: {
-		padding: 12,
-		borderRadius: 6,
-		borderColor: '#007AFF',
+	actionButton: {
+		width: '48%',
+		marginBottom: 10,
+	},
+	leaderboardSection: {
+		gap: 15,
+	},
+	leaderboardButtons: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	leaderboardButton: {
+		width: '48%',
+	},
+	leaderboardInputSection: {
+		gap: 10,
+	},
+	inputLabel: {
+		fontWeight: 'bold',
+	},
+	leaderboardInput: {
 		borderWidth: 1,
-		alignItems: 'center',
-		marginTop: 12,
-	},
-	buttonOutlineText: {
-		color: '#007AFF',
-		fontWeight: 'bold',
+		borderColor: '#ddd',
+		borderRadius: 8,
+		padding: 12,
 		fontSize: 16,
+		backgroundColor: '#fff',
 	},
-	questsTitle: {
-		textAlign: "center",
-		fontSize: 25
-	}
-})
+	goButton: {
+		marginTop: 5,
+	},
+	loadingSection: {
+		alignItems: 'center',
+		padding: 20,
+	},
+	emptySection: {
+		alignItems: 'center',
+		padding: 20,
+	},
+	emptyText: {
+		textAlign: 'center',
+		marginBottom: 15,
+		color: '#666',
+	},
+	browseButton: {
+		width: '100%',
+	},
+	questsList: {
+		gap: 10,
+	},
+	questCard: {
+		marginBottom: 10,
+	},
+	questTitle: {
+		fontWeight: 'bold',
+		marginBottom: 5,
+	},
+	questAuthor: {
+		color: '#666',
+		marginBottom: 8,
+	},
+	questDescription: {
+		marginBottom: 10,
+		lineHeight: 20,
+	},
+	questDates: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	questDate: {
+		color: '#888',
+		fontSize: 12,
+	},
+});

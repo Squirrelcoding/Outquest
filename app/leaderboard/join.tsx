@@ -11,7 +11,6 @@ import { supabase } from '@/lib/supabase';
 import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import { router } from 'expo-router';
-import uuid from "react-native-uuid";
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();

@@ -51,7 +51,7 @@ export default function BrowseQuests() {
 	return <ScrollView>
 		{users ? <View>
 			{users.map((user: any, idx: number) => {
-				return <Card key={idx}>
+				return <Card key={idx} onPress={() => router.push(`/profile/${user.id}`)}>
 					<Text>{user.id}</Text>
 				</Card>
 			})}
