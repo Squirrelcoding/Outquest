@@ -22,6 +22,7 @@ export default function QuestDetail() {
 	const [isUploading, setIsUploading] = useState<boolean>(false);
 	const [judgmentResult, setJudgmentResult] = useState<string | null>(null);
 	const [isSubmissionValid, setIsSubmissionValid] = useState<boolean>(false);
+	const [submissions, setSubmissions] = useState<number>(0);
 	const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
 	const [submissionQuestId, setSubmissionQuestId] = useState<number>(-1);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
@@ -74,6 +75,13 @@ export default function QuestDetail() {
 				if (submissionError && submissionError.code !== 'PGRST116') {
 					console.error('Error checking submission:', submissionError);
 				}
+
+				const { count: submissionsCount, error: submissionsError } = await supabase
+					.from('submission')
+					.select("*", { count: 'exact', head: true })
+					.eq('quest_id', id);
+				
+				setSubmissions(submissionsCount!);
 
 				if (submissionData) {
 					setHasSubmitted(true);
@@ -242,6 +250,11 @@ export default function QuestDetail() {
 						</Text>
 						<Text category="s1" style={styles.infoValue}>
 							{new Date(quest.deadline).toLocaleDateString()}
+						</Text>
+					</View>
+					<View>
+						<Text category="s1" style={styles.countInfo}>
+							{submissions} {submissions === 1 ? "person has" : "people have"} completed this quest so far.
 						</Text>
 					</View>
 				</View>
@@ -425,6 +438,11 @@ const styles = StyleSheet.create({
 	},
 	infoValue: {
 		color: '#333',
+	},
+	countInfo: {
+		textAlign: "center",
+		fontWeight: "bold",
+		color: "#666"
 	},
 	promptText: {
 		lineHeight: 20,

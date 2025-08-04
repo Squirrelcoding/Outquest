@@ -31,18 +31,16 @@ export default function BrowseQuests() {
 
 					if (data) setQuests(data);
 
-					const questAuthors = data!.map((quest) => quest.author);
 					console.log(data);
+
 					// Get the usernames for each quest author
-					const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").in('id', questAuthors);
-
-					if (usernameError) {
-						console.error('Error loading username data:', usernameError);
-						return;
-					}
-
-					const usernames = usernameData.map((user) => user.username);
-					console.log(usernames);
+					const usernames = await Promise.all(
+						data!.map(async (quest) => {
+							const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").eq('id', quest.author);
+							if (usernameError) throw usernameError;
+							return usernameData[0].username;
+						})
+					);
 					setUsernames(usernames);
 
 				} catch (error) {
@@ -62,7 +60,7 @@ export default function BrowseQuests() {
 			{quests.map((quest: any, idx: number) => {
 				return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
 					<Text>{quest.title}</Text>
-					<Text>By {usernames[idx] || quest.author}</Text>
+					<Text>By {usernames[idx] || "..."}</Text>
 					<Text>{quest.description}</Text>
 					<Text>Created {new Date(quest.created_at).toDateString()}</Text>
 					<Text>Ends {new Date(quest.deadline).toDateString()}</Text>

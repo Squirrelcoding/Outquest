@@ -18,17 +18,17 @@ export default function Page() {
 	// Load user's completed quests
 	useEffect(() => {
 		if (!session) return;
-		
+
 		const loadCompletedQuests = async () => {
 			try {
 				setLoadingQuests(true);
-				
+
 				// Get user's completed quest submissions
 				const { data: completedQuestData, error: submissionError } = await supabase
 					.from("submission")
 					.select('quest_id')
 					.eq('user_id', session.user.id);
-				
+
 				if (submissionError) {
 					console.error('Error loading submissions:', submissionError);
 					return;
@@ -45,24 +45,19 @@ export default function Page() {
 					.from("quest")
 					.select("*")
 					.in('id', questIDs);
-				
+
 				if (questError) {
 					console.error('Error loading quests:', questError);
 					return;
 				}
 
-				const questAuthors = questData!.map((quest) => quest.author);
-				console.log(questData);
-				// Get the usernames for each quest author
-				const { data: usernameData, error: usernameError} = await supabase.from("profile").select("*").in('id', questAuthors);
-
-				if (usernameError) {
-					console.error('Error loading username data:', usernameError);
-					return;
-				}
-
-				const usernames = usernameData.map((user) => user.username);
-				console.log(usernames);
+				const usernames = await Promise.all(
+					questData!.map(async (quest) => {
+						const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").eq('id', quest.author);
+						if (usernameError) throw usernameError;
+						return usernameData[0].username;
+					})
+				);
 				setUsernames(usernames);
 				setCompletedQuests(questData || []);
 			} catch (error) {
@@ -138,7 +133,7 @@ export default function Page() {
 			<Text category="h6">Loading...</Text>
 		</Layout>
 	);
-	
+
 	if (!session) return <Auth />;
 
 	return (
@@ -159,25 +154,25 @@ export default function Page() {
 					Quick Actions
 				</Text>
 				<View style={styles.buttonGrid}>
-					<Button 
+					<Button
 						style={styles.actionButton}
 						onPress={() => router.push('/browse')}
 					>
 						Browse Quests
 					</Button>
-					<Button 
+					<Button
 						style={styles.actionButton}
 						onPress={() => router.push('/create')}
 					>
 						Create Quest
 					</Button>
-					<Button 
+					<Button
 						style={styles.actionButton}
 						onPress={() => router.push('/settings')}
 					>
 						Settings
 					</Button>
-					<Button 
+					<Button
 						style={styles.actionButton}
 						onPress={() => router.push('/test')}
 					>
@@ -191,7 +186,7 @@ export default function Page() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Your Leaderboards ({userLeaderboards.length})
 				</Text>
-				
+
 				{loadingLeaderboards ? (
 					<View style={styles.loadingSection}>
 						<Text category="s1">Loading your leaderboards...</Text>
@@ -202,13 +197,13 @@ export default function Page() {
 							You haven&apos;t joined any leaderboards yet.
 						</Text>
 						<View style={styles.emptyButtons}>
-							<Button 
+							<Button
 								style={styles.emptyButton}
 								onPress={() => router.push('/leaderboard/make')}
 							>
 								Create Leaderboard
 							</Button>
-							<Button 
+							<Button
 								style={styles.emptyButton}
 								onPress={() => router.push('/leaderboard/join')}
 							>
@@ -219,8 +214,8 @@ export default function Page() {
 				) : (
 					<View style={styles.leaderboardsList}>
 						{userLeaderboards.map((leaderboard, idx) => (
-							<Card 
-								key={idx} 
+							<Card
+								key={idx}
 								style={styles.leaderboardCard}
 								onPress={() => router.push(`/leaderboard/show/${leaderboard.leaderboard_id}`)}
 							>
@@ -250,31 +245,31 @@ export default function Page() {
 				</Text>
 				<View style={styles.leaderboardSection}>
 					<View style={styles.leaderboardButtons}>
-						<Button 
+						<Button
 							style={styles.leaderboardButton}
 							onPress={() => router.push('/leaderboard/make')}
 						>
 							Create Leaderboard
 						</Button>
-						<Button 
+						<Button
 							style={styles.leaderboardButton}
 							onPress={() => router.push('/leaderboard/join')}
 						>
 							Join Leaderboard
 						</Button>
 					</View>
-					
+
 					<View style={styles.leaderboardInputSection}>
 						<Text category="s1" style={styles.inputLabel}>
 							Enter Leaderboard ID:
 						</Text>
-						<TextInput 
+						<TextInput
 							value={leaderboardID}
 							onChangeText={setLeaderboardID}
 							placeholder="Leaderboard ID"
 							style={styles.leaderboardInput}
 						/>
-						<Button 
+						<Button
 							style={styles.goButton}
 							onPress={navigateToLeaderboard}
 							disabled={!leaderboardID.trim()}
@@ -290,7 +285,7 @@ export default function Page() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Your Completed Quests ({completedQuests.length})
 				</Text>
-				
+
 				{loadingQuests ? (
 					<View style={styles.loadingSection}>
 						<Text category="s1">Loading your quests...</Text>
@@ -300,7 +295,7 @@ export default function Page() {
 						<Text category="s1" style={styles.emptyText}>
 							You haven&apos;t completed any quests yet.
 						</Text>
-						<Button 
+						<Button
 							style={styles.browseButton}
 							onPress={() => router.push('/browse')}
 						>
@@ -310,8 +305,8 @@ export default function Page() {
 				) : (
 					<View style={styles.questsList}>
 						{completedQuests.map((quest, idx) => (
-							<Card 
-								key={idx} 
+							<Card
+								key={idx}
 								style={styles.questCard}
 								onPress={() => router.push(`/posts/${quest.id}`)}
 							>
@@ -319,7 +314,7 @@ export default function Page() {
 									{quest.title}
 								</Text>
 								<Text category="s1" style={styles.questAuthor}>
-									By {usernames[idx]|| quest.author}
+									By {usernames[idx] || quest.author}
 								</Text>
 								<Text category="p2" style={styles.questDescription}>
 									{quest.description}
