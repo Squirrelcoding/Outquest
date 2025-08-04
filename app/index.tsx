@@ -174,9 +174,9 @@ export default function Page() {
 					</Button>
 					<Button
 						style={styles.actionButton}
-						onPress={() => router.push('/test')}
+						onPress={() => router.push('/debug')}
 					>
-						Test
+						Debug
 					</Button>
 				</View>
 			</Card>
