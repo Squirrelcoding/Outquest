@@ -1,5 +1,5 @@
 // app/posts/[id].tsx
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Button, Card, Text } from "@ui-kitten/components";
 import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
@@ -20,14 +20,27 @@ export default function PostDetail() {
 	const [uploading, setUploading] = useState<boolean>(false);
 	const [output, setOutput] = useState<any>(null);
 	const [validSubmission, setValidSubmission] = useState<boolean>(false);
+	const [submitted, setSubmitted] = useState<boolean>(false);
+	const [questID, setQuestID] = useState<number>(-1);
 
 	console.log(id);
 
 	useEffect(() => {
+		if (!session) return;
 		(async () => {
 			const { data, error } = await supabase.from('quest').select().eq('id', id).single();
 			if (error) console.error(error);
 			setPost(data);
+			const { data: postData, error: postError } = await supabase
+				.from('submission')
+				.select()
+				.eq('quest_id', id)
+				.eq('user_id', session.user.id);
+			if (postError) console.error(postError);
+			if (postData!.length) {
+				setSubmitted(true);
+				setQuestID(postData![0].quest_id);
+			};
 		})();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -49,13 +62,14 @@ export default function PostDetail() {
 
 	const submitEntry = async () => {
 		if (!image) return;
+		if (!session) return;
 		setUploading(true);
 
 		const base64 = await FileSystem.readAsStringAsync(image, {
 			encoding: FileSystem.EncodingType.Base64,
 		});
 
-		const fileName = `img-${Date.now()}.jpg`;
+		const fileName = `${session.user.id}/${post.id}/img-${Date.now()}.jpg`;
 		let { error } = await supabase
 			.storage
 			.from('quest-upload')
@@ -79,10 +93,18 @@ export default function PostDetail() {
 		if (edgeError) {
 			console.error(edgeError);
 		}
+
 		setJudging(false);
 		setOutput(edgeData);
-		console.log(edgeData);
+
+		// If it's a successful submission then we create add some new rows to the submission table
 		if (edgeData === "YES") {
+			const { error } = await supabase.from("submission").insert({
+				user_id: session?.user.id,
+				quest_id: post.id,
+				time: new Date()
+			});
+			if (error) console.error(error);
 			setValidSubmission(true);
 		}
 	};
@@ -108,8 +130,12 @@ export default function PostDetail() {
 		}
 		{image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
 
-		<Button onPress={submitEntry}>Submit entry</Button>
+		<Button onPress={submitEntry} disabled={submitted}>Submit entry</Button>
 
+		{submitted && <View>
+			<Text>You have already completed this quest!</Text>	
+			<Button onPress={() => router.push(`/submission/${session.user.id}/${questID}`)}>Click here to see your submission.</Button>
+		</View>}
 		{uploading && <Text>Uploading...</Text>}
 		{judging && <Text>Judging...</Text>}
 		{output && <View>
