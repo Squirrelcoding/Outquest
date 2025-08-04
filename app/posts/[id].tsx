@@ -5,7 +5,7 @@ import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, StyleSheet, Image, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, Alert, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
@@ -13,9 +13,10 @@ import { decode } from 'base64-arraybuffer';
 export default function QuestDetail() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
-	
+
 	// State management
 	const [quest, setQuest] = useState<any>(null);
+	const [authorUsername, setAuthorUsername] = useState<string>("");
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [isJudging, setIsJudging] = useState<boolean>(false);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -47,6 +48,20 @@ export default function QuestDetail() {
 				}
 
 				setQuest(questData);
+				const { data: authorData, error: authorError } = await supabase
+					.from('profile')
+					.select("*")
+					.eq('id', questData.author)
+					.single();
+
+
+				if (authorError) {
+					console.error('Error loading author:', authorError);
+					Alert.alert('Error', 'Failed to load quest details');
+					return;
+				}
+
+				setAuthorUsername(authorData.username);
 
 				// Check if user has already submitted
 				const { data: submissionData, error: submissionError } = await supabase
@@ -129,9 +144,9 @@ export default function QuestDetail() {
 
 			// Judge the submission using AI
 			const { data: judgmentData, error: judgmentError } = await supabase.functions.invoke('replicate-call', {
-				body: { 
-					image: fileName, 
-					question: `Does the image match the following description? Reply YES or NO. ${quest.photo_prompt}` 
+				body: {
+					image: fileName,
+					question: `Does the image match the following description? Reply YES or NO. ${quest.photo_prompt}`
 				},
 			});
 
@@ -178,7 +193,7 @@ export default function QuestDetail() {
 			<Text category="h6">Loading...</Text>
 		</Layout>
 	);
-	
+
 	if (!session) return <Auth />;
 
 	if (loadingQuest) return (
@@ -200,9 +215,7 @@ export default function QuestDetail() {
 				<Text category="h4" style={styles.title}>
 					{quest.title}
 				</Text>
-				<Text category="s1" style={styles.author}>
-					By {quest.author}
-				</Text>
+				<Pressable onPress={() => router.push(`/profile/${quest.author}`)}><Text>{authorUsername || quest.author}</Text></Pressable>
 			</Layout>
 
 			{/* Quest Details */}
@@ -213,7 +226,7 @@ export default function QuestDetail() {
 				<Text category="p1" style={styles.description}>
 					{quest.description}
 				</Text>
-				
+
 				<View style={styles.questInfo}>
 					<View style={styles.infoRow}>
 						<Text category="s1" style={styles.infoLabel}>
@@ -250,11 +263,11 @@ export default function QuestDetail() {
 					<Text category="h6" style={styles.sectionTitle}>
 						Your Submission
 					</Text>
-					
+
 					{selectedImage ? (
 						<View style={styles.selectedImageContainer}>
 							<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-							<Button 
+							<Button
 								style={styles.changeImageButton}
 								onPress={pickImage}
 							>
@@ -266,7 +279,7 @@ export default function QuestDetail() {
 							<Text category="s1" style={styles.placeholderText}>
 								No image selected
 							</Text>
-							<Button 
+							<Button
 								style={styles.pickImageButton}
 								onPress={pickImage}
 							>
@@ -286,7 +299,7 @@ export default function QuestDetail() {
 					<Text category="p1" style={styles.submittedText}>
 						You have already completed this quest.
 					</Text>
-					<Button 
+					<Button
 						style={styles.viewSubmissionButton}
 						onPress={() => router.push(`/submission/${session.user.id}/${submissionQuestId}`)}
 					>
@@ -298,15 +311,15 @@ export default function QuestDetail() {
 			{/* Submit Button */}
 			{!hasSubmitted && (
 				<Card style={styles.submitCard}>
-					<Button 
+					<Button
 						style={styles.submitButton}
 						onPress={submitEntry}
 						disabled={!selectedImage || isUploading || isJudging}
 					>
-						{isUploading ? 'Uploading...' : 
-						 isJudging ? 'Judging...' : 'Submit Entry'}
+						{isUploading ? 'Uploading...' :
+							isJudging ? 'Judging...' : 'Submit Entry'}
 					</Button>
-					
+
 					{(isUploading || isJudging) && (
 						<View style={styles.loadingIndicator}>
 							<Spinner size="small" />
@@ -325,8 +338,8 @@ export default function QuestDetail() {
 						{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
 					</Text>
 					<Text category="p1" style={styles.resultText}>
-						{isSubmissionValid 
-							? 'Your submission has been accepted! Great job!' 
+						{isSubmissionValid
+							? 'Your submission has been accepted! Great job!'
 							: 'Your image does not match the quest requirements. Please try again with a different image.'
 						}
 					</Text>
@@ -363,7 +376,7 @@ const styles = StyleSheet.create({
 		marginBottom: 5,
 	},
 	author: {
-		color: '#666',
+		textDecorationLine: "underline"
 	},
 	detailsCard: {
 		margin: 10,

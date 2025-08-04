@@ -16,8 +16,8 @@ import { router } from 'expo-router';
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
-
 	const [quests, setQuests] = useState<any>(null);
+	const [usernames, setUsernames] = useState<string[]>([]);
 
 	useEffect(() => {
 		if (session) {
@@ -30,6 +30,21 @@ export default function BrowseQuests() {
 					if (error && status !== 406) throw error
 
 					if (data) setQuests(data);
+
+					const questAuthors = data!.map((quest) => quest.author);
+					console.log(data);
+					// Get the usernames for each quest author
+					const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").in('id', questAuthors);
+
+					if (usernameError) {
+						console.error('Error loading username data:', usernameError);
+						return;
+					}
+
+					const usernames = usernameData.map((user) => user.username);
+					console.log(usernames);
+					setUsernames(usernames);
+
 				} catch (error) {
 					if (error instanceof Error) {
 						Alert.alert('Error loading quest data', error.message)
@@ -47,7 +62,7 @@ export default function BrowseQuests() {
 			{quests.map((quest: any, idx: number) => {
 				return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
 					<Text>{quest.title}</Text>
-					<Text>By {quest.author}</Text>
+					<Text>By {usernames[idx] || quest.author}</Text>
 					<Text>{quest.description}</Text>
 					<Text>Created {new Date(quest.created_at).toDateString()}</Text>
 					<Text>Ends {new Date(quest.deadline).toDateString()}</Text>

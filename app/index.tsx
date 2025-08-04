@@ -2,15 +2,16 @@ import { View, StyleSheet, TextInput, ScrollView, Alert } from 'react-native'
 import Auth from '../components/Auth';
 import { useAuth } from '../context/Auth';
 import { router } from 'expo-router';
-import { Button, Card, Layout, Divider, Text } from '@ui-kitten/components';
+import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export default function Home() {
+export default function Page() {
 	const { session, loading } = useAuth();
 	const [completedQuests, setCompletedQuests] = useState<any[]>([]);
 	const [leaderboardID, setLeaderboardID] = useState<string>('');
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
+	const [usernames, setUsernames] = useState<string[]>([]);
 	const [userLeaderboards, setUserLeaderboards] = useState<any[]>([]);
 	const [loadingLeaderboards, setLoadingLeaderboards] = useState<boolean>(false);
 
@@ -40,7 +41,7 @@ export default function Home() {
 
 				// Get quest details for completed quests
 				const questIDs = completedQuestData.map((quest) => quest.quest_id);
-				const { data: questData, error: questError } = await supabase
+				let { data: questData, error: questError } = await supabase
 					.from("quest")
 					.select("*")
 					.in('id', questIDs);
@@ -50,6 +51,19 @@ export default function Home() {
 					return;
 				}
 
+				const questAuthors = questData!.map((quest) => quest.author);
+				console.log(questData);
+				// Get the usernames for each quest author
+				const { data: usernameData, error: usernameError} = await supabase.from("profile").select("*").in('id', questAuthors);
+
+				if (usernameError) {
+					console.error('Error loading username data:', usernameError);
+					return;
+				}
+
+				const usernames = usernameData.map((user) => user.username);
+				console.log(usernames);
+				setUsernames(usernames);
 				setCompletedQuests(questData || []);
 			} catch (error) {
 				console.error('Error loading completed quests:', error);
@@ -305,7 +319,7 @@ export default function Home() {
 									{quest.title}
 								</Text>
 								<Text category="s1" style={styles.questAuthor}>
-									By {quest.author_username || quest.author}
+									By {usernames[idx]|| quest.author}
 								</Text>
 								<Text category="p2" style={styles.questDescription}>
 									{quest.description}
