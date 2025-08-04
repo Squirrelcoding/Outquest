@@ -1,5 +1,5 @@
 // app/profile.tsx or any screen
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, TextInput } from 'react-native'
 // import AsyncStorage from '@react-native-async-storage/async-storage'
 // import { supabase } from '@/lib/supabase'
 import Auth from '../components/Auth';
@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 export default function Profile() {
 	const { session, loading } = useAuth();
 	const [completedQuests, setCompletedQuests] = useState<any[]>([]);
+	const [leaderboardID, setLeaderboardID] = useState<string>();
 
 	useEffect(() => {
 		if (!session) return;
@@ -45,11 +46,15 @@ export default function Profile() {
 
 			<Button onPress={() => router.push('/browse')}>Browse quests</Button>
 			<Button onPress={() => router.push('/test')}>Test</Button>
+			<Button onPress={() => router.push('/leaderboard/make')}>Make leaderboard</Button>
+			<Button onPress={() => router.push('/leaderboard/join')}>Join a leaderboard</Button>
 
 			<View style={styles.container}>
 				<Text style={styles.questsTitle}>Your completed quests</Text>
 			</View>
 
+			<TextInput onChangeText={setLeaderboardID} placeholder="Leaderboard ID" style={styles.input} />
+			<Button onPress={() => router.push(`/leaderboard/show/${leaderboardID}`)}>Go</Button>
 			{completedQuests && <View>
 				{completedQuests.map((quest, idx: number) => {
 					return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
