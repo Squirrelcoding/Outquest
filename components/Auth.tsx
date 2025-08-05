@@ -44,15 +44,15 @@ export default function Auth() {
 		} = await supabase.auth.signUp({
 			email,
 			password,
-		})
+		});
 
 		if (error) {
-			Alert.alert('Sign up error', error.message)
+			Alert.alert('Sign up error', error.message);
 		}
 		if (!session) {
 			Alert.alert('Please check your inbox for email verification!');
 		}
-		setLoading(false)
+		setLoading(false);
 	}
 
 	return (

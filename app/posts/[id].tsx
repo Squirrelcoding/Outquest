@@ -26,6 +26,7 @@ export default function QuestDetail() {
 	const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
 	const [submissionQuestId, setSubmissionQuestId] = useState<number>(-1);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
+	const [comments, setComments] = useState<any>(null);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -80,7 +81,7 @@ export default function QuestDetail() {
 					.from('submission')
 					.select("*", { count: 'exact', head: true })
 					.eq('quest_id', id);
-				
+
 				setSubmissions(submissionsCount!);
 
 				if (submissionData) {
@@ -95,7 +96,31 @@ export default function QuestDetail() {
 			}
 		};
 
+		const loadCommentData = async () => {
+			const { data: rawComments } = await supabase.from("comment")
+				.select("*")
+				.eq('quest_id', id);
+
+			const comments = await Promise.all(rawComments!.map(async (comment) => {
+				const { data: commentAuthor } = await supabase.from("profile")
+					.select("*")
+					.eq('id', comment.user_id)
+					.single();
+				const { data: commentLikers } = await supabase.from("comment score")
+					.select("*")
+					.eq('comment_id', comment.id);
+				const likes = commentLikers!.map((commentLike) => commentLike.user_id);
+				return {
+					comment,
+					commentAuthor,
+					likes
+				}
+			}));
+			setComments(comments);
+		};
+
 		loadQuestData();
+		loadCommentData();
 	}, [id, session]);
 
 	// Pick image from camera roll
@@ -196,6 +221,28 @@ export default function QuestDetail() {
 		}
 	};
 
+	const likeComment = async (commentID: number) => {
+		console.log("Liking comment!!!");
+		if (!session) return;
+		const { error } = await supabase.from("comment score")
+			.insert({
+				comment_id: commentID,
+				user_id: session.user.id
+			});
+		if (error) console.error(error);
+	}
+
+	// const unlikeComment = async (commentID: number) => {
+	// 	console.log("Liking comment!!!");
+	// 	if (!session) return;
+	// 	const { error } = await supabase.from("comment score")
+	// 		.delete({
+	// 			comment_id: commentID,
+	// 			user_id: session.user.id
+	// 		});
+	// 	if (error) console.error(error);
+	// }
+
 	if (loading) return (
 		<Layout style={styles.loadingContainer}>
 			<Text category="h6">Loading...</Text>
@@ -215,6 +262,8 @@ export default function QuestDetail() {
 			<Text category="h6">Quest not found</Text>
 		</Layout>
 	);
+
+	console.log(comments);
 
 	return (
 		<ScrollView style={styles.container}>
@@ -358,6 +407,39 @@ export default function QuestDetail() {
 					</Text>
 				</Card>
 			)}
+			<Text>{"\n"}</Text>
+			<Text>{"\n"}</Text>
+			<Text category="h6" style={styles.sectionTitle}>Comments</Text>
+			{comments && <View>
+				{comments.map((comment: any, idx: number) => {
+					return <Card style={styles.detailsCard} key={idx}>
+						<Text category="h6" style={styles.sectionTitle}>
+							By {comment.commentAuthor.username}
+						</Text>
+						<Text category="p1" style={styles.description}>
+							{comment.comment.content}
+						</Text>
+
+						<View style={styles.questInfo}>
+							<View style={styles.infoRow}>
+								<Text category="s1" style={styles.infoLabel}>
+									Created:
+								</Text>
+								<Text category="s1" style={styles.infoValue}>
+									{new Date(comment.comment.created_at).toLocaleDateString()}
+								</Text>
+							</View>
+							<Text>{comment.likes.length} {comment.likes.length === 1 ? "like" : "likes"}</Text>
+							{comment.likes.includes(session.user.id) ?
+								<Button><Text>Unlike</Text></Button> : 
+								<Button onPress={() => likeComment(comment.comment.id)}>
+									<Text>Like {comment.id}</Text>
+								</Button>
+							}
+						</View>
+					</Card>
+				})}
+			</View>}
 		</ScrollView>
 	);
 }
