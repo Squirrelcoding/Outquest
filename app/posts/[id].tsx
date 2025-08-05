@@ -5,10 +5,11 @@ import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, StyleSheet, Image, ScrollView, Alert, Pressable } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
+import Comment from '@/components/Comment';
 
 export default function QuestDetail() {
 	const { session, loading } = useAuth();
@@ -27,6 +28,7 @@ export default function QuestDetail() {
 	const [submissionQuestId, setSubmissionQuestId] = useState<number>(-1);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
 	const [comments, setComments] = useState<any>(null);
+	const [commentInput, setCommentInput] = useState<any>(null);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -221,27 +223,20 @@ export default function QuestDetail() {
 		}
 	};
 
-	const likeComment = async (commentID: number) => {
-		console.log("Liking comment!!!");
+	const postComment = async () => {
 		if (!session) return;
-		const { error } = await supabase.from("comment score")
+		const { error } = await supabase.from("comment")
 			.insert({
-				comment_id: commentID,
-				user_id: session.user.id
+				quest_id: id,
+				user_id: session.user.id,
+				content: commentInput
 			});
-		if (error) console.error(error);
+		if (error) {
+			console.error(error);
+			throw error;
+		}
 	}
 
-	// const unlikeComment = async (commentID: number) => {
-	// 	console.log("Liking comment!!!");
-	// 	if (!session) return;
-	// 	const { error } = await supabase.from("comment score")
-	// 		.delete({
-	// 			comment_id: commentID,
-	// 			user_id: session.user.id
-	// 		});
-	// 	if (error) console.error(error);
-	// }
 
 	if (loading) return (
 		<Layout style={styles.loadingContainer}>
@@ -262,8 +257,6 @@ export default function QuestDetail() {
 			<Text category="h6">Quest not found</Text>
 		</Layout>
 	);
-
-	console.log(comments);
 
 	return (
 		<ScrollView style={styles.container}>
@@ -409,35 +402,16 @@ export default function QuestDetail() {
 			)}
 			<Text>{"\n"}</Text>
 			<Text>{"\n"}</Text>
+			<TextInput style={styles.input} 
+				placeholder='Type your comment here' 
+				onChangeText={setCommentInput} 
+			/>
+			<Button onPress={postComment}><Text>Post comment</Text></Button>
+
 			<Text category="h6" style={styles.sectionTitle}>Comments</Text>
 			{comments && <View>
 				{comments.map((comment: any, idx: number) => {
-					return <Card style={styles.detailsCard} key={idx}>
-						<Text category="h6" style={styles.sectionTitle}>
-							By {comment.commentAuthor.username}
-						</Text>
-						<Text category="p1" style={styles.description}>
-							{comment.comment.content}
-						</Text>
-
-						<View style={styles.questInfo}>
-							<View style={styles.infoRow}>
-								<Text category="s1" style={styles.infoLabel}>
-									Created:
-								</Text>
-								<Text category="s1" style={styles.infoValue}>
-									{new Date(comment.comment.created_at).toLocaleDateString()}
-								</Text>
-							</View>
-							<Text>{comment.likes.length} {comment.likes.length === 1 ? "like" : "likes"}</Text>
-							{comment.likes.includes(session.user.id) ?
-								<Button><Text>Unlike</Text></Button> : 
-								<Button onPress={() => likeComment(comment.comment.id)}>
-									<Text>Like {comment.id}</Text>
-								</Button>
-							}
-						</View>
-					</Card>
+					return <Comment comment={comment} session={session} key={idx} />
 				})}
 			</View>}
 		</ScrollView>
@@ -577,5 +551,14 @@ const styles = StyleSheet.create({
 	resultText: {
 		lineHeight: 20,
 		textAlign: 'center',
+
+	},
+	input: {
+		borderWidth: 1,
+		borderColor: '#ddd',
+		borderRadius: 8,
+		padding: 12,
+		fontSize: 16,
+		backgroundColor: '#fff',
 	},
 });
