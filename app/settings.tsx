@@ -23,6 +23,7 @@ export default function Settings() {
 	const [username, setUsername] = useState<string>('');
 	const [age, setAge] = useState<number>(0);
 	const [city, setCity] = useState<string>('');
+	const [citySuggestion, setCitySuggestion] = useState<any>(null);
 	const [image, setImage] = useState<string>('');
 	const [uploading, setUploading] = useState<boolean>(false);
 	const [saving, setSaving] = useState<boolean>(false);
@@ -128,13 +129,26 @@ export default function Settings() {
 		router.back();
 	}
 
+	const updateCityResults = async (s: string) => {
+		setCity(s);
+		const { data, error } = await supabase
+			.from('cities')
+			.select('*')
+			.ilike('city', `%${s}%`)
+			.order('population', { ascending: false })
+			.limit(1);
+		if (error) console.error(error);
+		console.log(data);
+		if (data) setCitySuggestion(data[0].city);
+	}
+
 
 	if (loading) return (
 		<Layout style={styles.loadingContainer}>
 			<Text category="h6">Loading...</Text>
 		</Layout>
 	);
-	
+
 	if (!session) return <Auth />;
 
 	return (
@@ -154,7 +168,7 @@ export default function Settings() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Profile Picture
 				</Text>
-				
+
 				<View style={styles.profileImageContainer}>
 					{image ? (
 						<Image source={{ uri: image }} style={styles.profileImage} />
@@ -165,8 +179,8 @@ export default function Settings() {
 							</Text>
 						</View>
 					)}
-					
-					<Button 
+
+					<Button
 						style={styles.imageButton}
 						onPress={pickImage}
 						disabled={uploading}
@@ -181,7 +195,7 @@ export default function Settings() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Account Information
 				</Text>
-				
+
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						Email
@@ -211,17 +225,26 @@ export default function Settings() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Personal Information
 				</Text>
-				
+
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						City
 					</Text>
-					<TextInput
-						style={styles.input}
-						value={city}
-						onChangeText={setCity}
-						placeholder="Enter your city"
-					/>
+					<View style={styles.inputWrapper}>
+						<TextInput
+							style={styles.inputCity}
+							value={city}
+							onChangeText={(s) => updateCityResults(s)}
+							placeholder="Enter city"
+							autoCorrect={false}
+							autoCapitalize="none"
+						/>
+						{citySuggestion && city && citySuggestion.toLowerCase().startsWith(city.toLowerCase()) && citySuggestion !== city && (
+							<Text style={styles.suggestionText}>
+								{city + citySuggestion.substring(city.length)}
+							</Text>
+						)}
+					</View>
 				</View>
 
 				<View style={styles.inputGroup}>
@@ -240,7 +263,7 @@ export default function Settings() {
 
 			{/* Save Button */}
 			<Card style={styles.section}>
-				<Button 
+				<Button
 					style={styles.saveButton}
 					onPress={updateProfile}
 					disabled={saving || uploading}
@@ -251,7 +274,7 @@ export default function Settings() {
 
 			{/* Sign Out */}
 			<Card style={styles.section}>
-				<Button 
+				<Button
 					style={styles.signOutButton}
 					onPress={signOut}
 					status="danger"
@@ -348,5 +371,35 @@ const styles = StyleSheet.create({
 	},
 	signOutButton: {
 		width: '100%',
+	},
+	inputWrapper: {
+		position: 'relative',
+		width: '100%',
+	},
+	suggestionText: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		color: '#aaa',
+		fontSize: 16,
+		backgroundColor: 'transparent',
+		padding: 12,
+		pointerEvents: 'none',
+		zIndex: 1,
+		fontFamily: 'System',
+		fontWeight: '400',
+		letterSpacing: 0,
+	},
+	inputCity: {
+		borderColor: '#ccc',
+		borderWidth: 1,
+		padding: 12,
+		color: '#000',
+		fontSize: 16,
+		backgroundColor: 'transparent',
+		zIndex: 2,
+		fontFamily: 'System',
+		fontWeight: '400',
+		letterSpacing: 0,
 	},
 });

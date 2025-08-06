@@ -6,6 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, Image } from "react-native";
 
+
 export default function Profile() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
