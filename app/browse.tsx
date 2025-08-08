@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 import {
 	Alert,
 	ScrollView,
+	TextInput,
 	View,
+	StyleSheet
 } from 'react-native';
-import { Card, Text } from '@ui-kitten/components';
+import { Avatar, Button, Card, Layout, Popover, Text } from '@ui-kitten/components';
 import { router } from 'expo-router';
 
 // import { Avatar, Button, Card, Text as RNText } from 'react-native-paper';
@@ -18,17 +20,17 @@ export default function BrowseQuests() {
 	const { session, loading } = useAuth();
 	const [quests, setQuests] = useState<any>(null);
 	const [usernames, setUsernames] = useState<string[]>([]);
-	
-	// Settings
+
+	// Search settings
 	const [timeLeft, setTimeLeft] = useState<string[]>([]);
-	const [endDate, setEndDate] = useState<string>();
 	const [radius, setRadius] = useState<number>();
 	const [numUploads, setNumUploads] = useState<number>();
-	const [localQuestsOnly, setLocalQuestsOnly] = useState<boolean>(false);
 	const [minimumLikeLimit, setMinimumLikeLimit] = useState<number>(10000000);
 	const [maximumLikeLimit, setMaximumLikeLimit] = useState<number>(0);
 	const [author, setAuthor] = useState<string>("");
 	const [title, setTitle] = useState<string>("");
+
+	const [searchVisible, setSearchVisible] = useState<boolean>(false);
 
 	useEffect(() => {
 		if (session) {
@@ -63,10 +65,26 @@ export default function BrowseQuests() {
 		};
 	}, [session]);
 
+	const renderToggleButton = (): React.ReactElement => (
+		<Button onPress={() => setSearchVisible(true)}>
+			TOGGLE POPOVER
+		</Button>
+	);
+
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Auth />
 
 	return <ScrollView>
+		<TextInput placeholder='Quest Title' style={styles.input} />
+		<TextInput placeholder='Time Left' style={styles.input} />
+		<TextInput placeholder='Radius' style={styles.input} />
+		<TextInput placeholder='Number of uploads' style={styles.input} />
+		<TextInput placeholder='Minimum likes' style={styles.input} />
+		<TextInput placeholder='Maximum likes' style={styles.input} />
+		<TextInput placeholder='Author username' style={styles.input} />
+		<TextInput placeholder='Author UUID' style={styles.input} />
+		<TextInput placeholder='Quest title' style={styles.input} />
+		<TextInput placeholder='Quest UUID' style={styles.input} />
 		{quests ? <View>
 			{quests.map((quest: any, idx: number) => {
 				return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
@@ -79,5 +97,37 @@ export default function BrowseQuests() {
 			})}
 		</View> : <Text>Loading...</Text>}
 
+		<Popover
+			visible={searchVisible}
+			anchor={renderToggleButton}
+			fullWidth={true}
+			onBackdropPress={() => setSearchVisible(false)}
+		>
+			<Layout style={styles.content}>
+				<Text>
+					Welcome to UI Kitten 😻
+				</Text>
+			</Layout>
+		</Popover>
 	</ScrollView>
 }
+
+const styles = StyleSheet.create({
+	input: {
+		borderWidth: 1,
+		borderColor: '#ddd',
+		borderRadius: 8,
+		padding: 12,
+		fontSize: 16,
+		backgroundColor: '#fff',
+	},
+	content: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingHorizontal: 4,
+		paddingVertical: 8,
+	},
+	avatar: {
+		marginHorizontal: 4,
+	},
+})
