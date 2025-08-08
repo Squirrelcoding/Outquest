@@ -29,6 +29,8 @@ export default function QuestDetail() {
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
 	const [comments, setComments] = useState<any>(null);
 	const [commentInput, setCommentInput] = useState<any>(null);
+	const [liked, setLiked] = useState<boolean>(false);
+	const [questLikes, setQuestLikes] = useState<number>(0);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -79,7 +81,9 @@ export default function QuestDetail() {
 					console.error('Error checking submission:', submissionError);
 				}
 
-				const { count: submissionsCount, error: submissionsError } = await supabase
+				// Get all submissions
+
+				const { count: submissionsCount } = await supabase
 					.from('submission')
 					.select("*", { count: 'exact', head: true })
 					.eq('quest_id', id);
@@ -90,6 +94,20 @@ export default function QuestDetail() {
 					setHasSubmitted(true);
 					setSubmissionQuestId(submissionData.quest_id);
 				}
+
+				// Check if post is liked
+				let { data: likeData } = await supabase
+					.from('quest score')
+					.select("*")
+					.eq('quest_id', id);
+
+				let likers = likeData!.map((like) => like.user_id);
+
+				if (likers.includes(session.user.id)) {
+					setLiked(true);
+				}
+				setQuestLikes(likers.length);
+
 			} catch (error) {
 				console.error('Error loading quest data:', error);
 				Alert.alert('Error', 'Failed to load quest information');
@@ -237,6 +255,29 @@ export default function QuestDetail() {
 		}
 	}
 
+	const setLike = async () => {
+		if (!session) return;
+
+		if (!liked) {
+			const { error } = await supabase.from("quest score")
+				.insert({
+					quest_id: id,
+					user_id: session.user.id
+				});
+			if (error) console.error(error);
+			setLiked(true);
+			setQuestLikes(questLikes + 1);
+		} else {
+			const { error } = await supabase.from("quest score")
+				.delete()
+				.eq('quest_id', id)
+				.eq('user_id', session.user.id);
+			if (error) console.error(error);
+			setLiked(false);
+			setQuestLikes(questLikes - 1);
+		}
+	}
+
 
 	if (loading) return (
 		<Layout style={styles.loadingContainer}>
@@ -300,6 +341,13 @@ export default function QuestDetail() {
 						</Text>
 					</View>
 				</View>
+			</Card>
+
+			<Card style={styles.promptCard}>
+				<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
+				<Button onPress={setLike}>
+					<Text>{liked ? "Unlike" : "Like"}</Text>
+				</Button>
 			</Card>
 
 			{/* Photo Prompt */}
@@ -402,9 +450,9 @@ export default function QuestDetail() {
 			)}
 			<Text>{"\n"}</Text>
 			<Text>{"\n"}</Text>
-			<TextInput style={styles.input} 
-				placeholder='Type your comment here' 
-				onChangeText={setCommentInput} 
+			<TextInput style={styles.input}
+				placeholder='Type your comment here'
+				onChangeText={setCommentInput}
 			/>
 			<Button onPress={postComment}><Text>Post comment</Text></Button>
 

@@ -134,12 +134,12 @@ export default function Settings() {
 		const { data, error } = await supabase
 			.from('cities')
 			.select('*')
-			.ilike('city', `%${s}%`)
+			.ilike('place', `%${s}%`)
 			.order('population', { ascending: false })
 			.limit(1);
 		if (error) console.error(error);
 		console.log(data);
-		if (data) setCitySuggestion(data[0].city);
+		if (data) setCitySuggestion(data[0].place);
 	}
 
 

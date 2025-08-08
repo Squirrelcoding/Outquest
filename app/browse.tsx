@@ -18,6 +18,17 @@ export default function BrowseQuests() {
 	const { session, loading } = useAuth();
 	const [quests, setQuests] = useState<any>(null);
 	const [usernames, setUsernames] = useState<string[]>([]);
+	
+	// Settings
+	const [timeLeft, setTimeLeft] = useState<string[]>([]);
+	const [endDate, setEndDate] = useState<string>();
+	const [radius, setRadius] = useState<number>();
+	const [numUploads, setNumUploads] = useState<number>();
+	const [localQuestsOnly, setLocalQuestsOnly] = useState<boolean>(false);
+	const [minimumLikeLimit, setMinimumLikeLimit] = useState<number>(10000000);
+	const [maximumLikeLimit, setMaximumLikeLimit] = useState<number>(0);
+	const [author, setAuthor] = useState<string>("");
+	const [title, setTitle] = useState<string>("");
 
 	useEffect(() => {
 		if (session) {
