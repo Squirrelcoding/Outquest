@@ -22,13 +22,10 @@ export default function BrowseQuests() {
 	const [usernames, setUsernames] = useState<string[]>([]);
 
 	// Search settings
-	const [timeLeft, setTimeLeft] = useState<string[]>([]);
-	const [radius, setRadius] = useState<number>();
-	const [numUploads, setNumUploads] = useState<number>();
-	const [minimumLikeLimit, setMinimumLikeLimit] = useState<number>(10000000);
-	const [maximumLikeLimit, setMaximumLikeLimit] = useState<number>(0);
-	const [author, setAuthor] = useState<string>("");
+	const [deadline, setDeadline] = useState<string[]>([]);
+	const [radius, setRadius] = useState<number>(-1);
 	const [title, setTitle] = useState<string>("");
+	const [place, setPlaceName] = useState<string>("");
 
 	const [searchVisible, setSearchVisible] = useState<boolean>(false);
 
@@ -65,11 +62,17 @@ export default function BrowseQuests() {
 		};
 	}, [session]);
 
-	const renderToggleButton = (): React.ReactElement => (
-		<Button onPress={() => setSearchVisible(true)}>
-			TOGGLE POPOVER
-		</Button>
-	);
+	const submitQuery = async () => {
+		// No specific place location.
+		if (place === "" && radius === -1) {
+
+		}
+		const posts = await supabase.from("quest")
+			.select()
+			.ilike('title', `%${title}%`)
+			.lt('deadline', new Date())
+			.gt('deadline', deadline);
+	};
 
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Auth />
@@ -77,14 +80,17 @@ export default function BrowseQuests() {
 	return <ScrollView>
 		<TextInput placeholder='Quest Title' style={styles.input} />
 		<TextInput placeholder='Time Left' style={styles.input} />
-		<TextInput placeholder='Radius' style={styles.input} />
-		<TextInput placeholder='Number of uploads' style={styles.input} />
+		<TextInput placeholder='Radius (Set 0 for same city)' style={styles.input} />
 		<TextInput placeholder='Minimum likes' style={styles.input} />
 		<TextInput placeholder='Maximum likes' style={styles.input} />
 		<TextInput placeholder='Author username' style={styles.input} />
 		<TextInput placeholder='Author UUID' style={styles.input} />
 		<TextInput placeholder='Quest title' style={styles.input} />
 		<TextInput placeholder='Quest UUID' style={styles.input} />
+		<Button>Submit Query</Button>
+
+		<Text>{"\n"}</Text>
+
 		{quests ? <View>
 			{quests.map((quest: any, idx: number) => {
 				return <Card key={idx} onPress={() => router.push(`/posts/${quest.id}`)}>
@@ -96,19 +102,6 @@ export default function BrowseQuests() {
 				</Card>
 			})}
 		</View> : <Text>Loading...</Text>}
-
-		<Popover
-			visible={searchVisible}
-			anchor={renderToggleButton}
-			fullWidth={true}
-			onBackdropPress={() => setSearchVisible(false)}
-		>
-			<Layout style={styles.content}>
-				<Text>
-					Welcome to UI Kitten 😻
-				</Text>
-			</Layout>
-		</Popover>
 	</ScrollView>
 }
 
