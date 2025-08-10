@@ -62,16 +62,14 @@ export default function BrowseQuests() {
 		};
 	}, [session]);
 
-	const submitQuery = async () => {
-		// No specific place location.
-		if (place === "" && radius === -1) {
-
-		}
-		const posts = await supabase.from("quest")
-			.select()
-			.ilike('title', `%${title}%`)
-			.lt('deadline', new Date())
-			.gt('deadline', deadline);
+	const radiusQuery = async () => {
+		const { data, error } = await supabase.rpc('get_search_results', {
+			current_lat: 44.883244,
+			current_long: -93.286240,
+			radius_meters: 10000
+		});
+		if (error) console.error(error);
+		console.log(data);
 	};
 
 	if (loading) return <Text>Loading...</Text>
@@ -80,14 +78,14 @@ export default function BrowseQuests() {
 	return <ScrollView>
 		<TextInput placeholder='Quest Title' style={styles.input} />
 		<TextInput placeholder='Time Left' style={styles.input} />
-		<TextInput placeholder='Radius (Set 0 for same city)' style={styles.input} />
+		<TextInput placeholder='Radius (Set 0 for same city)' style={styles.input} onChangeText={(str) => setRadius(Number(str))}/>
 		<TextInput placeholder='Minimum likes' style={styles.input} />
 		<TextInput placeholder='Maximum likes' style={styles.input} />
 		<TextInput placeholder='Author username' style={styles.input} />
 		<TextInput placeholder='Author UUID' style={styles.input} />
 		<TextInput placeholder='Quest title' style={styles.input} />
 		<TextInput placeholder='Quest UUID' style={styles.input} />
-		<Button>Submit Query</Button>
+		<Button onPress={radiusQuery}>Submit Query</Button>
 
 		<Text>{"\n"}</Text>
 
