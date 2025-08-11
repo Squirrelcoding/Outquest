@@ -12,6 +12,8 @@ import {
 import { Button, Card, Text } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { useLocation } from '@/context/Location';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
@@ -21,12 +23,30 @@ export default function BrowseQuests() {
 	const [usernames, setUsernames] = useState<string[]>([]);
 
 	// Search settings
-	const [deadline, setDeadline] = useState<string[]>([]);
-	const [radius, setRadius] = useState<number>(-1);
+	const [deadline, setDeadline] = useState<Date>(new Date());
+	const [radius, setRadius] = useState<number | null>(null);
 	const [title, setTitle] = useState<string>("");
-	const [place, setPlaceName] = useState<string>("");
 
-	const [searchVisible, setSearchVisible] = useState<boolean>(false);
+	const [date, setDate] = useState(new Date());
+	const [show, setShow] = useState(false);
+
+	const onChange = (event: any, selectedDate: any) => {
+		const currentDate = selectedDate;
+		setShow(false);
+		setDate(currentDate);
+	};
+
+	const showMode = (currentMode: any) => {
+		setShow(true);
+	};
+
+	const showDatepicker = () => {
+		showMode('date');
+	};
+
+	const showTimepicker = () => {
+		showMode('time');
+	};
 
 	useEffect(() => {
 		if (session) {
@@ -61,9 +81,9 @@ export default function BrowseQuests() {
 
 	const submitQuery = async () => {
 		if (radius) {
-			if (!location) { 
-				console.error("failed to get location"); 
-				return; 
+			if (!location) {
+				console.error("failed to get location");
+				return;
 			}
 			console.log(location);
 			const { data, error } = await supabase.rpc('get_search_results', {
@@ -73,34 +93,59 @@ export default function BrowseQuests() {
 			});
 
 			const questIDs = data.map((result: any) => result.id);
-			
-			const { data: questsInRadius } = await supabase.from("quest")
+
+			let query = supabase.from("quest")
 				.select("*")
 				.in('id', questIDs);
-			
-			setQuests(questsInRadius);
-			
-			if (error) console.error(error);
-			console.log(data);
-		} else {
 
+			if (deadline) query = query.lt('deadline', deadline);
+			if (title) query = query.ilike('title', `%${title}%`);
+
+			const { data: questData, error: questError } = await query;
+			setQuests(questData);
+
+			if (questError) {
+				console.error(questError);
+				throw questError;
+			}
+		} else {
+			let query = supabase.from("quest")
+				.select("*");
+
+			if (title) query = query.ilike('title', `%${title}%`);
+			if (deadline) query = query.lt('deadline', deadline);
+
+			const { data: questData, error } = await query;
+
+			if (error) {
+				console.error(error);
+				throw error;
+			}
+			setQuests(questData);
 		}
 	};
 
-	if (loading) return <Text>Loading...</Text>
+
+	if (loading && locLoading) return <Text>Loading...</Text>
 	if (!session) return <Auth />
 
 	return <ScrollView>
-		<TextInput placeholder='Quest Title' style={styles.input} />
-		<TextInput placeholder='Time Left' style={styles.input} />
+		<TextInput placeholder='Quest Title' style={styles.input} onChangeText={setTitle} />
 		<TextInput placeholder='Radius (Set 0 for same city)' style={styles.input} onChangeText={(str) => setRadius(Number(str))} />
-		<TextInput placeholder='Minimum likes' style={styles.input} />
-		<TextInput placeholder='Maximum likes' style={styles.input} />
-		<TextInput placeholder='Author username' style={styles.input} />
-		<TextInput placeholder='Author UUID' style={styles.input} />
-		<TextInput placeholder='Quest title' style={styles.input} />
-		<TextInput placeholder='Quest UUID' style={styles.input} />
+		<DateTimePicker
+			testID="dateTimePicker"
+			value={deadline}
+			mode={"date"}
+			is24Hour={true}
+			onChange={onChange}
+		/>
 		<Button onPress={submitQuery}>Submit Query</Button>
+		{/* <TextInput placeholder='Minimum likes' style={styles.input} /> */}
+		{/* <TextInput placeholder='Time Left' style={styles.input} /> */}
+		{/* <TextInput placeholder='Maximum likes' style={styles.input} /> */}
+		{/* <TextInput placeholder='Author username' style={styles.input} /> */}
+		{/* <TextInput placeholder='Author UUID' style={styles.input} /> */}
+		{/* <TextInput placeholder='Quest UUID' style={styles.input} /> */}
 
 		<Text>{"\n"}</Text>
 
