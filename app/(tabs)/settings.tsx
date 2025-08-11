@@ -7,7 +7,7 @@ import {
 	Image,
 	ScrollView,
 } from 'react-native'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../../lib/supabase'
 import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import * as ImagePicker from 'expo-image-picker';

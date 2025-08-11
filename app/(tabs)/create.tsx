@@ -6,11 +6,11 @@ import {
 	Alert,
 	ScrollView,
 } from 'react-native'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../../lib/supabase'
 import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
-import { Calendar } from 'react-native-calendars';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 
 export default function CreateQuest() {
@@ -22,7 +22,7 @@ export default function CreateQuest() {
 	const [prompt, setPrompt] = useState<string>('');
 	const [photoQuantity, setPhotoQuantity] = useState<number>(1);
 	const [deadline, setDeadline] = useState<Date>(new Date());
-	const [selectedDate, setSelectedDate] = useState<string>('');
+	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	if (loading) return (
@@ -32,6 +32,17 @@ export default function CreateQuest() {
 	);
 	
 	if (!session) return <Auth />;
+
+	const onChange = (event: any, selectedDate: any) => {
+		setShowDatePicker(false);
+		if (selectedDate) {
+			setDeadline(selectedDate);
+		}
+	};
+
+	const showDatepicker = () => {
+		setShowDatePicker(true);
+	};
 
 	const submitQuest = async () => {
 		// Validate required fields
@@ -188,45 +199,27 @@ export default function CreateQuest() {
 					Quest Deadline
 				</Text>
 				
-				<View style={styles.dateContainer}>
+				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
-						When should this quest end?
+						Quest Deadline
 					</Text>
+					<Button 
+						style={styles.dateButton}
+						onPress={showDatepicker}
+						appearance="outline"
+					>
+						{deadline.toLocaleDateString()}
+					</Button>
 					
-					<Calendar
-						onDayPress={(day) => {
-							const selectedDate = new Date(day.timestamp);
-							setDeadline(selectedDate);
-							setSelectedDate(day.dateString);
-						}}
-						markedDates={{
-							[selectedDate]: {
-								selected: true,
-								selectedColor: '#007AFF',
-								selectedTextColor: 'white'
-							}
-						}}
-						minDate={new Date().toISOString().split('T')[0]}
-						theme={{
-							selectedDayBackgroundColor: '#007AFF',
-							selectedDayTextColor: '#ffffff',
-							todayTextColor: '#007AFF',
-							dayTextColor: '#2d4150',
-							textDisabledColor: '#d9e1e8',
-							dotColor: '#007AFF',
-							selectedDotColor: '#ffffff',
-							arrowColor: '#007AFF',
-							monthTextColor: '#2d4150',
-							indicatorColor: '#007AFF',
-							textDayFontWeight: '300',
-							textMonthFontWeight: 'bold',
-							textDayHeaderFontWeight: '300',
-							textDayFontSize: 16,
-							textMonthFontSize: 16,
-							textDayHeaderFontSize: 13
-						}}
-						style={styles.calendar}
-					/>
+					{showDatePicker && (
+						<DateTimePicker
+							testID="dateTimePicker"
+							value={deadline}
+							mode="date"
+							onChange={onChange}
+							minimumDate={new Date()}
+						/>
+					)}
 					
 					<Text category="c1" style={styles.dateInfo}>
 						Selected: {deadline.toLocaleDateString()}
@@ -304,13 +297,8 @@ const styles = StyleSheet.create({
 		minHeight: 80,
 		textAlignVertical: 'top',
 	},
-	dateContainer: {
-		alignItems: 'center',
-	},
-	calendar: {
-		marginVertical: 10,
-		borderRadius: 8,
-		backgroundColor: '#fff',
+	dateButton: {
+		width: '100%',
 	},
 	dateInfo: {
 		color: '#666',

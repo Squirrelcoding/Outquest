@@ -340,6 +340,11 @@ export default function QuestDetail() {
 							{submissions} {submissions === 1 ? "person has" : "people have"} completed this quest so far.
 						</Text>
 					</View>
+					<View>
+						<Text category='s1' style={styles.infoLabel}>
+							{quest.location}
+						</Text>
+					</View>
 				</View>
 			</Card>
 

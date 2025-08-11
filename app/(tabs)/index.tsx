@@ -1,6 +1,6 @@
 import { View, StyleSheet, TextInput, ScrollView, Alert } from 'react-native'
-import Auth from '../components/Auth';
-import { useAuth } from '../context/Auth';
+import Auth from '../../components/Auth';
+import { useAuth } from '../../context/Auth';
 import { router } from 'expo-router';
 import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';

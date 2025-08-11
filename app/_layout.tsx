@@ -11,7 +11,9 @@ export default function App() {
 		<AuthProvider>
 			<LocationProvider>
 				<ApplicationProvider {...eva} theme={eva.light}>
-					<Stack />
+					<Stack>
+						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+					</Stack>
 				</ApplicationProvider>
 			</LocationProvider>
 			{/* <PaperProvider> */}
