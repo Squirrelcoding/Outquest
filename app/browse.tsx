@@ -13,18 +13,12 @@ import { Button, Card, Text } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { useLocation } from '@/context/Location';
 
-// import { Avatar, Button, Card, Text as RNText } from 'react-native-paper';
-
-// const LeftContent = (props: any) => <Avatar.Icon {...props} icon="folder" />
-
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
 	const { location, loading: locLoading } = useLocation();
-	console.log(location);
+
 	const [quests, setQuests] = useState<any>(null);
 	const [usernames, setUsernames] = useState<string[]>([]);
-
-
 
 	// Search settings
 	const [deadline, setDeadline] = useState<string[]>([]);
@@ -67,13 +61,29 @@ export default function BrowseQuests() {
 
 	const submitQuery = async () => {
 		if (radius) {
+			if (!location) { 
+				console.error("failed to get location"); 
+				return; 
+			}
+			console.log(location);
 			const { data, error } = await supabase.rpc('get_search_results', {
-				current_lat: 44.883244,
-				current_long: -93.286240,
+				current_lat: location.coords.latitude,
+				current_long: location.coords.longitude,
 				radius_meters: radius
 			});
+
+			const questIDs = data.map((result: any) => result.id);
+			
+			const { data: questsInRadius } = await supabase.from("quest")
+				.select("*")
+				.in('id', questIDs);
+			
+			setQuests(questsInRadius);
+			
 			if (error) console.error(error);
 			console.log(data);
+		} else {
+
 		}
 	};
 
