@@ -7,10 +7,11 @@ import {
 	ScrollView,
 	TextInput,
 	View,
-	StyleSheet
+	StyleSheet,
 } from 'react-native';
-import { Avatar, Button, Card, Layout, Popover, Text } from '@ui-kitten/components';
+import { Button, Card, Text } from '@ui-kitten/components';
 import { router } from 'expo-router';
+import { useLocation } from '@/context/Location';
 
 // import { Avatar, Button, Card, Text as RNText } from 'react-native-paper';
 
@@ -18,8 +19,12 @@ import { router } from 'expo-router';
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
+	const { location, loading: locLoading } = useLocation();
+	console.log(location);
 	const [quests, setQuests] = useState<any>(null);
 	const [usernames, setUsernames] = useState<string[]>([]);
+
+
 
 	// Search settings
 	const [deadline, setDeadline] = useState<string[]>([]);
@@ -41,8 +46,6 @@ export default function BrowseQuests() {
 
 					if (data) setQuests(data);
 
-					console.log(data);
-
 					// Get the usernames for each quest author
 					const usernames = await Promise.all(
 						data!.map(async (quest) => {
@@ -62,14 +65,16 @@ export default function BrowseQuests() {
 		};
 	}, [session]);
 
-	const radiusQuery = async () => {
-		const { data, error } = await supabase.rpc('get_search_results', {
-			current_lat: 44.883244,
-			current_long: -93.286240,
-			radius_meters: 10000
-		});
-		if (error) console.error(error);
-		console.log(data);
+	const submitQuery = async () => {
+		if (radius) {
+			const { data, error } = await supabase.rpc('get_search_results', {
+				current_lat: 44.883244,
+				current_long: -93.286240,
+				radius_meters: radius
+			});
+			if (error) console.error(error);
+			console.log(data);
+		}
 	};
 
 	if (loading) return <Text>Loading...</Text>
@@ -78,14 +83,14 @@ export default function BrowseQuests() {
 	return <ScrollView>
 		<TextInput placeholder='Quest Title' style={styles.input} />
 		<TextInput placeholder='Time Left' style={styles.input} />
-		<TextInput placeholder='Radius (Set 0 for same city)' style={styles.input} onChangeText={(str) => setRadius(Number(str))}/>
+		<TextInput placeholder='Radius (Set 0 for same city)' style={styles.input} onChangeText={(str) => setRadius(Number(str))} />
 		<TextInput placeholder='Minimum likes' style={styles.input} />
 		<TextInput placeholder='Maximum likes' style={styles.input} />
 		<TextInput placeholder='Author username' style={styles.input} />
 		<TextInput placeholder='Author UUID' style={styles.input} />
 		<TextInput placeholder='Quest title' style={styles.input} />
 		<TextInput placeholder='Quest UUID' style={styles.input} />
-		<Button onPress={radiusQuery}>Submit Query</Button>
+		<Button onPress={submitQuery}>Submit Query</Button>
 
 		<Text>{"\n"}</Text>
 
