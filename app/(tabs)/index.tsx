@@ -308,7 +308,7 @@ export default function Page() {
 							<Card
 								key={idx}
 								style={styles.questCard}
-								onPress={() => router.push(`/posts/${quest.id}`)}
+								onPress={() => router.push(`/browse/posts/${quest.id}`)}
 							>
 								<Text category="h6" style={styles.questTitle}>
 									{quest.title}

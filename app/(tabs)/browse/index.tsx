@@ -307,7 +307,7 @@ export default function BrowseQuests() {
 									<Card 
 										key={quest.id} 
 										style={styles.questCard}
-										onPress={() => router.push(`/posts/${quest.id}`)}
+										onPress={() => router.push(`/browse/posts/${quest.id}`)}
 									>
 										<View style={styles.questHeader}>
 											<Text category="h6" style={styles.questTitle}>
