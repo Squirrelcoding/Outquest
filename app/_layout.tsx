@@ -5,56 +5,79 @@ import { AppRegistry } from 'react-native';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { LocationProvider } from '@/context/Location';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
 	return (
 		<AuthProvider>
 			<LocationProvider>
 				<ApplicationProvider {...eva} theme={eva.light}>
-					<Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+					<Tabs 
+						screenOptions={{ 
+							tabBarActiveTintColor: '#007AFF',
+							tabBarInactiveTintColor: '#8E8E93',
+							tabBarStyle: {
+								backgroundColor: '#fff',
+								borderTopWidth: 1,
+								borderTopColor: '#E5E5EA',
+								paddingBottom: 5,
+								paddingTop: 5,
+								height: 60,
+							},
+							headerShown: false,
+						}}
+					>
 						<Tabs.Screen
-							name="index"
+							name="(tabs)/index"
 							options={{
 								title: 'Home',
-								tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+								tabBarIcon: ({ color, size }) => (
+									<Ionicons name="home-outline" size={size} color={color} />
+								),
+								tabBarIconStyle: { marginBottom: -3 },
 							}}
 						/>
 						<Tabs.Screen
-							name="settings"
+							name="(tabs)/browse"
 							options={{
-								title: 'Settings',
-								tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+								title: 'Browse',
+								tabBarIcon: ({ color, size }) => (
+									<Ionicons name="search-outline" size={size} color={color} />
+								),
+								tabBarIconStyle: { marginBottom: -3 },
 							}}
 						/>
 						<Tabs.Screen
-							name="browse"
-							options={{
-								title: 'Explore',
-								tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
-							}}
-						/>
-						<Tabs.Screen
-							name="create"
+							name="(tabs)/create"
 							options={{
 								title: 'Create',
-								tabBarIcon: ({ color }) => <FontAwesome size={28} name="plus" color={color} />,
+								tabBarIcon: ({ color, size }) => (
+									<Ionicons name="add-circle-outline" size={size} color={color} />
+								),
+								tabBarIconStyle: { marginBottom: -3 },
 							}}
 						/>
 						<Tabs.Screen
-							name="(tabs)/leaderboard/make"
+							name="(tabs)/settings"
+							options={{
+								title: 'Settings',
+								tabBarIcon: ({ color, size }) => (
+									<Ionicons name="settings-outline" size={size} color={color} />
+								),
+								tabBarIconStyle: { marginBottom: -3 },
+							}}
+						/>
+						
+						{/* Hidden screens - not shown in tab bar */}
+						<Tabs.Screen
+							name="(tabs)/posts/[id]"
 							options={{
 								href: null,
 							}}
 						/>
 						<Tabs.Screen
-							name="(tabs)/leaderboard/join"
-							options={{
-								href: null,
-							}}
-						/>
-						<Tabs.Screen
-							name="(tabs)/leaderboard/show/[id]"
+							name="(tabs)/leaderboard"
 							options={{
 								href: null,
 							}}
@@ -71,11 +94,18 @@ export default function App() {
 								href: null,
 							}}
 						/>
+						<Tabs.Screen
+							name="(tabs)/debug"
+							options={{
+								href: null,
+							}}
+						/>
 					</Tabs>
 				</ApplicationProvider>
 			</LocationProvider>
-		</AuthProvider >
+		</AuthProvider>
 	)
 }
+
 AppRegistry.registerComponent("appName", () => App);
 
