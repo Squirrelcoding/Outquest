@@ -4,11 +4,12 @@ export default function BrowseLayout() {
 	return (
 		<Stack
 			screenOptions={{
-				headerShown: false,
+				headerTitle: "",
 			}}
 		>
 			<Stack.Screen name="index" />
-			<Stack.Screen name="details" />
+			<Stack.Screen name="posts/[id]" />
 		</Stack>
+
 	)
 }

@@ -1,6 +1,6 @@
 // app/submission/[id].tsx
 import { useLocalSearchParams } from 'expo-router';
-import { Button, Card, Text } from "@ui-kitten/components";
+import { Card, Text } from "@ui-kitten/components";
 import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
@@ -16,7 +16,7 @@ export default function SubmissionView() {
 	useEffect(() => {
 		if (!session) return;
 		(async () => {
-			const { data, error } = await supabase.storage.from('quest-upload').list(`${userID}/${questID}`);
+			const { data } = await supabase.storage.from('quest-upload').list(`${userID}/${questID}`);
 			const urls = data!.map((file) => `${SUPABASE_URL}/storage/v1/object/public/quest-upload/${userID}/${questID}/${file.name}`);
 			setURLS(urls);
 		})();

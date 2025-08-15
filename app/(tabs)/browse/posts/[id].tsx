@@ -5,13 +5,13 @@ import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, StyleSheet, Image, ScrollView, Alert, Pressable, TextInput } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, Alert, Pressable, TextInput, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import Comment from '@/components/Comment';
 
-export default function QuestDetail() {
+export default function QuestBox() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
 
@@ -300,174 +300,184 @@ export default function QuestDetail() {
 	);
 
 	return (
-		<ScrollView style={styles.container}>
-			{/* Quest Header */}
-			<Layout style={styles.header}>
-				<Text category="h4" style={styles.title}>
-					{quest.title}
-				</Text>
-				<Pressable onPress={() => router.push(`/profile/${quest.author}`)}><Text>{authorUsername || quest.author}</Text></Pressable>
-			</Layout>
+		<>
+			{/* <Stack.Screen
+				options={{
+					headerTitle: "HEADER TITLE",
+					headerLeft: () => <TouchableOpacity onPress={() => router.back }>
+						<Text>Back</Text>
+					</TouchableOpacity>,
+				}}
+			/> */}
+			<ScrollView style={styles.container}>
+				{/* Quest Header */}
+				<Layout style={styles.header}>
+					<Text category="h4" style={styles.title}>
+						{quest.title}
+					</Text>
+					<Pressable onPress={() => router.push(`/profile/${quest.author}`)}><Text>{authorUsername || quest.author}</Text></Pressable>
+				</Layout>
 
-			{/* Quest Details */}
-			<Card style={styles.detailsCard}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Quest Details
-				</Text>
-				<Text category="p1" style={styles.description}>
-					{quest.description}
-				</Text>
-
-				<View style={styles.questInfo}>
-					<View style={styles.infoRow}>
-						<Text category="s1" style={styles.infoLabel}>
-							Created:
-						</Text>
-						<Text category="s1" style={styles.infoValue}>
-							{new Date(quest.created_at).toLocaleDateString()}
-						</Text>
-					</View>
-					<View style={styles.infoRow}>
-						<Text category="s1" style={styles.infoLabel}>
-							Deadline:
-						</Text>
-						<Text category="s1" style={styles.infoValue}>
-							{new Date(quest.deadline).toLocaleDateString()}
-						</Text>
-					</View>
-					<View>
-						<Text category="s1" style={styles.countInfo}>
-							{submissions} {submissions === 1 ? "person has" : "people have"} completed this quest so far.
-						</Text>
-					</View>
-					<View>
-						<Text category='s1' style={styles.infoLabel}>
-							{quest.location}
-						</Text>
-					</View>
-				</View>
-			</Card>
-
-			<Card style={styles.promptCard}>
-				<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
-				<Button onPress={setLike}>
-					<Text>{liked ? "Unlike" : "Like"}</Text>
-				</Button>
-			</Card>
-
-			{/* Photo Prompt */}
-			<Card style={styles.promptCard}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Photo Challenge
-				</Text>
-				<Text category="p1" style={styles.promptText}>
-					{quest.description}
-				</Text>
-			</Card>
-
-			{/* Image Selection - Only show if user hasn't submitted */}
-			{!hasSubmitted && (
-				<Card style={styles.imageCard}>
+				{/* Quest Details */}
+				<Card style={styles.detailsCard}>
 					<Text category="h6" style={styles.sectionTitle}>
-						Your Submission
+						Quest Details
+					</Text>
+					<Text category="p1" style={styles.description}>
+						{quest.description}
 					</Text>
 
-					{selectedImage ? (
-						<View style={styles.selectedImageContainer}>
-							<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-							<Button
-								style={styles.changeImageButton}
-								onPress={pickImage}
-							>
-								Change Image
-							</Button>
-						</View>
-					) : (
-						<View style={styles.imagePlaceholder}>
-							<Text category="s1" style={styles.placeholderText}>
-								No image selected
+					<View style={styles.questInfo}>
+						<View style={styles.infoRow}>
+							<Text category="s1" style={styles.infoLabel}>
+								Created:
 							</Text>
-							<Button
-								style={styles.pickImageButton}
-								onPress={pickImage}
-							>
-								Pick Image from Camera Roll
-							</Button>
-						</View>
-					)}
-				</Card>
-			)}
-
-			{/* Submission Status */}
-			{hasSubmitted && (
-				<Card style={styles.submittedCard}>
-					<Text category="h6" style={styles.sectionTitle}>
-						✅ Quest Completed!
-					</Text>
-					<Text category="p1" style={styles.submittedText}>
-						You have already completed this quest.
-					</Text>
-					<Button
-						style={styles.viewSubmissionButton}
-						onPress={() => router.push(`/submission/${session.user.id}/${submissionQuestId}`)}
-					>
-						View Your Submission
-					</Button>
-				</Card>
-			)}
-
-			{/* Submit Button */}
-			{!hasSubmitted && (
-				<Card style={styles.submitCard}>
-					<Button
-						style={styles.submitButton}
-						onPress={submitEntry}
-						disabled={!selectedImage || isUploading || isJudging}
-					>
-						{isUploading ? 'Uploading...' :
-							isJudging ? 'Judging...' : 'Submit Entry'}
-					</Button>
-
-					{(isUploading || isJudging) && (
-						<View style={styles.loadingIndicator}>
-							<Spinner size="small" />
-							<Text category="s1" style={styles.loadingText}>
-								{isUploading ? 'Uploading your image...' : 'AI is judging your submission...'}
+							<Text category="s1" style={styles.infoValue}>
+								{new Date(quest.created_at).toLocaleDateString()}
 							</Text>
 						</View>
-					)}
+						<View style={styles.infoRow}>
+							<Text category="s1" style={styles.infoLabel}>
+								Deadline:
+							</Text>
+							<Text category="s1" style={styles.infoValue}>
+								{new Date(quest.deadline).toLocaleDateString()}
+							</Text>
+						</View>
+						<View>
+							<Text category="s1" style={styles.countInfo}>
+								{submissions} {submissions === 1 ? "person has" : "people have"} completed this quest so far.
+							</Text>
+						</View>
+						<View>
+							<Text category='s1' style={styles.infoLabel}>
+								{quest.location}
+							</Text>
+						</View>
+					</View>
 				</Card>
-			)}
 
-			{/* Judgment Result */}
-			{judgmentResult && !hasSubmitted && (
-				<Card style={styles.resultCard}>
+				<Card style={styles.promptCard}>
+					<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
+					<Button onPress={setLike}>
+						<Text>{liked ? "Unlike" : "Like"}</Text>
+					</Button>
+				</Card>
+
+				{/* Photo Prompt */}
+				<Card style={styles.promptCard}>
 					<Text category="h6" style={styles.sectionTitle}>
-						{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
+						Photo Challenge
 					</Text>
-					<Text category="p1" style={styles.resultText}>
-						{isSubmissionValid
-							? 'Your submission has been accepted! Great job!'
-							: 'Your image does not match the quest requirements. Please try again with a different image.'
-						}
+					<Text category="p1" style={styles.promptText}>
+						{quest.description}
 					</Text>
 				</Card>
-			)}
-			<Text>{"\n"}</Text>
-			<Text>{"\n"}</Text>
-			<TextInput style={styles.input}
-				placeholder='Type your comment here'
-				onChangeText={setCommentInput}
-			/>
-			<Button onPress={postComment}><Text>Post comment</Text></Button>
 
-			<Text category="h6" style={styles.sectionTitle}>Comments</Text>
-			{comments && <View>
-				{comments.map((comment: any, idx: number) => {
-					return <Comment comment={comment} session={session} key={idx} />
-				})}
-			</View>}
-		</ScrollView>
+				{/* Image Selection - Only show if user hasn't submitted */}
+				{!hasSubmitted && (
+					<Card style={styles.imageCard}>
+						<Text category="h6" style={styles.sectionTitle}>
+							Your Submission
+						</Text>
+
+						{selectedImage ? (
+							<View style={styles.selectedImageContainer}>
+								<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+								<Button
+									style={styles.changeImageButton}
+									onPress={pickImage}
+								>
+									Change Image
+								</Button>
+							</View>
+						) : (
+							<View style={styles.imagePlaceholder}>
+								<Text category="s1" style={styles.placeholderText}>
+									No image selected
+								</Text>
+								<Button
+									style={styles.pickImageButton}
+									onPress={pickImage}
+								>
+									Pick Image from Camera Roll
+								</Button>
+							</View>
+						)}
+					</Card>
+				)}
+
+				{/* Submission Status */}
+				{hasSubmitted && (
+					<Card style={styles.submittedCard}>
+						<Text category="h6" style={styles.sectionTitle}>
+							✅ Quest Completed!
+						</Text>
+						<Text category="p1" style={styles.submittedText}>
+							You have already completed this quest.
+						</Text>
+						<Button
+							style={styles.viewSubmissionButton}
+							onPress={() => router.push(`/browse/submission/${session.user.id}/${submissionQuestId}`)}
+						>
+							View Your Submission
+						</Button>
+					</Card>
+				)}
+
+				{/* Submit Button */}
+				{!hasSubmitted && (
+					<Card style={styles.submitCard}>
+						<Button
+							style={styles.submitButton}
+							onPress={submitEntry}
+							disabled={!selectedImage || isUploading || isJudging}
+						>
+							{isUploading ? 'Uploading...' :
+								isJudging ? 'Judging...' : 'Submit Entry'}
+						</Button>
+
+						{(isUploading || isJudging) && (
+							<View style={styles.loadingIndicator}>
+								<Spinner size="small" />
+								<Text category="s1" style={styles.loadingText}>
+									{isUploading ? 'Uploading your image...' : 'AI is judging your submission...'}
+								</Text>
+							</View>
+						)}
+					</Card>
+				)}
+
+				{/* Judgment Result */}
+				{judgmentResult && !hasSubmitted && (
+					<Card style={styles.resultCard}>
+						<Text category="h6" style={styles.sectionTitle}>
+							{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
+						</Text>
+						<Text category="p1" style={styles.resultText}>
+							{isSubmissionValid
+								? 'Your submission has been accepted! Great job!'
+								: 'Your image does not match the quest requirements. Please try again with a different image.'
+							}
+						</Text>
+					</Card>
+				)}
+				<Text>{"\n"}</Text>
+				<Text>{"\n"}</Text>
+				<TextInput style={styles.input}
+					placeholder='Type your comment here'
+					onChangeText={setCommentInput}
+				/>
+				<Button onPress={postComment}><Text>Post comment</Text></Button>
+
+				<Text category="h6" style={styles.sectionTitle}>Comments</Text>
+				{comments && <View>
+					{comments.map((comment: any, idx: number) => {
+						return <Comment comment={comment} session={session} key={idx} />
+					})}
+				</View>}
+			</ScrollView>
+		</>
 	);
 }
 
@@ -556,7 +566,6 @@ const styles = StyleSheet.create({
 	promptText: {
 		lineHeight: 20,
 		fontStyle: 'italic',
-		color: '#007AFF',
 	},
 	imagePlaceholder: {
 		alignItems: 'center',

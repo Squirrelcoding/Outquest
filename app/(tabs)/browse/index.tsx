@@ -11,11 +11,11 @@ import {
 	RefreshControl,
 	ActivityIndicator,
 } from 'react-native';
-import { Button, Card, Text, Layout, Divider } from '@ui-kitten/components';
-import { router } from 'expo-router';
+import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { useLocation } from '@/context/Location';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import QuestBox from '@/components/QuestBox';
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
@@ -49,7 +49,7 @@ export default function BrowseQuests() {
 			if (!session?.user) throw new Error('No user on the session!')
 
 			let query = supabase.from('quest').select();
-			
+
 			// Filter out expired quests by default
 			if (!showExpired) {
 				query = query.gt('deadline', new Date().toISOString());
@@ -98,7 +98,7 @@ export default function BrowseQuests() {
 					Alert.alert('Location Error', 'Unable to get your location. Please enable location services.');
 					return;
 				}
-				
+
 				const { data, error } = await supabase.rpc('get_search_results', {
 					current_lat: location.coords.latitude,
 					current_long: location.coords.longitude,
@@ -112,10 +112,10 @@ export default function BrowseQuests() {
 				let query = supabase.from("quest")
 					.select("*")
 					.in('id', questIDs);
-				
+
 				if (deadline) query = query.lte('deadline', deadline.toISOString());
 				if (title) query = query.ilike('title', `%${title}%`);
-				
+
 				// Filter out expired quests unless showExpired is true
 				if (!showExpired) {
 					query = query.gt('deadline', new Date().toISOString());
@@ -129,12 +129,12 @@ export default function BrowseQuests() {
 
 				if (title) query = query.ilike('title', `%${title}%`);
 				if (deadline) query = query.lte('deadline', deadline.toISOString());
-				
+
 				// Filter out expired quests unless showExpired is true
 				if (!showExpired) {
 					query = query.gt('deadline', new Date().toISOString());
 				}
-				
+
 				const { data: questData, error } = await query;
 				if (error) throw error;
 				setQuests(questData);
@@ -155,23 +155,6 @@ export default function BrowseQuests() {
 		loadQuests();
 	};
 
-	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffTime = date.getTime() - now.getTime();
-		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-		
-		if (diffDays < 0) {
-			return 'Expired';
-		} else if (diffDays === 0) {
-			return 'Ends today';
-		} else if (diffDays === 1) {
-			return 'Ends tomorrow';
-		} else {
-			return `Ends in ${diffDays} days`;
-		}
-	};
-
 	if (loading || locLoading) {
 		return (
 			<Layout style={styles.loadingContainer}>
@@ -185,7 +168,7 @@ export default function BrowseQuests() {
 
 	return (
 		<Layout style={styles.container}>
-			<ScrollView 
+			<ScrollView
 				style={styles.scrollView}
 				refreshControl={
 					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -206,14 +189,14 @@ export default function BrowseQuests() {
 					<Text category="h6" style={styles.sectionTitle}>
 						Search Filters
 					</Text>
-					
+
 					<View style={styles.inputGroup}>
 						<Text category="s1" style={styles.inputLabel}>
 							Quest Title
 						</Text>
-						<TextInput 
-							placeholder='Search by title...' 
-							style={styles.input} 
+						<TextInput
+							placeholder='Search by title...'
+							style={styles.input}
 							value={title}
 							onChangeText={setTitle}
 						/>
@@ -223,9 +206,9 @@ export default function BrowseQuests() {
 						<Text category="s1" style={styles.inputLabel}>
 							Search Radius (km)
 						</Text>
-						<TextInput 
-							placeholder='0 = same city, leave empty for all' 
-							style={styles.input} 
+						<TextInput
+							placeholder='0 = same city, leave empty for all'
+							style={styles.input}
 							value={radius?.toString() || ''}
 							onChangeText={(str) => setRadius(str ? Number(str) : null)}
 							keyboardType="numeric"
@@ -236,7 +219,7 @@ export default function BrowseQuests() {
 						<Text category="s1" style={styles.inputLabel}>
 							Deadline
 						</Text>
-						<Button 
+						<Button
 							style={styles.dateButton}
 							onPress={showDatepicker}
 							appearance="outline"
@@ -270,14 +253,14 @@ export default function BrowseQuests() {
 					)}
 
 					<View style={styles.buttonGroup}>
-						<Button 
+						<Button
 							style={styles.searchButton}
 							onPress={submitQuery}
 							disabled={searching}
 						>
 							{searching ? 'Searching...' : 'Search Quests'}
 						</Button>
-						<Button 
+						<Button
 							style={styles.clearButton}
 							onPress={clearFilters}
 							appearance="ghost"
@@ -304,44 +287,15 @@ export default function BrowseQuests() {
 						quests.length > 0 ? (
 							<View style={styles.questsList}>
 								{quests.map((quest: any, idx: number) => (
-									<Card 
-										key={quest.id} 
-										style={styles.questCard}
-										onPress={() => router.push(`/browse/posts/${quest.id}`)}
-									>
-										<View style={styles.questHeader}>
-											<Text category="h6" style={styles.questTitle}>
-												{quest.title}
-											</Text>
-											<View style={styles.questMeta}>
-												<Ionicons name="person-outline" size={16} color="#666" />
-												<Text category="s1" style={styles.authorText}>
-													{usernames[idx] || "Unknown"}
-												</Text>
-											</View>
-										</View>
-										
-										<Text category="p1" style={styles.questDescription} numberOfLines={2}>
-											{quest.description}
-										</Text>
-										
-										<Divider style={styles.divider} />
-										
-										<View style={styles.questFooter}>
-											<View style={styles.dateInfo}>
-												<Ionicons name="calendar-outline" size={16} color="#666" />
-												<Text category="s1" style={styles.dateText}>
-													{formatDate(quest.deadline)}
-												</Text>
-											</View>
-											<View style={styles.createdInfo}>
-												<Ionicons name="time-outline" size={16} color="#666" />
-												<Text category="s1" style={styles.createdText}>
-													{new Date(quest.created_at).toLocaleDateString()}
-												</Text>
-											</View>
-										</View>
-									</Card>
+									<QuestBox
+										key={idx}
+										id={quest.id}
+										title={quest.title}
+										author_username={usernames[idx]}
+										description={quest.description}
+										deadline={quest.deadline}
+										created_at={quest.created_at}
+									/>
 								))}
 							</View>
 						) : (
@@ -466,55 +420,6 @@ const styles = StyleSheet.create({
 	},
 	questsList: {
 		gap: 10,
-	},
-	questCard: {
-		marginBottom: 10,
-	},
-	questHeader: {
-		marginBottom: 10,
-	},
-	questTitle: {
-		fontWeight: 'bold',
-		marginBottom: 5,
-	},
-	questMeta: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 5,
-	},
-	authorText: {
-		color: '#666',
-	},
-	questDescription: {
-		color: '#333',
-		lineHeight: 20,
-		marginBottom: 10,
-	},
-	divider: {
-		marginVertical: 10,
-	},
-	questFooter: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-	},
-	dateInfo: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 5,
-	},
-	dateText: {
-		color: '#666',
-		fontSize: 12,
-	},
-	createdInfo: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 5,
-	},
-	createdText: {
-		color: '#666',
-		fontSize: 12,
 	},
 	emptyState: {
 		alignItems: 'center',

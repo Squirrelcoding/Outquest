@@ -74,18 +74,6 @@ export default function App() {
 
 							{/* Hidden screens - not shown in tab bar */}
 							<Tabs.Screen
-								name="(tabs)/posts/[id]"
-								options={{
-									href: null,
-								}}
-							/>
-							<Tabs.Screen
-								name="(tabs)/leaderboard"
-								options={{
-									href: null,
-								}}
-							/>
-							<Tabs.Screen
 								name="(tabs)/leaderboard/join"
 								options={{
 									href: null
@@ -110,12 +98,6 @@ export default function App() {
 
 							<Tabs.Screen
 								name="(tabs)/profile/[id]"
-								options={{
-									href: null,
-								}}
-							/>
-							<Tabs.Screen
-								name="(tabs)/submission/[userID]/[questID]"
 								options={{
 									href: null,
 								}}
