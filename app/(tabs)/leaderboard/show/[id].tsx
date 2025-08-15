@@ -8,7 +8,7 @@ import {
 	View,
 	StyleSheet,
 } from 'react-native';
-import { Card, Text, Layout, Button, Avatar } from '@ui-kitten/components';
+import { Card, Text, Layout, Button } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 
 export default function LeaderboardDetail() {
