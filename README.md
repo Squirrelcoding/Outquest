@@ -29,3 +29,12 @@ You can create many different types of leaderboards and scoring options for what
 ### Prizes
 
 Whenever a user completes a quest, you can configure your quest to send them an email with prizes, such as gift card codes!
+
+## Under Development
+
+- Basic quests with multiple photos
+- Add google auth
+- Improve landing and sign-up pages
+- Add feature to message winners
+- Add QR code mode
+- Path tracker mode
