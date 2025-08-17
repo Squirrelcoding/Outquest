@@ -1,7 +1,6 @@
 import { View, StyleSheet, TextInput, ScrollView, Alert } from 'react-native'
-import Auth from '../../components/Auth';
 import { useAuth } from '../../context/Auth';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -134,7 +133,7 @@ export default function Page() {
 		</Layout>
 	);
 
-	if (!session) return <Auth />;
+	if (!session) return <Redirect href={`/(auth)`} />;
 
 	return (
 		<ScrollView style={styles.container}>

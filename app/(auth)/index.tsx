@@ -11,7 +11,6 @@ import {
 } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { router } from 'expo-router'
-import Page1 from './onboarding/page1'
 
 // Auto-refresh auth session while app is in foreground
 AppState.addEventListener('change', (state) => {
@@ -53,7 +52,7 @@ export default function Auth() {
 		}
 		if (!session) {
 			Alert.alert('Please check your inbox for email verification!');
-			return <Page1 email={email}/>
+			router.push(`/(auth)/onboarding/page1/${email}`);
 		}
 		setLoading(false);
 	}

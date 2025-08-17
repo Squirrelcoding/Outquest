@@ -1,14 +1,12 @@
 import { supabase } from "@/lib/supabase";
 import { Text } from "@ui-kitten/components";
+import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 
-interface Page1Props {
-	email: string;
-}
-
-export default function Page1({ email }: Page1Props) {
+export default function Page1() {
 	const [verified, setVerified] = useState<boolean>(false);
+	const { email } = useLocalSearchParams();
 
 	useEffect(() => {
 		const interval = setInterval(async () => {
@@ -65,4 +63,4 @@ const styles = StyleSheet.create({
 		fontSize: 30,
 		textAlign: "center"
 	}
-})
+});
