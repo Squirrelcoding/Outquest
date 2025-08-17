@@ -126,7 +126,7 @@ export default function Settings() {
 	const signOut = async () => {
 		await supabase.auth.signOut();
 		await AsyncStorage.clear();
-		router.back();
+		router.replace("/(auth)");
 	}
 
 	const updateCityResults = async (s: string) => {
