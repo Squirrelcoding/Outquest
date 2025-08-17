@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
 	View,
 	Text,
@@ -8,9 +8,8 @@ import {
 	Alert,
 } from 'react-native'
 import { supabase } from '@/lib/supabase';
-import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import uuid from "react-native-uuid";
 
 export default function CreateQuest() {
@@ -19,7 +18,7 @@ export default function CreateQuest() {
 	const [title, setTitle] = useState<string>('');
 
 	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth/>
+	if (!session) return <Redirect href="/(auth)"/>
 
 	async function createLeaderboard() {
 		if (!session) return;

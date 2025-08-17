@@ -8,9 +8,8 @@ import {
 	Alert,
 } from 'react-native'
 import { supabase } from '@/lib/supabase';
-import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
@@ -18,7 +17,7 @@ export default function CreateQuest() {
 	const [leaderboardID, setLeaderboardID] = useState<string>('');
 
 	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth/>
+	if (!session) return <Redirect href="/(auth)"/>
 
 	async function joinLeaderboard() {
 		if (!session) return;

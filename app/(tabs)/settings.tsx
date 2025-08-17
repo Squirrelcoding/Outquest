@@ -8,14 +8,13 @@ import {
 	ScrollView,
 } from 'react-native'
 import { supabase } from '../../lib/supabase'
-import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { decode } from 'base64-arraybuffer'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 
 export default function Settings() {
 	const { session, loading } = useAuth();
@@ -149,7 +148,7 @@ export default function Settings() {
 		</Layout>
 	);
 
-	if (!session) return <Auth />;
+	if (!session) return <Redirect href="/(auth)"/>
 
 	return (
 		<ScrollView style={styles.container}>
