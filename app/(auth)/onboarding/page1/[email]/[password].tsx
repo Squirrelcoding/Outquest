@@ -1,17 +1,36 @@
 import { supabase } from "@/lib/supabase";
-import { Text } from "@ui-kitten/components";
-import { useLocalSearchParams } from "expo-router";
+import { Text, Button } from "@ui-kitten/components";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 
 export default function Page1() {
 	const [verified, setVerified] = useState<boolean>(false);
-	const { email } = useLocalSearchParams();
+	const { email, password } = useLocalSearchParams();
+
+	const continueOnboarding = async () => {
+		setVerified(true);
+		// Sign the user in
+		const { data, error } = await supabase.auth.signInWithPassword({
+			email: email as string,
+			password: password as string,
+		});
+
+		if (error) {
+			console.error("There was an error. You're cooked.");
+			throw error;
+		}
+
+		router.replace(`/(auth)/onboarding/page2/${email}/${password}`);
+	};
 
 	useEffect(() => {
 		const interval = setInterval(async () => {
-			const { data } = await supabase.rpc('check_email_verified', { p_email: email })
-			if (data) setVerified(true);
+			const res = await supabase.rpc('check_email_verified', { p_email: email })
+			console.log(`Entire result: ${JSON.stringify(res)}`);
+			if (res.data) {
+				continueOnboarding();
+			};
 		}, 5000) // check every 5 seconds
 
 		return () => clearInterval(interval)
@@ -20,7 +39,9 @@ export default function Page1() {
 	return <>
 		<Text style={styles.titleText}>Verify your email</Text>
 		<Text>Once we have verified your email, we may continue with the onboarding process. Click the button below once you have </Text>
-		{verified && <Text>You have been verified!</Text>}
+		{verified && <Button onPress={continueOnboarding} style={styles.button}>
+			You have been verified! If you have not been automatically redirected, click here.
+		</Button>}
 	</>
 }
 

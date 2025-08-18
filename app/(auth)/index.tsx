@@ -52,7 +52,7 @@ export default function Auth() {
 		}
 		if (!session) {
 			Alert.alert('Please check your inbox for email verification!');
-			router.push(`/(auth)/onboarding/page1/${email}`);
+			router.push(`/(auth)/onboarding/page1/${email}/${password}`);
 		}
 		setLoading(false);
 	}
