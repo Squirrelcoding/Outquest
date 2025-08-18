@@ -1,11 +1,13 @@
 import { Dispatch, SetStateAction } from "react";
 
 interface SubquestInputFormat {
-	[descriptions, setDescriptions]: [string[], Dispatch<SetStateAction<string[]>>],
-	[descriptions, setDescriptions]: [string[], Dispatch<SetStateAction<string[]>>],
+	descriptionState: [string[], Dispatch<SetStateAction<string[]>>],
+	promptState: [string[], Dispatch<SetStateAction<string[]>>],
 }
 
 
-export default function SubquestInput({descriptions, prompts}: SubquestInputFormat) {
+export default function SubquestInput({descriptionState, promptState}: SubquestInputFormat) {
+	const [description, setDescription] = descriptionState;
+	const [prompt, setPrompt] = promptState;
 
 }
