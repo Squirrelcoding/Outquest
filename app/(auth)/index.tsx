@@ -10,7 +10,8 @@ import {
 	AppState,
 } from 'react-native'
 import { supabase } from '../../lib/supabase'
-import { router } from 'expo-router'
+import { Redirect, router } from 'expo-router'
+import { useAuth } from '@/context/Auth'
 
 // Auto-refresh auth session while app is in foreground
 AppState.addEventListener('change', (state) => {
@@ -26,15 +27,20 @@ export default function Auth() {
 	const [password, setPassword] = useState('')
 	const [loading, setLoading] = useState(false)
 
+	const {session} = useAuth();
+	if (session) return <Redirect href="/(tabs)"/>
+
 	async function signInWithEmail() {
 		setLoading(true)
-		const { error } = await supabase.auth.signInWithPassword({
+		const { data, error } = await supabase.auth.signInWithPassword({
 			email,
 			password,
 		});
+		console.log(data);
 
 		if (error) Alert.alert('Sign in error', error.message)
-		setLoading(false)
+		setLoading(false);
+		router.replace("/(tabs)");
 	}
 
 	async function signUpWithEmail() {
