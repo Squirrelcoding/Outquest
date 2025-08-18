@@ -11,7 +11,7 @@ export default function Page1() {
 	const continueOnboarding = async () => {
 		setVerified(true);
 		// Sign the user in
-		const { data, error } = await supabase.auth.signInWithPassword({
+		const { error } = await supabase.auth.signInWithPassword({
 			email: email as string,
 			password: password as string,
 		});
@@ -34,6 +34,7 @@ export default function Page1() {
 		}, 5000) // check every 5 seconds
 
 		return () => clearInterval(interval)
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [email]);
 
 	return <>

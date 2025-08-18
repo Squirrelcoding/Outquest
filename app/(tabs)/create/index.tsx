@@ -6,23 +6,22 @@ import {
 	Alert,
 	ScrollView,
 } from 'react-native'
-import { supabase } from '../../lib/supabase'
-import Auth from '@/components/Auth';
+import { supabase } from '../../../lib/supabase'
 import { useAuth } from '@/context/Auth';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
 	
 	const [title, setTitle] = useState<string>('');
-	const [description, setDescription] = useState<string>('');
 	const [location, setLocation] = useState<string>('');
-	const [prompt, setPrompt] = useState<string>('');
 	const [photoQuantity, setPhotoQuantity] = useState<number>(1);
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+	const [descriptions, setDescriptions] = useState<string[]>([]);
+	const [prompts, setPrompts] = useState<string[]>([]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	if (loading) return (
@@ -31,7 +30,7 @@ export default function CreateQuest() {
 		</Layout>
 	);
 	
-	if (!session) return <Auth />;
+	if (!session) return <Redirect href="/(auth)" />;
 
 	const onChange = (event: any, selectedDate: any) => {
 		setShowDatePicker(false);
@@ -50,11 +49,11 @@ export default function CreateQuest() {
 			Alert.alert('Error', 'Please enter a quest title');
 			return;
 		}
-		if (!description.trim()) {
+		if (descriptions.length === 0) {
 			Alert.alert('Error', 'Please enter a quest description');
 			return;
 		}
-		if (!prompt.trim()) {
+		if (prompts.length === 0) {
 			Alert.alert('Error', 'Please enter photo requirements');
 			return;
 		}
@@ -79,8 +78,6 @@ export default function CreateQuest() {
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
-				description: description.trim(),
-				photo_prompt: prompt.trim(),
 				num_photos: photoQuantity
 			});
 

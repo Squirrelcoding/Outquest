@@ -33,8 +33,8 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 ## Under Development
 
 - Basic quests with multiple photos
-- Add google auth
 - Improve landing and sign-up pages
 - Add feature to message winners
 - Add QR code mode
 - Path tracker mode
+- Add google auth
