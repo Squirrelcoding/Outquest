@@ -10,7 +10,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/Auth';
 import { Redirect, router } from 'expo-router';
-import uuid from "react-native-uuid";
+import { randomUUID } from "expo-crypto";
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
@@ -23,7 +23,7 @@ export default function CreateQuest() {
 	async function createLeaderboard() {
 		if (!session) return;
 		console.log("HERE");
-		const leaderboardUID = uuid.v4();
+		const leaderboardUID = randomUUID();
 		console.log("Creating leaderboard...");
 		const date = new Date();
 		const { error: metaError } = await supabase.from('leaderboard meta').insert({

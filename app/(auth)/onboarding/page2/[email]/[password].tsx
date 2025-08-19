@@ -68,6 +68,8 @@ export default function Page2() {
 					return;
 				}
 			}
+
+
 			Alert.alert('Success', 'Profile updated successfully!');
 		} catch (error) {
 			console.error('Error updating profile:', error);

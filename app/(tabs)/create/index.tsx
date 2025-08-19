@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { SetStateAction, useState } from 'react'
 import {
 	View,
 	TextInput,
@@ -11,17 +11,20 @@ import { useAuth } from '@/context/Auth';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Redirect, router } from 'expo-router';
+import SubquestInput from './SubquestInput';
+import { randomUUID } from 'expo-crypto';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
-	
+
 	const [title, setTitle] = useState<string>('');
 	const [location, setLocation] = useState<string>('');
+	const [description, setDescription] = useState<string>('');
 	const [photoQuantity, setPhotoQuantity] = useState<number>(1);
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-	const [descriptions, setDescriptions] = useState<string[]>([]);
-	const [prompts, setPrompts] = useState<string[]>([]);
+	const [prompts, setPrompts] = useState<string[]>([""]);
+	const [promptComponents, setPromptComponents] = useState<any>();
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	if (loading) return (
@@ -29,7 +32,7 @@ export default function CreateQuest() {
 			<Text category="h6">Loading...</Text>
 		</Layout>
 	);
-	
+
 	if (!session) return <Redirect href="/(auth)" />;
 
 	const onChange = (event: any, selectedDate: any) => {
@@ -49,7 +52,7 @@ export default function CreateQuest() {
 			Alert.alert('Error', 'Please enter a quest title');
 			return;
 		}
-		if (descriptions.length === 0) {
+		if (description.length === 0) {
 			Alert.alert('Error', 'Please enter a quest description');
 			return;
 		}
@@ -71,18 +74,45 @@ export default function CreateQuest() {
 
 		try {
 			setSubmitting(true);
-			
-			const { error } = await supabase.from('quest').insert({
+
+
+			// Insert the quest to the quest table
+			console.log({
 				author: session.user.id,
 				location: location.trim() || null,
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
 				num_photos: photoQuantity
-			});
-
+			})
+			const { data: quest, error } = await supabase.from('quest').insert({
+				author: session.user.id,
+				description,
+				location: location.trim() || null,
+				created_at: new Date(),
+				deadline: deadline,
+				title: title.trim(),
+			})
+				.select("id")
+				.single();
 			if (error) {
+				console.error('Insert error:', error);
+			} else {
+				console.log('New record ID:', quest.id);
+			}
+
+			// Insert in all of the subqeusts of the quest into the subquest table
+			const processedSubquests = prompts.map((prompt) => {
+				return {
+					quest_id: quest!.id,
+					prompt
+				}
+			});
+			const { error: bulkError } = await supabase.from("subquest").insert(processedSubquests);
+
+			if (error || bulkError) {
 				console.error('Error creating quest:', error);
+				console.error('Error creating quest:', bulkError);
 				Alert.alert('Error', 'Failed to create quest. Please try again.');
 				return;
 			}
@@ -96,6 +126,16 @@ export default function CreateQuest() {
 			setSubmitting(false);
 		}
 	};
+
+	const addPrompt = () => {
+		// Check if latest prompt is non empty
+		console.log(prompts)
+		if (prompts[prompts.length - 1] === "") {
+			return false;
+		}
+
+		setPrompts([...prompts, ""]);
+	}
 
 	return (
 		<ScrollView style={styles.container}>
@@ -113,7 +153,7 @@ export default function CreateQuest() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Quest Information
 				</Text>
-				
+
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						Quest Title *
@@ -158,36 +198,15 @@ export default function CreateQuest() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Photo Requirements
 				</Text>
-				
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Number of Photos Required
-					</Text>
-					<TextInput
-						value={photoQuantity.toString()}
-						onChangeText={(str) => {
-							const num = parseInt(str.replace(/[^0-9]/g, '')) || 1;
-							setPhotoQuantity(Math.max(1, num));
-						}}
-						placeholder="1"
-						style={styles.input}
-						keyboardType="numeric"
-					/>
-				</View>
 
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Photo Requirements *
-					</Text>
-					<TextInput
-						value={prompt}
-						onChangeText={setPrompt}
-						multiline
-						style={[styles.input, styles.textArea]}
-						placeholder="Must be a black bike with visible wheels and frame."
-						numberOfLines={3}
-					/>
-				</View>
+				{
+					Array(prompts.length).fill(0).map((_, idx) => {
+						return <SubquestInput idx={idx} key={idx} prompts={prompts} setPrompts={setPrompts} />
+					})
+				}
+
+				<Button onPress={addPrompt}>Add new prompt</Button>
+
 			</Card>
 
 			{/* Deadline Selection */}
@@ -195,19 +214,19 @@ export default function CreateQuest() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Quest Deadline
 				</Text>
-				
+
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						Quest Deadline
 					</Text>
-					<Button 
+					<Button
 						style={styles.dateButton}
 						onPress={showDatepicker}
 						appearance="outline"
 					>
 						{deadline.toLocaleDateString()}
 					</Button>
-					
+
 					{showDatePicker && (
 						<DateTimePicker
 							testID="dateTimePicker"
@@ -217,7 +236,7 @@ export default function CreateQuest() {
 							minimumDate={new Date()}
 						/>
 					)}
-					
+
 					<Text category="c1" style={styles.dateInfo}>
 						Selected: {deadline.toLocaleDateString()}
 					</Text>
@@ -226,14 +245,14 @@ export default function CreateQuest() {
 
 			{/* Submit Button */}
 			<Card style={styles.section}>
-				<Button 
+				<Button
 					style={styles.submitButton}
 					onPress={submitQuest}
-					disabled={submitting || !title.trim() || !description.trim() || !prompt.trim()}
+					disabled={submitting || !title.trim() || prompts.length === 0}
 				>
 					{submitting ? 'Creating Quest...' : 'Create Quest!'}
 				</Button>
-				
+
 				<Text category="c1" style={styles.helpText}>
 					* Required fields
 				</Text>
