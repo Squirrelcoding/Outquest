@@ -25,7 +25,7 @@ export default function Page() {
 				// Get user's completed quest submissions
 				const { data: completedQuestData, error: submissionError } = await supabase
 					.from("submission")
-					.select('quest_id')
+					.select('subquest_id')
 					.eq('user_id', session.user.id);
 
 				if (submissionError) {

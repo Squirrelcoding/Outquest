@@ -6,15 +6,19 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { decode } from 'base64-arraybuffer';
 import { Button, Card, Text } from "@ui-kitten/components";
+import { router } from "expo-router";
+
+// TODO: Let the viewer see their submissions right here.
 
 interface ImageCardParams {
 	session: Session,
-	quest: any
+	quest: any,
+	subquest: any,
+	hasSubmitted: boolean
 }
 
-export default function ImageCard({ session, quest }: ImageCardParams) {
+export default function ImageCard({ session, quest, subquest, hasSubmitted }: ImageCardParams) {
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
-	const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
 	const [judgmentResult, setJudgmentResult] = useState<string | null>(null);
 	const [isSubmissionValid, setIsSubmissionValid] = useState<boolean>(false);
@@ -54,7 +58,7 @@ export default function ImageCard({ session, quest }: ImageCardParams) {
 			});
 
 			// Upload image to storage
-			const fileName = `${session.user.id}/${quest.id}/img-${Date.now()}.jpg`;
+			const fileName = `${session.user.id}/${quest.id}/${subquest.id}.jpg`;
 			const { error: uploadError } = await supabase.storage
 				.from('quest-upload')
 				.upload(fileName, decode(base64), {
@@ -72,10 +76,11 @@ export default function ImageCard({ session, quest }: ImageCardParams) {
 			setIsJudging(true);
 
 			// Judge the submission using AI
+			console.log(`Does the image match the following description? Reply YES or NO. ${subquest.prompt}`)
 			const { data: judgmentData, error: judgmentError } = await supabase.functions.invoke('replicate-call', {
 				body: {
 					image: fileName,
-					question: `Does the image match the following description? Reply YES or NO. ${quest.photo_prompt}`
+					question: `Does the image match the following description? Reply YES or NO. ${subquest.prompt}`
 				},
 			});
 
@@ -92,7 +97,7 @@ export default function ImageCard({ session, quest }: ImageCardParams) {
 			if (judgmentData === "YES") {
 				const { error: submissionError } = await supabase.from("submission").insert({
 					user_id: session.user.id,
-					quest_id: quest.id,
+					subquest_id: subquest.id,
 					time: new Date()
 				});
 
@@ -103,7 +108,6 @@ export default function ImageCard({ session, quest }: ImageCardParams) {
 				}
 
 				setIsSubmissionValid(true);
-				setHasSubmitted(true);
 				Alert.alert('Success!', 'Your submission has been accepted!');
 			} else {
 				Alert.alert('Submission Rejected', 'Your image does not match the quest requirements. Please try again.');
@@ -118,9 +122,9 @@ export default function ImageCard({ session, quest }: ImageCardParams) {
 	};
 
 	return <Card style={styles.imageCard}>
-		{hasSubmitted ? <Text>Image submitted</Text> : <>
+		{hasSubmitted ? <Text>({subquest.prompt}) Image submitted!</Text> : <>
 			<Text category="h6" style={styles.sectionTitle}>
-				Your Submission
+				{subquest.prompt}
 			</Text>
 
 			{selectedImage ? (
@@ -154,6 +158,24 @@ export default function ImageCard({ session, quest }: ImageCardParams) {
 				{isUploading ? 'Uploading...' :
 					isJudging ? 'Judging...' : 'Submit Entry'}
 			</Button>
+			{/* Submission Status */}
+			{hasSubmitted && (
+				<Card style={styles.submittedCard}>
+					<Text category="h6" style={styles.sectionTitle}>
+						✅ Quest Completed!
+					</Text>
+					<Text category="p1" style={styles.submittedText}>
+						You have already completed this quest.
+					</Text>
+					<Button
+						style={styles.viewSubmissionButton}
+						
+						onPress={() => router.push(`/browse/submission/${session.user.id}/${quest.id}`)}
+					>
+						View Your Submission
+					</Button>
+				</Card>
+			)}
 			{judgmentResult && !hasSubmitted && (
 				<Card style={styles.resultCard}>
 					<Text category="h6" style={styles.sectionTitle}>

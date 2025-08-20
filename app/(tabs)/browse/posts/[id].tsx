@@ -1,14 +1,19 @@
 // app/posts/[id].tsx
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { Button, Card, Text, Layout, Spinner } from "@ui-kitten/components";
+import { Button, Card, Text, Layout } from "@ui-kitten/components";
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, StyleSheet, Image, ScrollView, Alert, Pressable, TextInput } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
+import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
+
 import Comment from '@/components/Comment';
+import ImageCard from '@/components/ImageCard';
+
+interface Subquest {
+	id: number,
+	prompt: string,
+	quest_id: number,
+}
 
 export default function QuestBox() {
 	const { session, loading } = useAuth();
@@ -17,14 +22,7 @@ export default function QuestBox() {
 	// State management
 	const [quest, setQuest] = useState<any>(null);
 	const [authorUsername, setAuthorUsername] = useState<string>("");
-	const [selectedImage, setSelectedImage] = useState<string | null>(null);
-	const [isJudging, setIsJudging] = useState<boolean>(false);
-	const [isUploading, setIsUploading] = useState<boolean>(false);
-	const [judgmentResult, setJudgmentResult] = useState<string | null>(null);
-	const [isSubmissionValid, setIsSubmissionValid] = useState<boolean>(false);
 	const [submissions, setSubmissions] = useState<number>(0);
-	const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
-	const [submissionQuestId, setSubmissionQuestId] = useState<number>(-1);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
 	const [comments, setComments] = useState<any>(null);
 	const [commentInput, setCommentInput] = useState<any>(null);
@@ -32,7 +30,8 @@ export default function QuestBox() {
 	const [questLikes, setQuestLikes] = useState<number>(0);
 
 	// Photo upload state management
-	const [images, setSelected] = useState<boolean[]>([]);
+	const [subquests, setSubquests] = useState<Subquest[]>([]);
+	const [submitted, setSubmitted] = useState<boolean[]>([]);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -71,17 +70,7 @@ export default function QuestBox() {
 
 				setAuthorUsername(authorData.username);
 
-				// Check if user has already submitted
-				const { data: submissionData, error: submissionError } = await supabase
-					.from('submission')
-					.select('quest_id')
-					.eq('quest_id', id)
-					.eq('user_id', session.user.id)
-					.single();
 
-				if (submissionError && submissionError.code !== 'PGRST116') {
-					console.error('Error checking submission:', submissionError);
-				}
 
 				// Get all submissions
 
@@ -91,11 +80,6 @@ export default function QuestBox() {
 					.eq('quest_id', id);
 
 				setSubmissions(submissionsCount!);
-
-				if (submissionData) {
-					setHasSubmitted(true);
-					setSubmissionQuestId(submissionData.quest_id);
-				}
 
 				// Check if post is liked
 				let { data: likeData } = await supabase
@@ -141,107 +125,34 @@ export default function QuestBox() {
 			setComments(comments);
 		};
 
+		const loadSubquests = async () => {
+			const { data: subquests } = await supabase.from("subquest")
+				.select("*")
+				.eq('quest_id', id);
+			
+			setSubquests(subquests!);
+
+			const { data: userSubmissions } = await supabase.from("submission")
+				.select("*")
+				.eq('user_id', session.user.id);
+			
+			const submittedIDS = userSubmissions!.map((submission) => {
+				return submission.subquest_id;
+			});
+			
+			const submittedImages = subquests!.map((subquest) => {
+				return submittedIDS.includes(subquest.id);
+			});
+			setSubmitted(submittedImages);
+		}
+
 		loadQuestData();
 		loadCommentData();
+		loadSubquests();
 	}, [id, session]);
 
-	// Pick image from camera roll
-	const pickImage = async () => {
-		try {
-			const result = await ImagePicker.launchImageLibraryAsync({
-				mediaTypes: ImagePicker.MediaTypeOptions.Images,
-				allowsEditing: true,
-				aspect: [4, 3],
-				quality: 0.8,
-			});
-
-			if (!result.canceled && result.assets[0]) {
-				setSelectedImage(result.assets[0].uri);
-			}
-		} catch (error) {
-			console.error('Error picking image:', error);
-			Alert.alert('Error', 'Failed to pick image from camera roll');
-		}
-	};
-
-	// Submit quest entry
-	const submitEntry = async () => {
-		if (!selectedImage || !session || !quest) {
-			Alert.alert('Error', 'Please select an image first');
-			return;
-		}
-
-		try {
-			setIsUploading(true);
-
-			// Convert image to base64
-			const base64 = await FileSystem.readAsStringAsync(selectedImage, {
-				encoding: FileSystem.EncodingType.Base64,
-			});
-
-			// Upload image to storage
-			const fileName = `${session.user.id}/${quest.id}/img-${Date.now()}.jpg`;
-			const { error: uploadError } = await supabase.storage
-				.from('quest-upload')
-				.upload(fileName, decode(base64), {
-					contentType: 'image/jpeg',
-					upsert: true
-				});
-
-			if (uploadError) {
-				console.error('Upload error:', uploadError);
-				Alert.alert('Error', 'Failed to upload image');
-				return;
-			}
-
-			setIsUploading(false);
-			setIsJudging(true);
-
-			// Judge the submission using AI
-			const { data: judgmentData, error: judgmentError } = await supabase.functions.invoke('replicate-call', {
-				body: {
-					image: fileName,
-					question: `Does the image match the following description? Reply YES or NO. ${quest.photo_prompt}`
-				},
-			});
-
-			if (judgmentError) {
-				console.error('Judgment error:', judgmentError);
-				Alert.alert('Error', 'Failed to judge submission');
-				return;
-			}
-
-			setIsJudging(false);
-			setJudgmentResult(judgmentData);
-
-			// If submission is valid, record it in database
-			if (judgmentData === "YES") {
-				const { error: submissionError } = await supabase.from("submission").insert({
-					user_id: session.user.id,
-					quest_id: quest.id,
-					time: new Date()
-				});
-
-				if (submissionError) {
-					console.error('Submission error:', submissionError);
-					Alert.alert('Error', 'Failed to record submission');
-					return;
-				}
-
-				setIsSubmissionValid(true);
-				setHasSubmitted(true);
-				Alert.alert('Success!', 'Your submission has been accepted!');
-			} else {
-				Alert.alert('Submission Rejected', 'Your image does not match the quest requirements. Please try again.');
-			}
-		} catch (error) {
-			console.error('Error submitting entry:', error);
-			Alert.alert('Error', 'Failed to submit entry');
-		} finally {
-			setIsUploading(false);
-			setIsJudging(false);
-		}
-	};
+	console.log(subquests);
+	console.log(submitted);
 
 	const postComment = async () => {
 		if (!session) return;
@@ -368,94 +279,9 @@ export default function QuestBox() {
 					</Text>
 				</Card>
 
-				{/* Image Selection - Only show if user hasn't submitted */}
-				{!hasSubmitted && (
-					<Card style={styles.imageCard}>
-						<Text category="h6" style={styles.sectionTitle}>
-							Your Submission
-						</Text>
-
-						{selectedImage ? (
-							<View style={styles.selectedImageContainer}>
-								<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-								<Button
-									style={styles.changeImageButton}
-									onPress={pickImage}
-								>
-									Change Image
-								</Button>
-							</View>
-						) : (
-							<View style={styles.imagePlaceholder}>
-								<Text category="s1" style={styles.placeholderText}>
-									No image selected
-								</Text>
-								<Button
-									style={styles.pickImageButton}
-									onPress={pickImage}
-								>
-									Pick Image from Camera Roll
-								</Button>
-							</View>
-						)}
-					</Card>
-				)}
-
-				{/* Submission Status */}
-				{hasSubmitted && (
-					<Card style={styles.submittedCard}>
-						<Text category="h6" style={styles.sectionTitle}>
-							✅ Quest Completed!
-						</Text>
-						<Text category="p1" style={styles.submittedText}>
-							You have already completed this quest.
-						</Text>
-						<Button
-							style={styles.viewSubmissionButton}
-							onPress={() => router.push(`/browse/submission/${session.user.id}/${submissionQuestId}`)}
-						>
-							View Your Submission
-						</Button>
-					</Card>
-				)}
-
-				{/* Submit Button */}
-				{!hasSubmitted && (
-					<Card style={styles.submitCard}>
-						<Button
-							style={styles.submitButton}
-							onPress={submitEntry}
-							disabled={!selectedImage || isUploading || isJudging}
-						>
-							{isUploading ? 'Uploading...' :
-								isJudging ? 'Judging...' : 'Submit Entry'}
-						</Button>
-
-						{(isUploading || isJudging) && (
-							<View style={styles.loadingIndicator}>
-								<Spinner size="small" />
-								<Text category="s1" style={styles.loadingText}>
-									{isUploading ? 'Uploading your image...' : 'AI is judging your submission...'}
-								</Text>
-							</View>
-						)}
-					</Card>
-				)}
-
-				{/* Judgment Result */}
-				{judgmentResult && !hasSubmitted && (
-					<Card style={styles.resultCard}>
-						<Text category="h6" style={styles.sectionTitle}>
-							{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
-						</Text>
-						<Text category="p1" style={styles.resultText}>
-							{isSubmissionValid
-								? 'Your submission has been accepted! Great job!'
-								: 'Your image does not match the quest requirements. Please try again with a different image.'
-							}
-						</Text>
-					</Card>
-				)}
+				{subquests.map((subquest, idx) => {
+					return <ImageCard key={idx} session={session} quest={quest} subquest={subquest} hasSubmitted={submitted[idx]}/>
+				})}
 
 				{/* Comment section */}
 				<Text>{"\n"}</Text>
@@ -503,9 +329,7 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		marginBottom: 5,
 	},
-	author: {
-		textDecorationLine: "underline"
-	},
+
 	detailsCard: {
 		margin: 10,
 		marginBottom: 10,
@@ -562,54 +386,6 @@ const styles = StyleSheet.create({
 	promptText: {
 		lineHeight: 20,
 		fontStyle: 'italic',
-	},
-	imagePlaceholder: {
-		alignItems: 'center',
-		padding: 20,
-	},
-	placeholderText: {
-		color: '#666',
-		marginBottom: 15,
-	},
-	pickImageButton: {
-		width: '100%',
-	},
-	selectedImageContainer: {
-		alignItems: 'center',
-	},
-	selectedImage: {
-		width: 200,
-		height: 150,
-		borderRadius: 8,
-		marginBottom: 15,
-	},
-	changeImageButton: {
-		width: '100%',
-	},
-	submittedText: {
-		marginBottom: 15,
-		textAlign: 'center',
-	},
-	viewSubmissionButton: {
-		width: '100%',
-	},
-	submitButton: {
-		width: '100%',
-		marginBottom: 10,
-	},
-	loadingIndicator: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 10,
-	},
-	loadingText: {
-		color: '#666',
-	},
-	resultText: {
-		lineHeight: 20,
-		textAlign: 'center',
-
 	},
 	input: {
 		borderWidth: 1,
