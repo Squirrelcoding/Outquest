@@ -1,4 +1,3 @@
-import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
@@ -16,6 +15,7 @@ import { useLocation } from '@/context/Location';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import QuestBox from '@/components/QuestBox';
+import { Redirect } from 'expo-router';
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
@@ -164,7 +164,7 @@ export default function BrowseQuests() {
 		);
 	}
 
-	if (!session) return <Auth />;
+	if (!session) return <Redirect href="/(auth)" />;
 
 	return (
 		<Layout style={styles.container}>

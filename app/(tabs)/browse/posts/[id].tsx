@@ -1,11 +1,10 @@
 // app/posts/[id].tsx
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { Button, Card, Text, Layout, Spinner } from "@ui-kitten/components";
-import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, StyleSheet, Image, ScrollView, Alert, Pressable, TextInput, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
@@ -31,6 +30,9 @@ export default function QuestBox() {
 	const [commentInput, setCommentInput] = useState<any>(null);
 	const [liked, setLiked] = useState<boolean>(false);
 	const [questLikes, setQuestLikes] = useState<number>(0);
+
+	// Photo upload state management
+	const [images, setSelected] = useState<boolean[]>([]);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -278,14 +280,13 @@ export default function QuestBox() {
 		}
 	}
 
-
 	if (loading) return (
 		<Layout style={styles.loadingContainer}>
 			<Text category="h6">Loading...</Text>
 		</Layout>
 	);
 
-	if (!session) return <Auth />;
+	if (!session) return <Redirect href="/(auth)" />;
 
 	if (loadingQuest) return (
 		<Layout style={styles.loadingContainer}>
@@ -301,14 +302,6 @@ export default function QuestBox() {
 
 	return (
 		<>
-			{/* <Stack.Screen
-				options={{
-					headerTitle: "HEADER TITLE",
-					headerLeft: () => <TouchableOpacity onPress={() => router.back }>
-						<Text>Back</Text>
-					</TouchableOpacity>,
-				}}
-			/> */}
 			<ScrollView style={styles.container}>
 				{/* Quest Header */}
 				<Layout style={styles.header}>
@@ -357,6 +350,7 @@ export default function QuestBox() {
 					</View>
 				</Card>
 
+				{/* Like quest */}
 				<Card style={styles.promptCard}>
 					<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
 					<Button onPress={setLike}>
@@ -462,6 +456,8 @@ export default function QuestBox() {
 						</Text>
 					</Card>
 				)}
+
+				{/* Comment section */}
 				<Text>{"\n"}</Text>
 				<Text>{"\n"}</Text>
 				<TextInput style={styles.input}

@@ -1,7 +1,6 @@
 // app/submission/[id].tsx
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { Card, Text } from "@ui-kitten/components";
-import Auth from '@/auth';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -23,7 +22,7 @@ export default function SubmissionView() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth />
+	if (!session) return <Redirect href="/(auth)" />
 
 	return <View style={styles.container}>
 
@@ -34,8 +33,6 @@ export default function SubmissionView() {
 				</Card>
 			})}
 		</ScrollView> : <Text>Loading...</Text>}
-
-
 	</View>
 }
 const styles = StyleSheet.create({

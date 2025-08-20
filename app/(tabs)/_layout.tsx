@@ -28,7 +28,7 @@ export default function TabsLayout() {
 			}}
 		/>
 		<Tabs.Screen
-			name="browse"
+			name="browse/index"
 			options={{
 				title: 'Browse',
 				tabBarIcon: ({ color, size }) => (
@@ -38,7 +38,7 @@ export default function TabsLayout() {
 			}}
 		/>
 		<Tabs.Screen
-			name="create"
+			name="create/index"
 			options={{
 				title: 'Create',
 				tabBarIcon: ({ color, size }) => (
@@ -96,5 +96,18 @@ export default function TabsLayout() {
 			}}
 		/>
 
+		<Tabs.Screen
+			name="browse/posts/[id]"
+			options={{
+				href: null,
+			}}
+		/>
+
+		<Tabs.Screen
+			name="browse/submission/[userID]/[questID]"
+			options={{
+				href: null,
+			}}
+		/>
 	</Tabs>
 }

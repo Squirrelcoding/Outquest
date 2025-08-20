@@ -1,4 +1,4 @@
-import { SetStateAction, useState } from 'react'
+import { useState } from 'react'
 import {
 	View,
 	TextInput,
@@ -11,8 +11,7 @@ import { useAuth } from '@/context/Auth';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Redirect, router } from 'expo-router';
-import SubquestInput from './SubquestInput';
-import { randomUUID } from 'expo-crypto';
+import SubquestInput from '../../../components/SubquestInput';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
@@ -20,11 +19,9 @@ export default function CreateQuest() {
 	const [title, setTitle] = useState<string>('');
 	const [location, setLocation] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
-	const [photoQuantity, setPhotoQuantity] = useState<number>(1);
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 	const [prompts, setPrompts] = useState<string[]>([""]);
-	const [promptComponents, setPromptComponents] = useState<any>();
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	if (loading) return (
@@ -60,7 +57,7 @@ export default function CreateQuest() {
 			Alert.alert('Error', 'Please enter photo requirements');
 			return;
 		}
-		if (photoQuantity < 1) {
+		if (prompts.length < 1) {
 			Alert.alert('Error', 'Please enter a valid number of photos (minimum 1)');
 			return;
 		}
@@ -83,7 +80,6 @@ export default function CreateQuest() {
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
-				num_photos: photoQuantity
 			})
 			const { data: quest, error } = await supabase.from('quest').insert({
 				author: session.user.id,

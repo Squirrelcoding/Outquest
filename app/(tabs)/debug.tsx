@@ -1,57 +1,48 @@
-import { useState, useEffect } from 'react';
-import { Platform, Text, View, StyleSheet } from 'react-native';
+import React from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { Layout, Card, Text } from "@ui-kitten/components";
 
-import * as Device from 'expo-device';
-import * as Location from 'expo-location';
-
-export default function App() {
-	const [location, setLocation] = useState<Location.LocationObject | null>(null);
-	const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-	useEffect(() => {
-		async function getCurrentLocation() {
-			if (Platform.OS === 'android' && !Device.isDevice) {
-				setErrorMsg(
-					'Oops, this will not work on Snack in an Android Emulator. Try it on your device!'
-				);
-				return;
-			}
-			let { status } = await Location.requestForegroundPermissionsAsync();
-			if (status !== 'granted') {
-				setErrorMsg('Permission to access location was denied');
-				return;
-			}
-
-			let location = await Location.getCurrentPositionAsync({});
-			setLocation(location);
-		}
-
-		getCurrentLocation();
-	}, []);
-
-	let text = 'Waiting...';
-	if (errorMsg) {
-		text = errorMsg;
-	} else if (location) {
-		text = JSON.stringify(location);
-	}
+export default function HorizontalFeed() {
+	const items = ["One", "Two", "Three", "Four", "Five"];
 
 	return (
-		<View style={styles.container}>
-			<Text style={styles.paragraph}>{text}</Text>
-		</View>
+		<Layout style={styles.container}>
+			<Text category="h5" style={styles.title}>
+				Horizontal Feed
+			</Text>
+
+			<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContainer}
+			>
+				{items.map((item, index) => (
+					<Card key={index} style={styles.card}>
+						<Text>{item}</Text>
+					</Card>
+				))}
+			</ScrollView>
+		</Layout>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		alignItems: 'center',
-		justifyContent: 'center',
-		padding: 20,
+		paddingTop: 50,
 	},
-	paragraph: {
-		fontSize: 18,
-		textAlign: 'center',
+	title: {
+		marginLeft: 16,
+		marginBottom: 12,
+	},
+	scrollContainer: {
+		paddingHorizontal: 16,
+		// alignItems: "center", // keeps cards aligned in the middle
+	},
+	card: {
+		width: 150,
+		height: 50, // <-- sets card height explicitly
+		marginRight: 12,
+		justifyContent: "center", // centers text inside
 	},
 });
