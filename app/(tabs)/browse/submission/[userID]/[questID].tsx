@@ -1,4 +1,3 @@
-// app/submission/[id].tsx
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { Card, Text } from "@ui-kitten/components";
 import { useAuth } from '@/context/Auth';
@@ -16,6 +15,7 @@ export default function SubmissionView() {
 		if (!session) return;
 		(async () => {
 			const { data } = await supabase.storage.from('quest-upload').list(`${userID}/${questID}`);
+			console.log(data);
 			const urls = data!.map((file) => `${SUPABASE_URL}/storage/v1/object/public/quest-upload/${userID}/${questID}/${file.name}`);
 			setURLS(urls);
 		})();
@@ -24,16 +24,18 @@ export default function SubmissionView() {
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Redirect href="/(auth)" />
 
-	return <View style={styles.container}>
+	return <>
+		<View style={styles.container}>
 
-		{urls ? <ScrollView>
-			{urls.map((url, idx) => {
-				return <Card key={idx} style={styles.imageContainer}>
-					<Image source={{ uri: url }} style={{ width: 200, height: 200 }} />
-				</Card>
-			})}
-		</ScrollView> : <Text>Loading...</Text>}
-	</View>
+			{urls ? <ScrollView>
+				{urls.map((url, idx) => {
+					return <Card key={idx} style={styles.imageContainer}>
+						<Image source={{ uri: url }} style={{ width: 200, height: 200 }} />
+					</Card>
+				})}
+			</ScrollView> : <Text>Loading...</Text>}
+		</View>
+	</>
 }
 const styles = StyleSheet.create({
 	titleText: {

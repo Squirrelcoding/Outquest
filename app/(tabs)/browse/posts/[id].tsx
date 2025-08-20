@@ -2,7 +2,7 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { Button, Card, Text, Layout } from "@ui-kitten/components";
 import { useAuth } from '@/context/Auth';
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 
@@ -14,6 +14,7 @@ interface Subquest {
 	prompt: string,
 	quest_id: number,
 }
+
 
 export default function QuestBox() {
 	const { session, loading } = useAuth();
@@ -31,7 +32,9 @@ export default function QuestBox() {
 
 	// Photo upload state management
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
-	const [submitted, setSubmitted] = useState<boolean[]>([]);
+	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
+
+
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -70,12 +73,10 @@ export default function QuestBox() {
 
 				setAuthorUsername(authorData.username);
 
-
-
 				// Get all submissions
 
 				const { count: submissionsCount } = await supabase
-					.from('submission')
+					.from('completion')
 					.select("*", { count: 'exact', head: true })
 					.eq('quest_id', id);
 
@@ -132,18 +133,18 @@ export default function QuestBox() {
 			
 			setSubquests(subquests!);
 
+			const subquestIDS = subquests!.map((s) => s.id);
+
 			const { data: userSubmissions } = await supabase.from("submission")
 				.select("*")
-				.eq('user_id', session.user.id);
+				.eq('user_id', session.user.id)
+				.in('subquest_id', subquestIDS);
 			
 			const submittedIDS = userSubmissions!.map((submission) => {
 				return submission.subquest_id;
 			});
-			
-			const submittedImages = subquests!.map((subquest) => {
-				return submittedIDS.includes(subquest.id);
-			});
-			setSubmitted(submittedImages);
+			console.log(submittedIDS);
+			setSubquestsCompleted(submittedIDS);
 		}
 
 		loadQuestData();
@@ -152,7 +153,7 @@ export default function QuestBox() {
 	}, [id, session]);
 
 	console.log(subquests);
-	console.log(submitted);
+	console.log(subquestsCompleted);
 
 	const postComment = async () => {
 		if (!session) return;
@@ -211,6 +212,7 @@ export default function QuestBox() {
 		</Layout>
 	);
 
+
 	return (
 		<>
 			<ScrollView style={styles.container}>
@@ -258,8 +260,14 @@ export default function QuestBox() {
 								{quest.location}
 							</Text>
 						</View>
+						<View>
+							<Text category='s1' style={styles.infoLabel}>
+								You have completed {subquestsCompleted.length} / {subquests.length} subquests.
+							</Text>
+						</View>
 					</View>
 				</Card>
+
 
 				{/* Like quest */}
 				<Card style={styles.promptCard}>
@@ -272,15 +280,26 @@ export default function QuestBox() {
 				{/* Photo Prompt */}
 				<Card style={styles.promptCard}>
 					<Text category="h6" style={styles.sectionTitle}>
-						Photo Challenge
+						Quest Description
 					</Text>
 					<Text category="p1" style={styles.promptText}>
 						{quest.description}
 					</Text>
 				</Card>
 
+				{subquestsCompleted.length === subquests.length && <Text>ALL COMPLETED!!!</Text>}
+
 				{subquests.map((subquest, idx) => {
-					return <ImageCard key={idx} session={session} quest={quest} subquest={subquest} hasSubmitted={submitted[idx]}/>
+					return <ImageCard 
+						key={idx}
+						session={session}
+						quest={quest}
+						subquest={subquest}
+						hasSubmitted={subquestsCompleted.includes(subquest.id)} 
+						submittedSubquests={subquestsCompleted} 
+						setSubmittedSubquests={setSubquestsCompleted}
+						totalSubquests={subquests.length}
+					/>
 				})}
 
 				{/* Comment section */}

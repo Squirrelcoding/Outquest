@@ -10,14 +10,26 @@ import { router } from "expo-router";
 
 // TODO: Let the viewer see their submissions right here.
 
+// Diabolical ad-hoc data structure
 interface ImageCardParams {
 	session: Session,
 	quest: any,
 	subquest: any,
-	hasSubmitted: boolean
+	hasSubmitted: boolean,
+	submittedSubquests: number[],
+	setSubmittedSubquests: React.Dispatch<React.SetStateAction<number[]>>,
+	totalSubquests: number
 }
 
-export default function ImageCard({ session, quest, subquest, hasSubmitted }: ImageCardParams) {
+export default function ImageCard({
+	session,
+	quest,
+	subquest,
+	hasSubmitted,
+	submittedSubquests,
+	setSubmittedSubquests,
+	totalSubquests
+}: ImageCardParams) {
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
 	const [judgmentResult, setJudgmentResult] = useState<string | null>(null);
@@ -107,6 +119,22 @@ export default function ImageCard({ session, quest, subquest, hasSubmitted }: Im
 					return;
 				}
 
+				// Check whether completing this quest completes the entire quest
+				const newSubmitted = [...submittedSubquests, subquest.id];
+				setSubmittedSubquests(newSubmitted);
+				console.log(newSubmitted, totalSubquests);
+				if (newSubmitted.length === totalSubquests) {
+					const { error } = await supabase.from("completion")
+						.insert({
+							quest_id: quest.id,
+							user_id: session.user.id
+						});
+					console.log("HERE");
+					if (error) throw error;
+
+				}
+
+
 				setIsSubmissionValid(true);
 				Alert.alert('Success!', 'Your submission has been accepted!');
 			} else {
@@ -121,77 +149,85 @@ export default function ImageCard({ session, quest, subquest, hasSubmitted }: Im
 		}
 	};
 
-	return <Card style={styles.imageCard}>
-		{hasSubmitted ? <Text>({subquest.prompt}) Image submitted!</Text> : <>
-			<Text category="h6" style={styles.sectionTitle}>
-				{subquest.prompt}
-			</Text>
+	return <>
 
-			{selectedImage ? (
-				<View style={styles.selectedImageContainer}>
-					<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-					<Button
-						style={styles.changeImageButton}
-						onPress={pickImage}
-					>
-						Change Image
-					</Button>
-				</View>
-			) : (
-				<View style={styles.imagePlaceholder}>
-					<Text category="s1" style={styles.placeholderText}>
-						No image selected
-					</Text>
-					<Button
-						style={styles.pickImageButton}
-						onPress={pickImage}
-					>
-						Pick Image from Camera Roll
-					</Button>
-				</View>
-			)}
-			<Button
-				style={styles.submitButton}
-				onPress={submitEntry}
-				disabled={!selectedImage || isUploading || isJudging}
-			>
-				{isUploading ? 'Uploading...' :
-					isJudging ? 'Judging...' : 'Submit Entry'}
-			</Button>
-			{/* Submission Status */}
-			{hasSubmitted && (
-				<Card style={styles.submittedCard}>
+		<Card style={styles.imageCard}>
+			{hasSubmitted ? <>
+				<Text>({subquest.prompt}) Image submitted! </Text>
+				<Button onPress={() => router.push(`/(tabs)/browse/submission/${session.user.id}/${quest.id}`)}>View submission</Button>
+			</>
+				: <>
 					<Text category="h6" style={styles.sectionTitle}>
-						✅ Quest Completed!
+						{subquest.prompt}
 					</Text>
-					<Text category="p1" style={styles.submittedText}>
-						You have already completed this quest.
-					</Text>
-					<Button
-						style={styles.viewSubmissionButton}
-						
-						onPress={() => router.push(`/browse/submission/${session.user.id}/${quest.id}`)}
-					>
-						View Your Submission
-					</Button>
-				</Card>
-			)}
-			{judgmentResult && !hasSubmitted && (
-				<Card style={styles.resultCard}>
-					<Text category="h6" style={styles.sectionTitle}>
-						{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
-					</Text>
-					<Text category="p1" style={styles.resultText}>
-						{isSubmissionValid
-							? 'Your submission has been accepted! Great job!'
-							: 'Your image does not match the quest requirements. Please try again with a different image.'
-						}
-					</Text>
-				</Card>
-			)}
-		</>}
 
-	</Card>
+					{selectedImage ? (
+						<View style={styles.selectedImageContainer}>
+							<Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+							<Button
+								style={styles.changeImageButton}
+								onPress={pickImage}
+							>
+								Change Image
+							</Button>
+						</View>
+					) : (
+						<View style={styles.imagePlaceholder}>
+							<Text category="s1" style={styles.placeholderText}>
+								No image selected
+							</Text>
+							<Button
+								style={styles.pickImageButton}
+								onPress={pickImage}
+							>
+								Pick Image from Camera Roll
+							</Button>
+						</View>
+					)}
+					<Button
+						style={styles.submitButton}
+						onPress={submitEntry}
+						disabled={!selectedImage || isUploading || isJudging}
+					>
+						{isUploading ? 'Uploading...' :
+							isJudging ? 'Judging...' : 'Submit Entry'}
+					</Button>
+					{/* Submission Status */}
+					{hasSubmitted && (
+						<Card style={styles.submittedCard}>
+							<Text category="h6" style={styles.sectionTitle}>
+								✅ Quest Completed!
+							</Text>
+							<Text category="p1" style={styles.submittedText}>
+								You have already completed this quest.
+							</Text>
+							<Button
+								style={styles.viewSubmissionButton}
+
+								onPress={() => router.push(`/browse/submission/${session.user.id}/${quest.id}`)}
+							>
+								View Your Submission
+							</Button>
+						</Card>
+					)}
+					{judgmentResult && !hasSubmitted && (
+						<Card style={styles.resultCard}>
+							<Text category="h6" style={styles.sectionTitle}>
+								{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
+							</Text>
+							<Text category="p1" style={styles.resultText}>
+								{isSubmissionValid
+									? 'Your submission has been accepted! Great job!'
+									: 'Your image does not match the quest requirements. Please try again with a different image.'
+								}
+							</Text>
+						</Card>
+					)}
+				</>}
+
+		</Card>
+
+	</>
 
 }
 
