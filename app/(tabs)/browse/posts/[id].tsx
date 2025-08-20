@@ -2,7 +2,7 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { Button, Card, Text, Layout } from "@ui-kitten/components";
 import { useAuth } from '@/context/Auth';
-import { SetStateAction, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 
