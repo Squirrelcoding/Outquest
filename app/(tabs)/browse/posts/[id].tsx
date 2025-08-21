@@ -34,7 +34,52 @@ export default function QuestBox() {
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
 	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
 
+	const [message, setMessage] = useState<string>("");
 
+	// Run this code when the user completes the quest
+	useEffect(() => {
+		if (!session) return;
+		(async () => {
+			if (subquestsCompleted.length === subquests.length) {
+				// Check if user already completed quest
+				const { data: winners } = await supabase.from("completion")
+					.select("*")
+					.eq("quest_id", id)
+					.order("created_at", { ascending: true })
+				const winnerIDs = winners!.map((winner) => winner.user_id)!;
+				if (winnerIDs.includes(session.user.id)) {
+					const place = winnerIDs.indexOf(session.user.id);
+					setMessage(`PLACE: ${place}`);
+
+					// Try to get the winner messages with current place from the database.
+					const { data: messages } = await supabase.from("message")
+						.select("*")
+						.eq("quest_id", id)
+						.eq("place", place + 1)
+						.single();
+					if (messages) {
+						setMessage(messages.content);
+					} else {
+						const { data: defaultMessage } = await supabase.from("message")
+							.select("*")
+							.eq("quest_id", id)
+							.eq("place", 0)
+							.single();
+						setMessage(defaultMessage.content);
+					}
+
+					return;
+				}
+
+				// If quest is not completed, get the number of people who completed the quest before
+				const place = winners!.length;
+				console.log(`USER GOT PLACE: ${place}`)
+				// Get the appropiate winner message.
+			}
+
+
+		})();
+	}, [subquestsCompleted, subquests]);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -130,7 +175,7 @@ export default function QuestBox() {
 			const { data: subquests } = await supabase.from("subquest")
 				.select("*")
 				.eq('quest_id', id);
-			
+
 			setSubquests(subquests!);
 
 			const subquestIDS = subquests!.map((s) => s.id);
@@ -139,7 +184,7 @@ export default function QuestBox() {
 				.select("*")
 				.eq('user_id', session.user.id)
 				.in('subquest_id', subquestIDS);
-			
+
 			const submittedIDS = userSubmissions!.map((submission) => {
 				return submission.subquest_id;
 			});
@@ -151,9 +196,6 @@ export default function QuestBox() {
 		loadCommentData();
 		loadSubquests();
 	}, [id, session]);
-
-	console.log(subquests);
-	console.log(subquestsCompleted);
 
 	const postComment = async () => {
 		if (!session) return;
@@ -287,16 +329,16 @@ export default function QuestBox() {
 					</Text>
 				</Card>
 
-				{subquestsCompleted.length === subquests.length && <Text>ALL COMPLETED!!!</Text>}
+				{subquestsCompleted.length === subquests.length && <Text>{message}</Text>}
 
 				{subquests.map((subquest, idx) => {
-					return <ImageCard 
+					return <ImageCard
 						key={idx}
 						session={session}
 						quest={quest}
 						subquest={subquest}
-						hasSubmitted={subquestsCompleted.includes(subquest.id)} 
-						submittedSubquests={subquestsCompleted} 
+						hasSubmitted={subquestsCompleted.includes(subquest.id)}
+						submittedSubquests={subquestsCompleted}
 						setSubmittedSubquests={setSubquestsCompleted}
 						totalSubquests={subquests.length}
 					/>

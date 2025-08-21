@@ -1,44 +1,43 @@
 import { View, TextInput, StyleSheet } from "react-native";
 import { Button, Text } from "@ui-kitten/components";
 
-interface SubquestInputFormat {
+interface CreateMessageFormat {
 	idx: number,
-	winnerMessages: string[],
-	setWinnerMessages: React.Dispatch<React.SetStateAction<string[]>>
+	messages: string[],
+	setMessages: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 
-export default function CreateMessage({ idx, winnerMessages, setWinnerMessages }: SubquestInputFormat) {
-
-	const updatePrompts = (content: string) => {
-		console.log(`Text changed at index ${idx}. Content: ${content}`);
-		let newWinnerMessages = [...winnerMessages];
-		newWinnerMessages[idx] = content;
-		setWinnerMessages(newWinnerMessages);
+export default function CreateMessage({idx, messages, setMessages}: CreateMessageFormat) {
+	const updateMessages = (content: string) => {
+		console.log(`[create messages] Text changed at index ${idx}. Content: ${content}`);
+		let newMessages = [...messages];
+		newMessages[idx] = content;
+		setMessages(newMessages);
 	}
 	
-	const deletePrompt = () => {
-		if (winnerMessages.length === 1) return;
-		let newPrompts = [...setWinnerMessages];
-		newPrompts = newPrompts.filter((_, index) => index !== idx);
+	const deleteMessages = () => {
+		if (messages.length === 1) return;
+		let newMessages = [...messages];
+		newMessages = newMessages.filter((_, index) => index !== idx);
 
-		setPrompts(newPrompts);
+		setMessages(newMessages);
 	};
 
 	return <>
 		<View style={styles.inputGroup}>
 			<Text category="s1" style={styles.inputLabel}>
-				Photo {idx + 1}
+				{idx + 1 === messages.length ? "Default" : idx + 1} Winner message
 			</Text>
 			<TextInput
-				value={prompts[idx]}
-				onChangeText={(c) => updatePrompts(c)}
+				value={messages[idx]}
+				onChangeText={(c) => updateMessages(c)}
 				multiline
 				style={[styles.input, styles.textArea]}
-				placeholder="Must be a black bike with visible wheels and frame."
+				placeholder="Congratulations!"
 				numberOfLines={3}
 			/>
-			<Button onPress={deletePrompt}>Delete prompt</Button>
+			<Button onPress={deleteMessages}>Delete prompt</Button>
 		</View>
 
 	</>

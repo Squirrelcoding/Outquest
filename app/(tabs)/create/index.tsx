@@ -12,6 +12,7 @@ import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Redirect, router } from 'expo-router';
 import SubquestInput from '../../../components/SubquestInput';
+import CreateMessage from '@/components/CreateMessage';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
@@ -22,6 +23,7 @@ export default function CreateQuest() {
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 	const [prompts, setPrompts] = useState<string[]>([""]);
+	const [winnerMessages, setWinnerMessages] = useState<string[]>([""]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	if (loading) return (
@@ -106,9 +108,21 @@ export default function CreateQuest() {
 			});
 			const { error: bulkError } = await supabase.from("subquest").insert(processedSubquests);
 
-			if (error || bulkError) {
+			// Insert all of the winner messages if any.
+			const processedMessages = winnerMessages.map((message, idx) => {
+				return {
+					quest_id: quest!.id,
+					content: message,
+					place: (idx + 1 === winnerMessages.length ? 0 : idx + 1)
+				}
+			});
+			const { error: messageError } = await supabase.from("message")
+				.insert(processedMessages);
+
+			if (error || bulkError || messageError) {
 				console.error('Error creating quest:', error);
 				console.error('Error creating quest:', bulkError);
+				console.error('Error creating quest:', messageError);
 				Alert.alert('Error', 'Failed to create quest. Please try again.');
 				return;
 			}
@@ -127,10 +141,18 @@ export default function CreateQuest() {
 		// Check if latest prompt is non empty
 		console.log(prompts)
 		if (prompts[prompts.length - 1] === "") {
-			return false;
+			return;
 		}
-
 		setPrompts([...prompts, ""]);
+	}
+
+	const addMessage = () => {
+		// Check if latest message is non-empty
+		console.log(winnerMessages)
+		if (winnerMessages[winnerMessages.length - 1] === "") {
+			return;
+		}
+		setWinnerMessages([...winnerMessages, ""]);
 	}
 
 	return (
@@ -203,6 +225,24 @@ export default function CreateQuest() {
 
 				<Button onPress={addPrompt}>Add new prompt</Button>
 
+			</Card>
+
+			{/* Winner messages */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Winner messages
+				</Text>
+				{
+					Array(winnerMessages.length).fill(0).map((_, idx) => {
+						return <CreateMessage 
+							idx={idx} 
+							key={idx} 
+							messages={winnerMessages} 
+							setMessages={setWinnerMessages} 
+						/>
+					})
+				}
+				<Button onPress={addMessage}>Add new winner message</Button>
 			</Card>
 
 			{/* Deadline Selection */}
