@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { BsQrCode } from "react-icons/bs";
 
 export default function TabsLayout() {
 	return <Tabs
@@ -58,6 +59,17 @@ export default function TabsLayout() {
 			}}
 		/>
 
+		<Tabs.Screen
+			name="create_qr"
+			options={{
+				title: 'QR mode',
+				tabBarIcon: ({ color, size }) => (
+					<Ionicons name="qr-code-outline" size={size} color={color} />
+				),
+				tabBarIconStyle: { marginBottom: -3 },
+			}}
+		/>
+
 		{/* Hidden screens - not shown in tab bar */}
 		<Tabs.Screen
 			name="leaderboard/join"
@@ -92,7 +104,11 @@ export default function TabsLayout() {
 		<Tabs.Screen
 			name="debug"
 			options={{
-				href: null,
+				title: 'debug',
+				tabBarIcon: ({ color, size }) => (
+					<Ionicons name="qr-code-outline" size={size} color={color} />
+				),
+				tabBarIconStyle: { marginBottom: -3 },
 			}}
 		/>
 
