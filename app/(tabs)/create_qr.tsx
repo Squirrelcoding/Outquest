@@ -1,31 +1,89 @@
-import { useState } from 'react'
-import {
-	View,
-	TextInput,
-	StyleSheet,
-	Alert,
-	ScrollView,
-} from 'react-native'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '@/context/Auth';
-import { Button, Card, Text, Layout } from '@ui-kitten/components';
+import { Button, Card, Layout, Text } from "@ui-kitten/components";
+import React, { useState, useCallback } from "react";
+import { View, StyleSheet, ScrollView, TextInput, Alert, } from "react-native";
+import MapView, { Marker, MapPressEvent, Callout } from "react-native-maps";
+import GenerateLocationCode from '@/components/GenerateLocation';
+import { Redirect, router } from "expo-router";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/Auth";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Redirect, router } from 'expo-router';
-import SubquestInput from '../../components/SubquestInput';
-import CreateMessage from '@/components/CreateMessage';
-import GenerateQRCode from '@/components/GenerateQR';
 
-export default function CreateQuest() {
+type MarkerType = {
+	id: string;
+	latitude: number;
+	longitude: number;
+};
+
+enum QUEST_TYPE {
+	PHOTO,
+	LOCATION,
+	PATH
+}
+
+type LocationType = {
+	id: string;
+	message: string;
+}
+
+export default function MultiMarkerMap() {
 	const { session, loading } = useAuth();
-
+	const [markers, setMarkers] = useState<MarkerType[]>([]);
 	const [title, setTitle] = useState<string>('');
-	const [location, setLocation] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-	const [prompts, setPrompts] = useState<string[]>([""]);
-	const [winnerMessages, setWinnerMessages] = useState<string[]>([""]);
+	const [prompts, setPrompts] = useState<LocationType[]>([]);
+	const [winnerMessages, setWinnerMessages] = useState<string[]>([]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
+
+	const handleMapPress = useCallback((event: MapPressEvent) => {
+		try {
+			const coordinate = event?.nativeEvent?.coordinate;
+			if (!coordinate || typeof coordinate.latitude !== 'number' || typeof coordinate.longitude !== 'number') {
+				return;
+			}
+
+			const { latitude, longitude } = coordinate;
+			const id = `marker_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+			const newMarker = { id, latitude, longitude };
+			console.log('Adding marker:', newMarker);
+
+			setMarkers((prev) => [...prev, newMarker]);
+
+			// Also add a new thing to the Location codes at the bottom
+			setPrompts((prev) => [...prev, {
+				id,
+				message: ""
+			}])
+		} catch (error) {
+			console.error('Error in handleMapPress:', error);
+		}
+	}, []);
+
+	const handleMarkerDelete = useCallback((id: string) => {
+		try {
+			console.log(`Attempting to delete marker: ${id}`);
+
+			setMarkers((prevMarkers) => {
+				console.log('Current markers before delete:', prevMarkers.length);
+				const markerToDelete = prevMarkers.find(m => m.id === id);
+
+				if (!markerToDelete) {
+					console.warn(`Marker with id ${id} not found in current markers`);
+					return prevMarkers;
+				}
+
+				const newMarkers = prevMarkers.filter((m) => m.id !== id);
+				console.log('Markers after delete:', newMarkers.length);
+				return newMarkers;
+			});
+			setPrompts((prevPrompts) => prevPrompts.filter((m) => m.id !== id));
+		} catch (error) {
+			console.error('Error in handleMarkerDelete:', error);
+		}
+	}, []);
+
 
 	if (loading) return (
 		<Layout style={styles.loadingContainer}>
@@ -79,7 +137,6 @@ export default function CreateQuest() {
 			// Insert the quest to the quest table
 			console.log({
 				author: session.user.id,
-				location: location.trim() || null,
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
@@ -87,10 +144,10 @@ export default function CreateQuest() {
 			const { data: quest, error } = await supabase.from('quest').insert({
 				author: session.user.id,
 				description,
-				location: location.trim() || null,
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
+				type: "LOCATION"
 			})
 				.select("id")
 				.single();
@@ -101,10 +158,10 @@ export default function CreateQuest() {
 			}
 
 			// Insert in all of the subqeusts of the quest into the subquest table
-			const processedSubquests = prompts.map((prompt) => {
+			const processedSubquests = prompts.map((prompt, i) => {
 				return {
 					quest_id: quest!.id,
-					prompt
+					prompt: JSON.stringify({...prompt, ...markers[i]}),
 				}
 			});
 			const { error: bulkError } = await supabase.from("subquest").insert(processedSubquests);
@@ -138,150 +195,204 @@ export default function CreateQuest() {
 		}
 	};
 
-	const addPrompt = () => {
-		// Check if latest prompt is non empty
-		console.log(prompts)
-		if (prompts[prompts.length - 1] === "") {
-			return;
-		}
-		setPrompts([...prompts, ""]);
-	}
 
-	const addMessage = () => {
-		// Check if latest message is non-empty
-		console.log(winnerMessages)
-		if (winnerMessages[winnerMessages.length - 1] === "") {
-			return;
-		}
-		setWinnerMessages([...winnerMessages, ""]);
-	}
 
 	return (
-		<ScrollView style={styles.container}>
-			<Layout style={styles.header}>
-				<Text category="h4" style={styles.headerTitle}>
-					Create QR Quest
-				</Text>
-				<Text category="s1" style={styles.headerSubtitle}>
-					Design a QR-code based challenge for other adventurers	
-				</Text>
-			</Layout>
+		<View style={styles.container}>
+			<MapView
+				style={styles.map}
+				initialRegion={{
+					latitude: 37.78825,
+					longitude: -122.4324,
+					latitudeDelta: 0.0922,
+					longitudeDelta: 0.0421,
+				}}
+				onPress={handleMapPress}
+			>
+				{markers.map((marker) => {
+					// Add safety check for marker data
+					if (!marker || typeof marker.latitude !== 'number' || typeof marker.longitude !== 'number') {
+						console.warn('Invalid marker data:', marker);
+						return null;
+					}
 
-			{/* Quest Details */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Quest Information
-				</Text>
+					return (
+						<Marker
+							key={marker.id}
+							coordinate={{
+								latitude: marker.latitude,
+								longitude: marker.longitude,
+							}}
+						>
+							<Callout
+								tooltip={false}
+								onPress={() => {
+									console.log(`Callout pressed for marker: ${marker.id}`);
+									// Use setTimeout to delay the deletion slightly
+									setTimeout(() => {
+										handleMarkerDelete(marker.id);
+									}, 100);
+								}}
+							>
+								<View style={styles.callout}>
+									<Text style={styles.calloutText}>Delete {marker.id}</Text>
+								</View>
+							</Callout>
+						</Marker>
+					);
+				})}
+			</MapView>
 
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Quest Title *
+			{/* Debug info */}
+			<View style={styles.debugInfo}>
+				<Text style={styles.debugText}>Markers: {markers.length}</Text>
+			</View>
+			<ScrollView style={styles.container}>
+				<Layout style={styles.header}>
+					<Text category="h4" style={styles.headerTitle}>
+						Create Location Quest
 					</Text>
-					<TextInput
-						value={title}
-						onChangeText={setTitle}
-						placeholder="Find three black bikes"
-						style={styles.input}
-					/>
-				</View>
-
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Description *
+					<Text category="s1" style={styles.headerSubtitle}>
+						Design a Location-based challenge for other adventurers
 					</Text>
-					<TextInput
-						value={description}
-						onChangeText={setDescription}
-						multiline
-						style={[styles.input, styles.textArea]}
-						placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
-						numberOfLines={4}
-					/>
-				</View>
-			</Card>
+				</Layout>
 
-			{/* Photo Requirements */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					QR Code Messages	
-				</Text>
-				<Text>
-					Add messages for users to read upon scanning each QR Code. 
-				</Text>
+				{/* Quest Details */}
+				<Card style={styles.section}>
+					<Text category="h6" style={styles.sectionTitle}>
+						Quest Information
+					</Text>
 
-				{
-					Array(prompts.length).fill(0).map((_, idx) => {
-						return <GenerateQRCode 
-							idx={idx} 
-							key={idx} 
-							prompts={prompts} 
-							setPrompts={setPrompts} 
+					<View style={styles.inputGroup}>
+						<Text category="s1" style={styles.inputLabel}>
+							Quest Title *
+						</Text>
+						<TextInput
+							value={title}
+							onChangeText={setTitle}
+							placeholder="Find three black bikes"
+							style={styles.input}
 						/>
-					})
-				}
+					</View>
 
-				<Button onPress={addPrompt}>Add new prompt</Button>
+					<View style={styles.inputGroup}>
+						<Text category="s1" style={styles.inputLabel}>
+							Description *
+						</Text>
+						<TextInput
+							value={description}
+							onChangeText={setDescription}
+							multiline
+							style={[styles.input, styles.textArea]}
+							placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
+							numberOfLines={4}
+						/>
+					</View>
+				</Card>
 
-			</Card>
+				{/* Photo Requirements */}
+				<Card style={styles.section}>
+					<Text category="h6" style={styles.sectionTitle}>
+						Location Code Messages
+					</Text>
+					<Text>
+						Tap on the map to add a new point
+					</Text>
+
+					{
+						Array(prompts.length).fill(0).map((_, idx) => {
+							return <GenerateLocationCode
+								idx={idx}
+								key={idx}
+								prompts={prompts}
+								setPrompts={setPrompts}
+							/>
+						})
+					}
+
+				</Card>
 
 
 
-			{/* Deadline Selection */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Quest Deadline
-				</Text>
-
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
+				{/* Deadline Selection */}
+				<Card style={styles.section}>
+					<Text category="h6" style={styles.sectionTitle}>
 						Quest Deadline
 					</Text>
+
+					<View style={styles.inputGroup}>
+						<Text category="s1" style={styles.inputLabel}>
+							Quest Deadline
+						</Text>
+						<Button
+							style={styles.dateButton}
+							onPress={showDatepicker}
+							appearance="outline"
+						>
+							{deadline.toLocaleDateString()}
+						</Button>
+
+						{showDatePicker && (
+							<DateTimePicker
+								testID="dateTimePicker"
+								value={deadline}
+								mode="date"
+								onChange={onChange}
+								minimumDate={new Date()}
+							/>
+						)}
+
+						<Text category="c1" style={styles.dateInfo}>
+							Selected: {deadline.toLocaleDateString()}
+						</Text>
+					</View>
+				</Card>
+
+				{/* Submit Button */}
+				<Card style={styles.section}>
 					<Button
-						style={styles.dateButton}
-						onPress={showDatepicker}
-						appearance="outline"
+						style={styles.submitButton}
+						onPress={submitQuest}
+						disabled={submitting || !title.trim() || prompts.length === 0}
 					>
-						{deadline.toLocaleDateString()}
+						{submitting ? 'Creating Quest...' : 'Create Quest!'}
 					</Button>
 
-					{showDatePicker && (
-						<DateTimePicker
-							testID="dateTimePicker"
-							value={deadline}
-							mode="date"
-							onChange={onChange}
-							minimumDate={new Date()}
-						/>
-					)}
-
-					<Text category="c1" style={styles.dateInfo}>
-						Selected: {deadline.toLocaleDateString()}
+					<Text category="c1" style={styles.helpText}>
+						* Required fields
 					</Text>
-				</View>
-			</Card>
-
-			{/* Submit Button */}
-			<Card style={styles.section}>
-				<Button
-					style={styles.submitButton}
-					onPress={submitQuest}
-					disabled={submitting || !title.trim() || prompts.length === 0}
-				>
-					{submitting ? 'Creating Quest...' : 'Create Quest!'}
-				</Button>
-
-				<Text category="c1" style={styles.helpText}>
-					* Required fields
-				</Text>
-			</Card>
-		</ScrollView>
+				</Card>
+			</ScrollView>
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: '#f5f5f5',
+	container: { flex: 1 },
+	map: { height: "50%" },
+	callout: {
+		padding: 6,
+		borderRadius: 6,
+		backgroundColor: "#fff",
+		minWidth: 100,
+	},
+	calloutText: {
+		fontSize: 14,
+		color: "red",
+		fontWeight: "600",
+		textAlign: "center",
+	},
+	debugInfo: {
+		position: 'absolute',
+		top: 50,
+		left: 10,
+		backgroundColor: 'rgba(0,0,0,0.7)',
+		padding: 8,
+		borderRadius: 4,
+	},
+	debugText: {
+		color: 'white',
+		fontSize: 12,
 	},
 	loadingContainer: {
 		flex: 1,
