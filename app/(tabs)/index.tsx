@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Database } from "../../database.types";
 
 type Quest = Database["public"]["Tables"]["quest"]["Row"];
+type LeaderboardMetaRow = Database["public"]["Tables"]["leaderboard meta"]["Row"];
 
 export default function Page() {
 	const { session, loading } = useAuth();
@@ -30,7 +31,7 @@ export default function Page() {
 					.from("submission")
 					.select('subquest_id')
 					.eq('user_id', session.user.id);
-				
+
 
 				if (submissionError) {
 					console.error('Error loading submissions:', submissionError);
@@ -99,18 +100,23 @@ export default function Page() {
 				}
 
 				// Get leaderboard metadata for each leaderboard
-				const leaderboardIDs = userLeaderboardData.map((lb) => lb.leaderboard_id);
-				const { data: leaderboardMetaData, error: metaError } = await supabase
+				const leaderboardIDs: string[] = userLeaderboardData.map((lb) => lb.leaderboard_id);
+				let { data: leaderboardMetaData, error: metaError }: {
+					data: LeaderboardMetaRow[] | null;
+					error: any;
+				} = await supabase
 					.from('leaderboard meta')
 					.select('*')
 					.in('leaderboard_id', leaderboardIDs);
+
+				let typedLeaderboardMetaData: LeaderboardMetaRow[] = leaderboardMetaData!;
 
 				if (metaError) {
 					console.error('Error loading leaderboard metadata:', metaError);
 					return;
 				}
 
-				setUserLeaderboards(leaderboardMetaData || []);
+				setUserLeaderboards(typedLeaderboardMetaData|| []);
 			} catch (error) {
 				console.error('Error loading user leaderboards:', error);
 				Alert.alert('Error', 'Failed to load your leaderboards');

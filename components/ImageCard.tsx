@@ -7,14 +7,17 @@ import { supabase } from "@/lib/supabase";
 import { decode } from 'base64-arraybuffer';
 import { Button, Card, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
+import { Database } from "../database.types";
 
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
+type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
 // TODO: Let the viewer see their submissions right here.
 
 // Diabolical ad-hoc data structure
 interface ImageCardParams {
 	session: Session,
-	quest: any,
-	subquest: any,
+	quest: Quest,
+	subquest: Subquest,
 	hasSubmitted: boolean,
 	submittedSubquests: number[],
 	setSubmittedSubquests: React.Dispatch<React.SetStateAction<number[]>>,

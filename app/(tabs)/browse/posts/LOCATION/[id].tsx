@@ -9,7 +9,19 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 import Comment from '@/components/Comment';
 import LocationCard from '@/components/LocationCard';
 import { useLocation } from '@/context/Location';
+import { Database } from '@/database.types';
 
+type DBComment = Database["public"]["Tables"]["comment"]["Row"];
+type Profile = Database["public"]["Tables"]["profile"]["Row"];
+type CommentLike = Database["public"]["Tables"]["comment score"]["Row"];
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
+
+interface CommentType {
+	comment: DBComment,
+	commentAuthor: string;
+}
+
+// TODO: fix this
 interface Subquest {
 	id: number,
 	prompt: string,
@@ -23,11 +35,11 @@ export default function QuestBox() {
 
 
 	// State management
-	const [quest, setQuest] = useState<any>(null);
+	const [quest, setQuest] = useState<Quest | null>(null);
 	const [authorUsername, setAuthorUsername] = useState<string>("");
 	const [submissions, setSubmissions] = useState<number>(0);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
-	const [comments, setComments] = useState<any>(null);
+	const [comments, setComments] = useState<CommentType[]>([]);
 	const [commentInput, setCommentInput] = useState<any>(null);
 	const [liked, setLiked] = useState<boolean>(false);
 	const [questLikes, setQuestLikes] = useState<number>(0);
@@ -132,23 +144,22 @@ export default function QuestBox() {
 		};
 
 		const loadCommentData = async () => {
-			const { data: rawComments } = await supabase.from("comment")
+			let { data: rawDBComments } = await supabase
+				.from("comment")
 				.select("*")
 				.eq('quest_id', id);
+			
+			let rawComments: DBComment[] = rawDBComments ?? [];
 
 			const comments = await Promise.all(rawComments!.map(async (comment) => {
-				const { data: commentAuthor } = await supabase.from("profile")
+				let { data: rawCommentAuthor } = await supabase.from("profile")
 					.select("*")
 					.eq('id', comment.user_id)
 					.single();
-				const { data: commentLikers } = await supabase.from("comment score")
-					.select("*")
-					.eq('comment_id', comment.id);
-				const likes = commentLikers!.map((commentLike) => commentLike.user_id);
+				let commentAuthor: Profile = rawCommentAuthor;
 				return {
 					comment,
 					commentAuthor,
-					likes
 				}
 			}));
 			setComments(comments);
