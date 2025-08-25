@@ -85,6 +85,13 @@ export default function TabsLayout() {
 			}}
 		/>
 
+		<Tabs.Screen
+			name="browse/posts/[type]/[id]"
+			options={{
+				href: null
+			}}
+		/>
+
 
 		<Tabs.Screen
 			name="leaderboard/show/[id]"
@@ -109,13 +116,6 @@ export default function TabsLayout() {
 					<Ionicons name="qr-code-outline" size={size} color={color} />
 				),
 				tabBarIconStyle: { marginBottom: -3 },
-			}}
-		/>
-
-		<Tabs.Screen
-			name="browse/posts/[id]"
-			options={{
-				href: null,
 			}}
 		/>
 

@@ -9,7 +9,8 @@ interface Quest {
 	author_username: string,
 	description: string,
 	deadline: string,
-	created_at: string
+	created_at: string,
+	type: string,
 }
 
 
@@ -36,12 +37,13 @@ export default function QuestBox({
 	author_username,
 	description,
 	deadline,
-	created_at
+	created_at,
+	type
 }: Quest) {
 	return <Card
 		// key={quest.id}
 		style={styles.questCard}
-		onPress={() => router.push(`/browse/posts/${id}`)}
+		onPress={() => router.push(`/browse/posts/${type}/${id}`)}
 	>
 		<View style={styles.questHeader}>
 			<Text category="h6" style={styles.questTitle}>

@@ -15,7 +15,6 @@ interface Subquest {
 	quest_id: number,
 }
 
-
 export default function QuestBox() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
@@ -76,7 +75,6 @@ export default function QuestBox() {
 				console.log(`USER GOT PLACE: ${place}`)
 				// Get the appropiate winner message.
 			}
-
 
 		})();
 	}, [subquestsCompleted, subquests]);
@@ -309,7 +307,6 @@ export default function QuestBox() {
 						</View>
 					</View>
 				</Card>
-
 
 				{/* Like quest */}
 				<Card style={styles.promptCard}>

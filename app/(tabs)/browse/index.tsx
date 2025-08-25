@@ -295,6 +295,7 @@ export default function BrowseQuests() {
 										description={quest.description}
 										deadline={quest.deadline}
 										created_at={quest.created_at}
+										type={quest.type}
 									/>
 								))}
 							</View>
