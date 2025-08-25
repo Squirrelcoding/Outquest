@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Text } from "@ui-kitten/components";
@@ -23,9 +23,6 @@ export default function LocationCard({
 	quest,
 	subquest,
 	hasSubmitted,
-	submittedSubquests,
-	setSubmittedSubquests,
-	totalSubquests,
 	location
 }: LocationCardParams) {
 
@@ -33,30 +30,38 @@ export default function LocationCard({
 	const [isSubmissionValid, setIsSubmissionValid] = useState<boolean>(false);
 	const [isJudging, setIsJudging] = useState<boolean>(false);
 
-	const { latitude: userLat, longitude: userLon } = location;
+	console.log(location);
+	const { latitude: userLat, longitude: userLon } = location.coords;
 	const { latitude: goalLat, longitude: goalLon } = JSON.parse(subquest.prompt);
 	console.log(userLat, userLon, goalLat, goalLon)
 
 	// Submit quest entry
-	const submitEntry = () => {
-		const distanceMeters = haversineDistance([userLat, userLon], [goalLat, goalLon]) / 1000;
+	const submitEntry = async () => {
+		const distanceMeters = haversineDistance([userLat, userLon], [goalLat, goalLon]) * 1000;
 		if (distanceMeters > 10) return;
 
-		console.log("You win!")
-	};
+		// Add location
+		const { error } = await supabase.from("submission")
+			.insert({
+				subquest_id: subquest.id,
+				user_id: session.user.id,
+			});
+		Alert.alert(location.message);
+		if (error) {
+			console.error(error);
+			throw error;
+		}
+	}
 
 	return <>
-
 		<Card style={styles.imageCard}>
 			{hasSubmitted ? <>
-				<Text>({subquest.prompt}) Image submitted! </Text>
-				<Button onPress={() => router.push(`/(tabs)/browse/submission/${session.user.id}/${quest.id}`)}>View submission</Button>
+				<Text>({location.message}) Image submitted! </Text>
 			</>
 				: <>
 					<Text category="h6" style={styles.sectionTitle}>
-						{subquest.prompt}
+						Title: {subquest.prompt} end of title.
 					</Text>
-
 					
 					<Button
 						style={styles.submitButton}
@@ -97,11 +102,8 @@ export default function LocationCard({
 						</Card>
 					)}
 				</>}
-
 		</Card>
-
 	</>
-
 }
 
 const styles = StyleSheet.create({

@@ -4,10 +4,13 @@ import { Redirect, router } from 'expo-router';
 import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Database } from "../../database.types";
+
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
 
 export default function Page() {
 	const { session, loading } = useAuth();
-	const [completedQuests, setCompletedQuests] = useState<any[]>([]);
+	const [completedQuests, setCompletedQuests] = useState<Quest[]>([]);
 	const [leaderboardID, setLeaderboardID] = useState<string>('');
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 	const [usernames, setUsernames] = useState<string[]>([]);
@@ -27,6 +30,7 @@ export default function Page() {
 					.from("submission")
 					.select('subquest_id')
 					.eq('user_id', session.user.id);
+				
 
 				if (submissionError) {
 					console.error('Error loading submissions:', submissionError);
@@ -39,7 +43,7 @@ export default function Page() {
 				}
 
 				// Get quest details for completed quests
-				const questIDs = completedQuestData.map((quest) => quest.quest_id);
+				const questIDs = completedQuestData.map((quest) => quest.subquest_id);
 				let { data: questData, error: questError } = await supabase
 					.from("quest")
 					.select("*")
@@ -307,7 +311,7 @@ export default function Page() {
 							<Card
 								key={idx}
 								style={styles.questCard}
-								onPress={() => router.push(`/browse/posts/${quest.id}`)}
+								onPress={() => router.push(`/browse/posts/${quest.type}/${quest.id}`)}
 							>
 								<Text category="h6" style={styles.questTitle}>
 									{quest.title}
@@ -320,10 +324,10 @@ export default function Page() {
 								</Text>
 								<View style={styles.questDates}>
 									<Text category="c1" style={styles.questDate}>
-										Created: {new Date(quest.created_at).toLocaleDateString()}
+										Created: {new Date(quest.created_at!).toLocaleDateString()}
 									</Text>
 									<Text category="c1" style={styles.questDate}>
-										Ends: {new Date(quest.deadline).toLocaleDateString()}
+										Ends: {new Date(quest.deadline!).toLocaleDateString()}
 									</Text>
 								</View>
 							</Card>

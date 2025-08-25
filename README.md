@@ -35,7 +35,7 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 - [x] Basic quests with multiple photos
 - [x] Improve landing and sign-up pages
 - [x] Add feature to message winners
-- [ ] Add QR code mode
+- [x] (99% done) Add QR code mode
 - [ ] Path tracker mode
 - [ ] Implement anti-cheating
 - [ ] Refactor code

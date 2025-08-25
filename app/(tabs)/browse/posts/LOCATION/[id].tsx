@@ -36,7 +36,6 @@ export default function QuestBox() {
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
 	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
 
-	const [message, setMessage] = useState<string>("");
 
 	// Run this code when the user completes the quest
 	useEffect(() => {
@@ -50,25 +49,7 @@ export default function QuestBox() {
 					.order("created_at", { ascending: true })
 				const winnerIDs = winners!.map((winner) => winner.user_id)!;
 				if (winnerIDs.includes(session.user.id)) {
-					const place = winnerIDs.indexOf(session.user.id);
-					setMessage(`PLACE: ${place}`);
 
-					// Try to get the winner messages with current place from the database.
-					const { data: messages } = await supabase.from("message")
-						.select("*")
-						.eq("quest_id", id)
-						.eq("place", place + 1)
-						.single();
-					if (messages) {
-						setMessage(messages.content);
-					} else {
-						const { data: defaultMessage } = await supabase.from("message")
-							.select("*")
-							.eq("quest_id", id)
-							.eq("place", 0)
-							.single();
-						setMessage(defaultMessage.content);
-					}
 
 					return;
 				}
@@ -81,7 +62,7 @@ export default function QuestBox() {
 
 
 		})();
-	}, [subquestsCompleted, subquests]);
+	}, [subquestsCompleted, subquests, session, id]);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -201,6 +182,7 @@ export default function QuestBox() {
 
 	const postComment = async () => {
 		if (!session) return;
+		console.log("posted comment")
 		const { error } = await supabase.from("comment")
 			.insert({
 				quest_id: id,
@@ -255,7 +237,6 @@ export default function QuestBox() {
 			<Text category="h6">Quest not found</Text>
 		</Layout>
 	);
-
 
 	return (
 		<>
@@ -330,13 +311,12 @@ export default function QuestBox() {
 					</Text>
 				</Card>
 
-				{subquestsCompleted.length === subquests.length && <Text>{message}</Text>}
 
 				{subquests.map((subquest, idx) => {
 					return <LocationCard
 						key={idx}
 						session={session}
-						location={location!.coords}
+						location={location}
 						quest={quest}
 						subquest={subquest}
 						hasSubmitted={subquestsCompleted.includes(subquest.id)}

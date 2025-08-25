@@ -15,7 +15,7 @@ interface Subquest {
 	quest_id: number,
 }
 
-export default function QuestBox() {
+export default function Post() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
 
@@ -44,9 +44,10 @@ export default function QuestBox() {
 				const { data: winners } = await supabase.from("completion")
 					.select("*")
 					.eq("quest_id", id)
-					.order("created_at", { ascending: true })
+					.order("created_at", { ascending: true });
 				const winnerIDs = winners!.map((winner) => winner.user_id)!;
 				if (winnerIDs.includes(session.user.id)) {
+					console.log("WE ALREADY DID")
 					const place = winnerIDs.indexOf(session.user.id);
 					setMessage(`PLACE: ${place}`);
 
@@ -66,7 +67,6 @@ export default function QuestBox() {
 							.single();
 						setMessage(defaultMessage.content);
 					}
-
 					return;
 				}
 
@@ -251,7 +251,6 @@ export default function QuestBox() {
 			<Text category="h6">Quest not found</Text>
 		</Layout>
 	);
-
 
 	return (
 		<>

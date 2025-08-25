@@ -1,5 +1,5 @@
 import { View, TextInput, StyleSheet } from "react-native";
-import { Button, Text } from "@ui-kitten/components";
+import { Text } from "@ui-kitten/components";
 
 type QRType = {
 	id: string;
