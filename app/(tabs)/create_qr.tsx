@@ -6,19 +6,13 @@ import GenerateLocationCode from '@/components/GenerateLocation';
 import { Redirect, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/Auth";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 type MarkerType = {
 	id: string;
 	latitude: number;
 	longitude: number;
 };
-
-enum QUEST_TYPE {
-	PHOTO,
-	LOCATION,
-	PATH
-}
 
 type LocationType = {
 	id: string;
@@ -93,7 +87,7 @@ export default function MultiMarkerMap() {
 
 	if (!session) return <Redirect href="/(auth)" />;
 
-	const onChange = (event: any, selectedDate: any) => {
+	const onChange = (_event: DateTimePickerEvent, selectedDate: Date) => {
 		setShowDatePicker(false);
 		if (selectedDate) {
 			setDeadline(selectedDate);
@@ -337,7 +331,7 @@ export default function MultiMarkerMap() {
 								testID="dateTimePicker"
 								value={deadline}
 								mode="date"
-								onChange={onChange}
+								onChange={(event, date) => onChange(event, date!)}
 								minimumDate={new Date()}
 							/>
 						)}

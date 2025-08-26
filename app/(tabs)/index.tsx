@@ -15,7 +15,7 @@ export default function Page() {
 	const [leaderboardID, setLeaderboardID] = useState<string>('');
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 	const [usernames, setUsernames] = useState<string[]>([]);
-	const [userLeaderboards, setUserLeaderboards] = useState<any[]>([]);
+	const [userLeaderboards, setUserLeaderboards] = useState<LeaderboardMetaRow[]>([]);
 	const [loadingLeaderboards, setLoadingLeaderboards] = useState<boolean>(false);
 
 	// Load user's completed quests

@@ -2,8 +2,24 @@ import { supabase } from "@/lib/supabase";
 import { Button, Card, Text } from "@ui-kitten/components";
 import { useState } from "react";
 import { View, StyleSheet } from "react-native";
+import { Database } from '@/database.types';
+import { Session } from "@supabase/supabase-js";
 
-export default function Comment({ comment, session }: any) {
+type DBComment = Database["public"]["Tables"]["comment"]["Row"];
+type Profile = Database["public"]["Tables"]["profile"]["Row"];
+
+interface CommentType {
+	comment: DBComment,
+	commentAuthor: Profile;
+	likes: string[];
+}
+
+interface CommentProps {
+	comment: CommentType,
+	session: Session
+}
+
+export default function Comment({ comment, session }: CommentProps) {
 	const [liked, setLiked] = useState<boolean>(comment.likes.includes(session.user.id));
 	const [likes, setLikes] = useState<number>(comment.likes.length);
 
@@ -53,7 +69,7 @@ export default function Comment({ comment, session }: any) {
 					<Text>Unlike</Text>
 				</Button> :
 				<Button onPress={() => likeComment(comment.comment.id)}>
-					<Text>Like {comment.id}</Text>
+					<Text>Like {comment.comment.id}</Text>
 				</Button>
 			}
 		</View>

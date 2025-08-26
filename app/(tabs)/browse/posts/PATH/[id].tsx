@@ -8,6 +8,9 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 
 import Comment from '@/components/Comment';
 import ImageCard from '@/components/ImageCard';
+import { Database } from "@/database.types";
+
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
 
 interface Subquest {
 	id: number,

@@ -16,12 +16,15 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import QuestBox from '@/components/QuestBox';
 import { Redirect } from 'expo-router';
+import { Database } from "../../../database.types";
+
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
 	const { location, loading: locLoading } = useLocation();
 
-	const [quests, setQuests] = useState<any>(null);
+	const [quests, setQuests] = useState<Quest[]>([]);
 	const [usernames, setUsernames] = useState<string[]>([]);
 	const [refreshing, setRefreshing] = useState(false);
 	const [searching, setSearching] = useState(false);
@@ -121,7 +124,8 @@ export default function BrowseQuests() {
 					query = query.gt('deadline', new Date().toISOString());
 				}
 
-				const { data: questData, error: questError } = await query;
+				const { data: rawQuestData, error: questError } = await query;
+				const questData: Quest[] = rawQuestData!;
 				if (questError) throw questError;
 				setQuests(questData);
 			} else {
@@ -286,15 +290,15 @@ export default function BrowseQuests() {
 					{quests ? (
 						quests.length > 0 ? (
 							<View style={styles.questsList}>
-								{quests.map((quest: any, idx: number) => (
+								{quests.map((quest: Quest, idx: number) => (
 									<QuestBox
 										key={idx}
 										id={quest.id}
-										title={quest.title}
+										title={quest.title!}
 										author_username={usernames[idx]}
-										description={quest.description}
-										deadline={quest.deadline}
-										created_at={quest.created_at}
+										description={quest.description!}
+										deadline={quest.deadline!}
+										created_at={quest.created_at!}
 										type={quest.type}
 									/>
 								))}

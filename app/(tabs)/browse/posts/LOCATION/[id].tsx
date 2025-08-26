@@ -13,20 +13,22 @@ import { Database } from '@/database.types';
 
 type DBComment = Database["public"]["Tables"]["comment"]["Row"];
 type Profile = Database["public"]["Tables"]["profile"]["Row"];
-type CommentLike = Database["public"]["Tables"]["comment score"]["Row"];
 type Quest = Database["public"]["Tables"]["quest"]["Row"];
+type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
+type CommentLike = Database["public"]["Tables"]["comment score"]["Row"];
 
 interface CommentType {
 	comment: DBComment,
-	commentAuthor: string;
+	commentAuthor: Profile;
+	likes: string[];
 }
 
-// TODO: fix this
-interface Subquest {
-	id: number,
-	prompt: string,
-	quest_id: number,
-}
+// // TODO: fix this
+// interface Subquest {
+// 	id: number,
+// 	prompt: string,
+// 	quest_id: number,
+// }
 
 export default function QuestBox() {
 	const { session, loading: authLoading } = useAuth();
@@ -40,7 +42,7 @@ export default function QuestBox() {
 	const [submissions, setSubmissions] = useState<number>(0);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
 	const [comments, setComments] = useState<CommentType[]>([]);
-	const [commentInput, setCommentInput] = useState<any>(null);
+	const [commentInput, setCommentInput] = useState<string | null>(null);
 	const [liked, setLiked] = useState<boolean>(false);
 	const [questLikes, setQuestLikes] = useState<number>(0);
 
@@ -144,33 +146,38 @@ export default function QuestBox() {
 		};
 
 		const loadCommentData = async () => {
-			let { data: rawDBComments } = await supabase
-				.from("comment")
+			const { data: rawComments } = await supabase.from("comment")
 				.select("*")
 				.eq('quest_id', id);
-			
-			let rawComments: DBComment[] = rawDBComments ?? [];
 
-			const comments = await Promise.all(rawComments!.map(async (comment) => {
+			const comments = await Promise.all(rawComments!.map(async (comment: DBComment) => {
 				let { data: rawCommentAuthor } = await supabase.from("profile")
 					.select("*")
 					.eq('id', comment.user_id)
 					.single();
-				let commentAuthor: Profile = rawCommentAuthor;
+				const commentAuthor: Profile = rawCommentAuthor!;
+				let { data: rawCommentLikers } = await supabase.from("comment score")
+					.select("*")
+					.eq('comment_id', comment.id);
+				const commentLikers: CommentLike[] = rawCommentLikers!;
+				const likes = commentLikers!.map((commentLike) => commentLike.user_id!);
 				return {
 					comment,
 					commentAuthor,
+					likes
 				}
 			}));
 			setComments(comments);
 		};
 
 		const loadSubquests = async () => {
-			const { data: subquests } = await supabase.from("subquest")
+			let { data: rawSubquests } = await supabase.from("subquest")
 				.select("*")
 				.eq('quest_id', id);
 
-			setSubquests(subquests!);
+			const subquests: Subquest[] = rawSubquests!;
+
+			setSubquests(subquests);
 
 			const subquestIDS = subquests!.map((s) => s.id);
 
@@ -275,7 +282,7 @@ export default function QuestBox() {
 								Created:
 							</Text>
 							<Text category="s1" style={styles.infoValue}>
-								{new Date(quest.created_at).toLocaleDateString()}
+								{new Date(quest.created_at!).toLocaleDateString()}
 							</Text>
 						</View>
 						<View style={styles.infoRow}>
@@ -283,7 +290,7 @@ export default function QuestBox() {
 								Deadline:
 							</Text>
 							<Text category="s1" style={styles.infoValue}>
-								{new Date(quest.deadline).toLocaleDateString()}
+								{new Date(quest.deadline!).toLocaleDateString()}
 							</Text>
 						</View>
 						<View>
@@ -327,7 +334,7 @@ export default function QuestBox() {
 					return <LocationCard
 						key={idx}
 						session={session}
-						location={location}
+						location={location!}
 						quest={quest}
 						subquest={subquest}
 						hasSubmitted={subquestsCompleted.includes(subquest.id)}
@@ -348,7 +355,7 @@ export default function QuestBox() {
 
 				<Text category="h6" style={styles.sectionTitle}>Comments</Text>
 				{comments && <View>
-					{comments.map((comment: any, idx: number) => {
+					{comments.map((comment: CommentType, idx: number) => {
 						return <Comment comment={comment} session={session} key={idx} />
 					})}
 				</View>}

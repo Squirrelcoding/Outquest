@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Alert, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { haversineDistance } from "@/lib/utils";
 import { Database } from "../database.types";
+import { LocationObject } from "expo-location";
 
 type Quest = Database["public"]["Tables"]["quest"]["Row"];
 type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
@@ -13,7 +14,7 @@ type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
 // Diabolical ad-hoc data structure
 interface LocationCardParams {
 	session: Session,
-	location: any,
+	location: LocationObject,
 	quest: Quest,
 	subquest: Subquest,
 	hasSubmitted: boolean,
@@ -36,13 +37,17 @@ export default function LocationCard({
 
 	console.log(location);
 	const { latitude: userLat, longitude: userLon } = location.coords;
-	const { latitude: goalLat, longitude: goalLon } = JSON.parse(subquest.prompt);
+	const { latitude: goalLat, longitude: goalLon } = JSON.parse(subquest.prompt!);
 	console.log(userLat, userLon, goalLat, goalLon)
 
 	// Submit quest entry
 	const submitEntry = async () => {
+		setIsJudging(true);
 		const distanceMeters = haversineDistance([userLat, userLon], [goalLat, goalLon]) * 1000;
-		if (distanceMeters > 10) return;
+		if (distanceMeters > 10) {
+			setIsSubmissionValid(false);
+			return;
+		}
 
 		// Add location
 		const { error } = await supabase.from("submission")
@@ -50,17 +55,19 @@ export default function LocationCard({
 				subquest_id: subquest.id,
 				user_id: session.user.id,
 			});
-		Alert.alert(location.message);
+		setIsJudging(false);
 		if (error) {
 			console.error(error);
 			throw error;
 		}
+		setVerificationResult(true);
+		setIsSubmissionValid(true);
 	}
 
 	return <>
 		<Card style={styles.imageCard}>
 			{hasSubmitted ? <>
-				<Text>({location.message}) Image submitted! </Text>
+				<Text>Image submitted! </Text>
 			</>
 				: <>
 					<Text category="h6" style={styles.sectionTitle}>

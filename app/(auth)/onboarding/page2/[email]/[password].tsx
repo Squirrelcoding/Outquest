@@ -14,6 +14,9 @@ import * as FileSystem from 'expo-file-system';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { decode } from 'base64-arraybuffer'
 import { router } from 'expo-router';
+import { Database } from '@/database.types';
+
+type City = Database["public"]["Tables"]["cities"]["Row"];
 
 export default function Page2() {
 	const { session, loading } = useAuth();
@@ -22,7 +25,7 @@ export default function Page2() {
 	const [username, setUsername] = useState<string>('');
 	const [age, setAge] = useState<number>(0);
 	const [city, setCity] = useState<string>('');
-	const [citySuggestion, setCitySuggestion] = useState<any>(null);
+	const [citySuggestion, setCitySuggestion] = useState<string | null>(null);
 	const [image, setImage] = useState<string>('');
 	const [uploading, setUploading] = useState<boolean>(false);
 	const [saving, setSaving] = useState<boolean>(false);
@@ -98,15 +101,17 @@ export default function Page2() {
 
 	const updateCityResults = async (s: string) => {
 		setCity(s);
-		const { data, error } = await supabase
+		let { data: rawData, error } = await supabase
 			.from('cities')
 			.select('*')
 			.ilike('place', `%${s}%`)
 			.order('population', { ascending: false })
 			.limit(1);
+		const data: City[] = rawData!;
+
 		if (error) console.error(error);
 		console.log(data);
-		if (data) setCitySuggestion(data[0].place);
+		if (data) setCitySuggestion(data[0].place!);
 	}
 
 

@@ -15,6 +15,9 @@ import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { decode } from 'base64-arraybuffer'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect, router } from 'expo-router';
+import { Database } from "../../database.types";
+
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
 
 export default function Settings() {
 	const { session, loading } = useAuth();
@@ -22,7 +25,7 @@ export default function Settings() {
 	const [username, setUsername] = useState<string>('');
 	const [age, setAge] = useState<number>(0);
 	const [city, setCity] = useState<string>('');
-	const [citySuggestion, setCitySuggestion] = useState<any>(null);
+	const [citySuggestion, setCitySuggestion] = useState<string | null>(null);
 	const [image, setImage] = useState<string>('');
 	const [uploading, setUploading] = useState<boolean>(false);
 	const [saving, setSaving] = useState<boolean>(false);
@@ -138,7 +141,7 @@ export default function Settings() {
 			.limit(1);
 		if (error) console.error(error);
 		console.log(data);
-		if (data) setCitySuggestion(data[0].place);
+		if (data) setCitySuggestion(data[0].place!);
 	}
 
 

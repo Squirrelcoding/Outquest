@@ -1,17 +1,18 @@
-import Auth from "@/auth";
 import { useAuth } from "@/context/Auth";
+import { Database } from "@/database.types";
 import { supabase } from "@/lib/supabase";
 import { Text, Card, Layout } from "@ui-kitten/components";
-import { useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, Image } from "react-native";
 
+type Profile = Database["public"]["Tables"]["profile"]["Row"];
 
-export default function Profile() {
+export default function ProfilePage() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
 
-	const [user, setUser] = useState<any>(null);
+	const [user, setUser] = useState<Profile | null>(null);
 	const [profilePic, setProfilePic] = useState<string | null>(null);
 	const [completedQuests, setCompletedQuests] = useState<number>(0);
 	const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
@@ -20,11 +21,13 @@ export default function Profile() {
 		(async () => {
 			try {
 				// Get user profile data
-				const { data: profileData, error: profileError } = await supabase
+				let { data: rawProfileData, error: profileError } = await supabase
 					.from('profile')
 					.select('*')
 					.eq('id', id)
 					.single();
+
+				const profileData: Profile = rawProfileData!;
 				
 				if (profileError) {
 					console.error('Profile error:', profileError);
@@ -54,7 +57,8 @@ export default function Profile() {
 						setProfilePic(imageData.publicUrl);
 					}
 				} catch (imageError) {
-					console.log('No profile picture found');
+					console.error(imageError);
+					throw imageError;
 				}
 
 			} catch (error) {
@@ -66,7 +70,7 @@ export default function Profile() {
 	}, [id]);
 
 	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Auth />
+	if (!session) return <Redirect href='/(auth)' />
 	if (loadingProfile) return <Text>Loading profile...</Text>
 
 	return (
