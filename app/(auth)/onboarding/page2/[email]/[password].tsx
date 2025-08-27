@@ -14,9 +14,7 @@ import * as FileSystem from 'expo-file-system';
 import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { decode } from 'base64-arraybuffer'
 import { router } from 'expo-router';
-import { Database } from '@/database.types';
-
-type City = Database["public"]["Tables"]["cities"]["Row"];
+import { City } from '@/types';
 
 export default function Page2() {
 	const { session, loading } = useAuth();

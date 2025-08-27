@@ -15,9 +15,6 @@ import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { decode } from 'base64-arraybuffer'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect, router } from 'expo-router';
-import { Database } from "../../database.types";
-
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
 
 export default function Settings() {
 	const { session, loading } = useAuth();

@@ -1,12 +1,10 @@
 import { useAuth } from "@/context/Auth";
-import { Database } from "@/database.types";
 import { supabase } from "@/lib/supabase";
+import { Profile } from "@/types";
 import { Text, Card, Layout } from "@ui-kitten/components";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, Image } from "react-native";
-
-type Profile = Database["public"]["Tables"]["profile"]["Row"];
 
 export default function ProfilePage() {
 	const { session, loading } = useAuth();

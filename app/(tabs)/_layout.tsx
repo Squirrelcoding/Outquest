@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { BsQrCode } from "react-icons/bs";
 
 export default function TabsLayout() {
 	return <Tabs

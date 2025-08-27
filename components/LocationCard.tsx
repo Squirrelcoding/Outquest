@@ -5,11 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { Button, Card, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { haversineDistance } from "@/lib/utils";
-import { Database } from "../database.types";
 import { LocationObject } from "expo-location";
+import { Quest, Subquest } from "@/types";
 
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
-type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
 
 // Diabolical ad-hoc data structure
 interface LocationCardParams {

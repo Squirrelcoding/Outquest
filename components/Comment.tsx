@@ -2,11 +2,8 @@ import { supabase } from "@/lib/supabase";
 import { Button, Card, Text } from "@ui-kitten/components";
 import { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { Database } from '@/database.types';
 import { Session } from "@supabase/supabase-js";
-
-type DBComment = Database["public"]["Tables"]["comment"]["Row"];
-type Profile = Database["public"]["Tables"]["profile"]["Row"];
+import { DBComment, Profile } from "@/types";
 
 interface CommentType {
 	comment: DBComment,

@@ -16,9 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import QuestBox from '@/components/QuestBox';
 import { Redirect } from 'expo-router';
-import { Database } from "../../../database.types";
-
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
+import { Quest } from '@/types';
 
 export default function BrowseQuests() {
 	const { session, loading } = useAuth();
@@ -91,6 +89,7 @@ export default function BrowseQuests() {
 		if (session) {
 			loadQuests();
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [session, showExpired]);
 
 	const submitQuery = async () => {

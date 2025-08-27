@@ -8,13 +8,7 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 
 import Comment from '@/components/Comment';
 import ImageCard from '@/components/ImageCard';
-import { Database } from '@/database.types';
-
-type DBComment = Database["public"]["Tables"]["comment"]["Row"];
-type Profile = Database["public"]["Tables"]["profile"]["Row"];
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
-type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
-type CommentLike = Database["public"]["Tables"]["comment score"]["Row"];
+import { CommentLike, DBComment, Profile, Quest, Subquest } from '@/types';
 
 interface CommentType {
 	comment: DBComment,
@@ -84,7 +78,7 @@ export default function Post() {
 			}
 
 		})();
-	}, [subquestsCompleted, subquests]);
+	}, [subquestsCompleted, subquests, session, id]);
 
 	// Load quest details and check submission status
 	useEffect(() => {

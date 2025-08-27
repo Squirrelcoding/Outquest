@@ -4,10 +4,7 @@ import { Redirect, router } from 'expo-router';
 import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Database } from "../../database.types";
-
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
-type LeaderboardMetaRow = Database["public"]["Tables"]["leaderboard meta"]["Row"];
+import { LeaderboardMetaRow, Quest } from '@/types';
 
 export default function Page() {
 	const { session, loading } = useAuth();

@@ -9,11 +9,7 @@ import {
 } from 'react-native';
 import { Card, Text, Layout, Button } from '@ui-kitten/components';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { Database } from "@/database.types";
-
-type LeaderboardMetaRow = Database["public"]["Tables"]["leaderboard meta"]["Row"];
-type Profile = Database["public"]["Tables"]["profile"]["Row"];
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
+import { LeaderboardMetaRow, Profile } from '@/types';
 
 export default function LeaderboardDetail() {
 	const { session, loading } = useAuth();
@@ -23,7 +19,7 @@ export default function LeaderboardDetail() {
 	const [users, setUsers] = useState<Profile[]>([]);
 	const [isOwner, setIsOwner] = useState<boolean>(false);
 	const [loadingData, setLoadingData] = useState<boolean>(true);
-	const [userStats, setUserStats] = useState<any>({});
+	const [userStats, setUserStats] = useState<Record<string, number>>({});
 
 	useEffect(() => {
 		if (!session) return;
@@ -81,15 +77,15 @@ export default function LeaderboardDetail() {
 					setUsers(userData || []);
 
 					// Load user stats (completed quests)
-					const statsPromises = userIDs.map(async (userId) => {
-						const { data: submissionData } = await supabase
+					const statsPromises = userIDs.map(async (userId: string) => {
+						const { data } = await supabase
 							.from('submission')
 							.select('quest_id')
 							.eq('user_id', userId);
 						
 						return {
 							userId,
-							completedQuests: submissionData?.length || 0
+							completedQuests: data?.length || 0
 						};
 					});
 
@@ -97,7 +93,7 @@ export default function LeaderboardDetail() {
 					const statsMap = statsResults.reduce((acc, stat) => {
 						acc[stat.userId] = stat.completedQuests;
 						return acc;
-					}, {});
+					}, {} as Record<string, number>);
 
 					setUserStats(statsMap);
 				}
@@ -139,6 +135,8 @@ export default function LeaderboardDetail() {
 		return bQuests - aQuests;
 	});
 
+	console.log(userStats);
+
 	return (
 		<ScrollView style={styles.container}>
 			{/* Leaderboard Header */}
@@ -172,7 +170,7 @@ export default function LeaderboardDetail() {
 					</View>
 					<View style={styles.statItem}>
 						<Text category="h4" style={styles.statNumber}>
-							{Object.values(userStats).reduce((sum: number, quests: Quest[]) => sum + quests, 0)}
+							{Object.values(userStats).reduce((a: number, b: number) => a + b, 0)}
 						</Text>
 						<Text category="c1" style={styles.statLabel}>
 							Total Quests

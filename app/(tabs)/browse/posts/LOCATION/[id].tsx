@@ -9,13 +9,7 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 import Comment from '@/components/Comment';
 import LocationCard from '@/components/LocationCard';
 import { useLocation } from '@/context/Location';
-import { Database } from '@/database.types';
-
-type DBComment = Database["public"]["Tables"]["comment"]["Row"];
-type Profile = Database["public"]["Tables"]["profile"]["Row"];
-type Quest = Database["public"]["Tables"]["quest"]["Row"];
-type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
-type CommentLike = Database["public"]["Tables"]["comment score"]["Row"];
+import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
 
 interface CommentType {
 	comment: DBComment,
