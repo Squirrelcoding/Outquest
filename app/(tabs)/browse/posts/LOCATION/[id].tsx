@@ -93,7 +93,6 @@ export default function QuestBox() {
 					.eq('id', questData.author)
 					.single();
 
-
 				if (authorError) {
 					console.error('Error loading author:', authorError);
 					Alert.alert('Error', 'Failed to load quest details');
@@ -315,7 +314,6 @@ export default function QuestBox() {
 						{quest.description}
 					</Text>
 				</Card>
-
 
 				{subquests.map((subquest, idx) => {
 					return <LocationCard

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import Entypo from '@expo/vector-icons/Entypo';
 
 export default function TabsLayout() {
 	return <Tabs
@@ -47,23 +48,25 @@ export default function TabsLayout() {
 				tabBarIconStyle: { marginBottom: -3 },
 			}}
 		/>
+
+
 		<Tabs.Screen
-			name="settings"
+			name="create_qr"
 			options={{
-				title: 'Settings',
+				title: 'Location Quest',
 				tabBarIcon: ({ color, size }) => (
-					<Ionicons name="settings-outline" size={size} color={color} />
+					<Entypo name="globe" size={size} color={color} />
 				),
 				tabBarIconStyle: { marginBottom: -3 },
 			}}
 		/>
 
 		<Tabs.Screen
-			name="create_qr"
+			name="settings"
 			options={{
-				title: 'QR mode',
+				title: 'Settings',
 				tabBarIcon: ({ color, size }) => (
-					<Ionicons name="qr-code-outline" size={size} color={color} />
+					<Ionicons name="settings-outline" size={size} color={color} />
 				),
 				tabBarIconStyle: { marginBottom: -3 },
 			}}
@@ -110,16 +113,32 @@ export default function TabsLayout() {
 		<Tabs.Screen
 			name="debug"
 			options={{
-				title: 'debug',
-				tabBarIcon: ({ color, size }) => (
-					<Ionicons name="qr-code-outline" size={size} color={color} />
-				),
-				tabBarIconStyle: { marginBottom: -3 },
+				href: null,
 			}}
 		/>
 
 		<Tabs.Screen
 			name="browse/submission/[userID]/[questID]"
+			options={{
+				href: null,
+			}}
+		/>
+
+		<Tabs.Screen
+			name="browse/posts/LOCATION/[id]"
+			options={{
+				href: null,
+			}}
+		/>
+		<Tabs.Screen
+			name="browse/posts/PATH/[id]"
+			options={{
+				href: null,
+			}}
+		/>
+
+		<Tabs.Screen
+			name="browse/posts/PHOTO/[id]"
 			options={{
 				href: null,
 			}}
