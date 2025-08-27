@@ -23,13 +23,6 @@ interface CommentType {
 	likes: string[];
 }
 
-// // TODO: fix this
-// interface Subquest {
-// 	id: number,
-// 	prompt: string,
-// 	quest_id: number,
-// }
-
 export default function QuestBox() {
 	const { session, loading: authLoading } = useAuth();
 	const { location, loading: locationLoading } = useLocation();

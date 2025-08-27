@@ -1,4 +1,3 @@
-import Auth from '@/components/Auth';
 import { useAuth } from '@/context/Auth';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
@@ -9,14 +8,19 @@ import {
 	StyleSheet,
 } from 'react-native';
 import { Card, Text, Layout, Button } from '@ui-kitten/components';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Database } from "@/database.types";
+
+type LeaderboardMetaRow = Database["public"]["Tables"]["leaderboard meta"]["Row"];
+type Profile = Database["public"]["Tables"]["profile"]["Row"];
+type Quest = Database["public"]["Tables"]["quest"]["Row"];
 
 export default function LeaderboardDetail() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
 
-	const [leaderboardData, setLeaderboardData] = useState<any>(null);
-	const [users, setUsers] = useState<any[]>([]);
+	const [leaderboardData, setLeaderboardData] = useState<LeaderboardMetaRow | null>(null);
+	const [users, setUsers] = useState<Profile[]>([]);
 	const [isOwner, setIsOwner] = useState<boolean>(false);
 	const [loadingData, setLoadingData] = useState<boolean>(true);
 	const [userStats, setUserStats] = useState<any>({});
@@ -29,11 +33,13 @@ export default function LeaderboardDetail() {
 				setLoadingData(true);
 
 				// Load leaderboard metadata
-				const { data: metaData, error: metaError } = await supabase
+				const { data: rawMetaData, error: metaError } = await supabase
 					.from('leaderboard meta')
 					.select('*')
 					.eq('leaderboard_id', id)
 					.single();
+				
+				const metaData: LeaderboardMetaRow = rawMetaData;
 
 				if (metaError) {
 					console.error('Error loading leaderboard metadata:', metaError);
@@ -60,10 +66,12 @@ export default function LeaderboardDetail() {
 					const userIDs = userIDData.map((user) => user.user_id);
 					
 					// Load user profiles
-					const { data: userData, error: userError } = await supabase
+					const { data: rawUserData, error: userError } = await supabase
 						.from('profile')
 						.select('*')
 						.in('id', userIDs);
+					
+					const userData: Profile[] = rawUserData!;	
 
 					if (userError) {
 						console.error('Error loading user profiles:', userError);
@@ -110,7 +118,7 @@ export default function LeaderboardDetail() {
 		</Layout>
 	);
 	
-	if (!session) return <Auth />;
+	if (!session) return <Redirect href="/(auth)" />;
 
 	if (loadingData) return (
 		<Layout style={styles.loadingContainer}>
@@ -164,7 +172,7 @@ export default function LeaderboardDetail() {
 					</View>
 					<View style={styles.statItem}>
 						<Text category="h4" style={styles.statNumber}>
-							{Object.values(userStats).reduce((sum: number, quests: any) => sum + quests, 0)}
+							{Object.values(userStats).reduce((sum: number, quests: Quest[]) => sum + quests, 0)}
 						</Text>
 						<Text category="c1" style={styles.statLabel}>
 							Total Quests

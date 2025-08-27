@@ -8,14 +8,18 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 
 import Comment from '@/components/Comment';
 import ImageCard from '@/components/ImageCard';
-import { Database } from "@/database.types";
+import { Database } from '@/database.types';
 
+type DBComment = Database["public"]["Tables"]["comment"]["Row"];
+type Profile = Database["public"]["Tables"]["profile"]["Row"];
 type Quest = Database["public"]["Tables"]["quest"]["Row"];
+type Subquest = Database["public"]["Tables"]["subquest"]["Row"];
+type CommentLike = Database["public"]["Tables"]["comment score"]["Row"];
 
-interface Subquest {
-	id: number,
-	prompt: string,
-	quest_id: number,
+interface CommentType {
+	comment: DBComment,
+	commentAuthor: Profile;
+	likes: string[];
 }
 
 export default function Post() {
@@ -23,12 +27,12 @@ export default function Post() {
 	const { id } = useLocalSearchParams();
 
 	// State management
-	const [quest, setQuest] = useState<any>(null);
+	const [quest, setQuest] = useState<Quest | null>(null);
 	const [authorUsername, setAuthorUsername] = useState<string>("");
 	const [submissions, setSubmissions] = useState<number>(0);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
-	const [comments, setComments] = useState<any>(null);
-	const [commentInput, setCommentInput] = useState<any>(null);
+	const [comments, setComments] = useState<CommentType[]>([]);
+	const [commentInput, setCommentInput] = useState<string | null>(null);
 	const [liked, setLiked] = useState<boolean>(false);
 	const [questLikes, setQuestLikes] = useState<number>(0);
 
@@ -154,15 +158,17 @@ export default function Post() {
 				.select("*")
 				.eq('quest_id', id);
 
-			const comments = await Promise.all(rawComments!.map(async (comment) => {
-				const { data: commentAuthor } = await supabase.from("profile")
+			const comments = await Promise.all(rawComments!.map(async (comment: DBComment) => {
+				let { data: rawCommentAuthor } = await supabase.from("profile")
 					.select("*")
 					.eq('id', comment.user_id)
 					.single();
-				const { data: commentLikers } = await supabase.from("comment score")
+				const commentAuthor: Profile = rawCommentAuthor!;
+				let { data: rawCommentLikers } = await supabase.from("comment score")
 					.select("*")
 					.eq('comment_id', comment.id);
-				const likes = commentLikers!.map((commentLike) => commentLike.user_id);
+				const commentLikers: CommentLike[] = rawCommentLikers!;
+				const likes = commentLikers!.map((commentLike) => commentLike.user_id!);
 				return {
 					comment,
 					commentAuthor,
@@ -281,7 +287,7 @@ export default function Post() {
 								Created:
 							</Text>
 							<Text category="s1" style={styles.infoValue}>
-								{new Date(quest.created_at).toLocaleDateString()}
+								{new Date(quest.created_at!).toLocaleDateString()}
 							</Text>
 						</View>
 						<View style={styles.infoRow}>
@@ -289,7 +295,7 @@ export default function Post() {
 								Deadline:
 							</Text>
 							<Text category="s1" style={styles.infoValue}>
-								{new Date(quest.deadline).toLocaleDateString()}
+								{new Date(quest.deadline!).toLocaleDateString()}
 							</Text>
 						</View>
 						<View>
@@ -354,7 +360,7 @@ export default function Post() {
 
 				<Text category="h6" style={styles.sectionTitle}>Comments</Text>
 				{comments && <View>
-					{comments.map((comment: any, idx: number) => {
+					{comments.map((comment: CommentType, idx: number) => {
 						return <Comment comment={comment} session={session} key={idx} />
 					})}
 				</View>}
