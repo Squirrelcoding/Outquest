@@ -26,6 +26,9 @@ export default function LocationCard({
 	quest,
 	subquest,
 	hasSubmitted,
+	submittedSubquests,
+	setSubmittedSubquests,
+	totalSubquests,
 	location
 }: LocationCardParams) {
 
@@ -43,24 +46,42 @@ export default function LocationCard({
 		setIsJudging(true);
 		const distanceMeters = haversineDistance([userLat, userLon], [goalLat, goalLon]) * 1000;
 		if (distanceMeters > 10) {
+			setIsJudging(false);
 			setIsSubmissionValid(false);
-			return;
-		}
+			setVerificationResult(true);
+		} else {
+			// Add location
+			const { error } = await supabase.from("submission")
+				.insert({
+					subquest_id: subquest.id,
+					user_id: session.user.id,
+				});
 
-		// Add location
-		const { error } = await supabase.from("submission")
-			.insert({
-				subquest_id: subquest.id,
-				user_id: session.user.id,
-			});
-		setIsJudging(false);
-		if (error) {
-			console.error(error);
-			throw error;
+			const newSubmitted = [...submittedSubquests, subquest.id];
+			setSubmittedSubquests(newSubmitted);
+
+			if (newSubmitted.length === totalSubquests) {
+				const { error } = await supabase.from("completion")
+					.insert({
+						quest_id: quest.id,
+						user_id: session.user.id
+					});
+				console.log("user completed location quest")
+				if (error) throw error;
+			}
+
+			setIsJudging(false);
+			if (error) {
+				console.error(error);
+				throw error;
+			}
+			setVerificationResult(true);
+			setIsSubmissionValid(true);
+
 		}
-		setVerificationResult(true);
-		setIsSubmissionValid(true);
 	}
+
+	const details = JSON.parse(subquest.prompt!);
 
 	return <>
 		<Card style={styles.imageCard}>
@@ -69,15 +90,17 @@ export default function LocationCard({
 			</>
 				: <>
 					<Text category="h6" style={styles.sectionTitle}>
-						Title: {subquest.prompt} end of title.
+						{details.message} {'\n'}
+						Longitude: {details.longitude} {'\n'}
+						Latitude: {details.latitude}
 					</Text>
-					
+
 					<Button
 						style={styles.submitButton}
 						onPress={submitEntry}
 						disabled={verificationResult || isJudging}
 					>
-						{isJudging ? 'Judging...' : 'Submit Entry'}
+						{isJudging ? 'Judging...' : 'Verify location'}
 					</Button>
 					{/* Submission Status */}
 					{hasSubmitted && (

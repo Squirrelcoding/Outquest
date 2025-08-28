@@ -88,14 +88,6 @@ export default function TabsLayout() {
 		/>
 
 		<Tabs.Screen
-			name="browse/posts/[type]/[id]"
-			options={{
-				href: null
-			}}
-		/>
-
-
-		<Tabs.Screen
 			name="leaderboard/show/[id]"
 			options={{
 				href: null

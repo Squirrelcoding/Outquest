@@ -4,7 +4,7 @@ import { Redirect, router } from 'expo-router';
 import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { LeaderboardMetaRow, Quest } from '@/types';
+import { Completion, LeaderboardMetaRow, Quest } from '@/types';
 
 export default function Page() {
 	const { session, loading } = useAuth();
@@ -24,41 +24,27 @@ export default function Page() {
 				setLoadingQuests(true);
 
 				// Get user's completed quest submissions
-				const { data: completedQuestData, error: submissionError } = await supabase
-					.from("submission")
-					.select('subquest_id')
+				const { data: rawQuestData } = await supabase
+					.from("completion")
+					.select('*')
 					.eq('user_id', session.user.id);
 
-
-				if (submissionError) {
-					console.error('Error loading submissions:', submissionError);
-					return;
-				}
-
-				if (!completedQuestData || completedQuestData.length === 0) {
-					setCompletedQuests([]);
-					return;
-				}
-
-				// Get quest details for completed quests
-				const questIDs = completedQuestData.map((quest) => quest.subquest_id);
-				let { data: questData, error: questError } = await supabase
-					.from("quest")
-					.select("*")
-					.in('id', questIDs);
-
-				if (questError) {
-					console.error('Error loading quests:', questError);
-					return;
-				}
+				const completedQuests: Completion[] = rawQuestData!;
+				const completedQuestIDs = completedQuests.map((q) => q.quest_id);
 
 				const usernames = await Promise.all(
-					questData!.map(async (quest) => {
-						const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").eq('id', quest.author);
+					completedQuests!.map(async (quest) => {
+						const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").eq('id', quest.user_id);
 						if (usernameError) throw usernameError;
 						return usernameData[0].username;
 					})
 				);
+
+				const { data: questData } = await supabase
+					.from("quest")
+					.select("*")
+					.in("id", completedQuestIDs);
+
 				setUsernames(usernames);
 				setCompletedQuests(questData || []);
 			} catch (error) {
@@ -113,7 +99,7 @@ export default function Page() {
 					return;
 				}
 
-				setUserLeaderboards(typedLeaderboardMetaData|| []);
+				setUserLeaderboards(typedLeaderboardMetaData || []);
 			} catch (error) {
 				console.error('Error loading user leaderboards:', error);
 				Alert.alert('Error', 'Failed to load your leaderboards');
