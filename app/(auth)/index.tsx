@@ -64,7 +64,7 @@ export default function Auth() {
 		}
 		if (!session) {
 			Alert.alert('Please check your inbox for email verification!');
-			router.push(`/(auth)/onboarding/page1/${email}/${password}`);
+			router.push('/(auth)/email_verification');
 		}
 		setLoading(false);
 	}
@@ -104,7 +104,7 @@ export default function Auth() {
 					/>
 				</View>
 
-				<Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+				{/* <Text style={styles.forgotPasswordText}>Forgot Password?</Text> */}
 
 				<TouchableOpacity
 					style={[styles.button, loading && styles.disabledButton]}

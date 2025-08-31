@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import Entypo from '@expo/vector-icons/Entypo';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
+	const insets = useSafeAreaInsets();
+
 	return <Tabs
 		screenOptions={{
 			tabBarActiveTintColor: '#007AFF',
@@ -11,9 +14,9 @@ export default function TabsLayout() {
 				backgroundColor: '#fff',
 				borderTopWidth: 1,
 				borderTopColor: '#E5E5EA',
-				paddingBottom: 5,
 				paddingTop: 5,
-				height: 60,
+				height: 30 + insets.bottom,
+				paddingBottom: insets.bottom,
 			},
 			headerShown: false,
 		}}

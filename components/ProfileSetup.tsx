@@ -16,9 +16,13 @@ import { decode } from 'base64-arraybuffer'
 import { router } from 'expo-router';
 import { City } from '@/types';
 
-export default function Page2() {
+interface ProfileSetupProps {
+  email: string;
+  onComplete: () => void;
+}
+
+export default function ProfileSetup({ email, onComplete }: ProfileSetupProps) {
 	const { session, loading } = useAuth();
-	// const 
 
 	const [username, setUsername] = useState<string>('');
 	const [age, setAge] = useState<number>(0);
@@ -164,14 +168,14 @@ export default function Page2() {
 					Account Information
 				</Text>
 
-				<View style={styles.inputGroup}>
+				{/* <View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						Email
 					</Text>
 					<Text category="p1" style={styles.emailText}>
 						email
 					</Text>
-				</View>
+				</View> */}
 
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
