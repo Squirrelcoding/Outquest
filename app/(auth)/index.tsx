@@ -15,6 +15,7 @@ import { supabase } from '../../lib/supabase'
 import { Redirect, router } from 'expo-router'
 import { useAuth } from '@/context/Auth'
 import { Image } from 'expo-image';
+import { EmailVerification } from '@/components/EmailVerification'
 
 const imageSource = require("../../assets/images/grass-touching.jpg");
 const screenWidth = Dimensions.get('window').width;
@@ -64,7 +65,7 @@ export default function Auth() {
 		}
 		if (!session) {
 			Alert.alert('Please check your inbox for email verification!');
-			router.push('/(auth)/email_verification');
+			router.replace(`/(auth)/onboarding/page1/${email}/${password}`);
 		}
 		setLoading(false);
 	}

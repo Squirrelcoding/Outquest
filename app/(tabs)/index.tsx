@@ -126,7 +126,10 @@ export default function Page() {
 		</Layout>
 	);
 
-	if (!session) return <Redirect href={`/(auth)`} />;
+	if (!session) {
+		console.log("Fiujhewuhj")
+		return <Redirect href={`/(auth)`} />;
+	}
 
 	return (
 		<ScrollView style={styles.container}>

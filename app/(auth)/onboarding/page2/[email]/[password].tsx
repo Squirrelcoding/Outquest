@@ -164,14 +164,14 @@ export default function Page2() {
 					Account Information
 				</Text>
 
-				{/* <View style={styles.inputGroup}>
+				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						Email
 					</Text>
 					<Text category="p1" style={styles.emailText}>
 						email
 					</Text>
-				</View> */}
+				</View>
 
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
@@ -242,7 +242,7 @@ export default function Page2() {
 			<Card style={styles.section}>
 				<Button
 					style={styles.saveButton}
-					onPress={() => router.push("/(tabs)")}
+					onPress={() => router.replace("/(tabs)")}
 					disabled={saving || uploading}
 				>
 					Finish setup
