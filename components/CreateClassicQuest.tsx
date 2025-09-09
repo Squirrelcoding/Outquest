@@ -1,22 +1,18 @@
-import { useState } from 'react'
-import {
-	View,
-	TextInput,
-	StyleSheet,
-	Alert,
-	ScrollView,
-} from 'react-native'
-import { supabase } from '../../../lib/supabase'
-import { useAuth } from '@/context/Auth';
-import { Button, Card, Text, Layout } from '@ui-kitten/components';
+import { router } from "expo-router";
+import { useState } from "react";
+import { Alert, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { Session } from '@supabase/supabase-js'
+import { supabase } from "@/lib/supabase";
+import { Button, Card, Layout, Text } from "@ui-kitten/components";
+import SubquestInput from '../components/SubquestInput';
+import CreateMessage from "./CreateMessage";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Redirect, router } from 'expo-router';
-import SubquestInput from '../../../components/SubquestInput';
-import CreateMessage from '@/components/CreateMessage';
 
-export default function CreateQuest() {
-	const { session, loading } = useAuth();
+interface CreateQuestProps {
+	session: Session
+}
 
+export default function CreateClassicQuest({ session }: CreateQuestProps) {
 	const [title, setTitle] = useState<string>('');
 	const [location, setLocation] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
@@ -26,13 +22,6 @@ export default function CreateQuest() {
 	const [winnerMessages, setWinnerMessages] = useState<string[]>([""]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
-	if (loading) return (
-		<Layout style={styles.loadingContainer}>
-			<Text category="h6">Loading...</Text>
-		</Layout>
-	);
-
-	if (!session) return <Redirect href="/(auth)" />;
 
 	const onChange = (event: any, selectedDate: any) => {
 		setShowDatePicker(false);
@@ -155,146 +144,144 @@ export default function CreateQuest() {
 		setWinnerMessages([...winnerMessages, ""]);
 	}
 
-	return (
-		<ScrollView style={styles.container}>
-			<Layout style={styles.header}>
-				<Text category="h4" style={styles.headerTitle}>
-					Create New Quest
-				</Text>
-				<Text category="s1" style={styles.headerSubtitle}>
-					Design a challenge for other adventurers
-				</Text>
-			</Layout>
+	return <ScrollView style={styles.container}>
+		<Layout style={styles.header}>
+			<Text category="h4" style={styles.headerTitle}>
+				Create New Quest
+			</Text>
+			<Text category="s1" style={styles.headerSubtitle}>
+				Design a challenge for other adventurers
+			</Text>
+		</Layout>
 
-			{/* Quest Details */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Quest Information
-				</Text>
+		{/* Quest Details */}
+		<Card style={styles.section}>
+			<Text category="h6" style={styles.sectionTitle}>
+				Quest Information
+			</Text>
 
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Quest Title *
-					</Text>
-					<TextInput
-						value={title}
-						onChangeText={setTitle}
-						placeholder="Find three black bikes"
-						style={styles.input}
+			<View style={styles.inputGroup}>
+				<Text category="s1" style={styles.inputLabel}>
+					Quest Title *
+				</Text>
+				<TextInput
+					value={title}
+					onChangeText={setTitle}
+					placeholder="Find three black bikes"
+					style={styles.input}
+				/>
+			</View>
+
+			<View style={styles.inputGroup}>
+				<Text category="s1" style={styles.inputLabel}>
+					Location (Optional)
+				</Text>
+				<TextInput
+					value={location}
+					onChangeText={setLocation}
+					placeholder="Chicago, IL"
+					style={styles.input}
+				/>
+			</View>
+
+			<View style={styles.inputGroup}>
+				<Text category="s1" style={styles.inputLabel}>
+					Description *
+				</Text>
+				<TextInput
+					value={description}
+					onChangeText={setDescription}
+					multiline
+					style={[styles.input, styles.textArea]}
+					placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
+					numberOfLines={4}
+				/>
+			</View>
+		</Card>
+
+		{/* Photo Requirements */}
+		<Card style={styles.section}>
+			<Text category="h6" style={styles.sectionTitle}>
+				Photo Requirements
+			</Text>
+
+			{
+				Array(prompts.length).fill(0).map((_, idx) => {
+					return <SubquestInput idx={idx} key={idx} prompts={prompts} setPrompts={setPrompts} />
+				})
+			}
+
+			<Button onPress={addPrompt}>Add new prompt</Button>
+
+		</Card>
+
+		{/* Winner messages */}
+		<Card style={styles.section}>
+			<Text category="h6" style={styles.sectionTitle}>
+				Winner messages
+			</Text>
+			{
+				Array(winnerMessages.length).fill(0).map((_, idx) => {
+					return <CreateMessage
+						idx={idx}
+						key={idx}
+						messages={winnerMessages}
+						setMessages={setWinnerMessages}
 					/>
-				</View>
+				})
+			}
+			<Button onPress={addMessage}>Add new winner message</Button>
+		</Card>
 
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Location (Optional)
-					</Text>
-					<TextInput
-						value={location}
-						onChangeText={setLocation}
-						placeholder="Chicago, IL"
-						style={styles.input}
-					/>
-				</View>
+		{/* Deadline Selection */}
+		<Card style={styles.section}>
+			<Text category="h6" style={styles.sectionTitle}>
+				Quest Deadline
+			</Text>
 
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Description *
-					</Text>
-					<TextInput
-						value={description}
-						onChangeText={setDescription}
-						multiline
-						style={[styles.input, styles.textArea]}
-						placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
-						numberOfLines={4}
-					/>
-				</View>
-			</Card>
-
-			{/* Photo Requirements */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Photo Requirements
-				</Text>
-
-				{
-					Array(prompts.length).fill(0).map((_, idx) => {
-						return <SubquestInput idx={idx} key={idx} prompts={prompts} setPrompts={setPrompts} />
-					})
-				}
-
-				<Button onPress={addPrompt}>Add new prompt</Button>
-
-			</Card>
-
-			{/* Winner messages */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Winner messages
-				</Text>
-				{
-					Array(winnerMessages.length).fill(0).map((_, idx) => {
-						return <CreateMessage 
-							idx={idx} 
-							key={idx} 
-							messages={winnerMessages} 
-							setMessages={setWinnerMessages} 
-						/>
-					})
-				}
-				<Button onPress={addMessage}>Add new winner message</Button>
-			</Card>
-
-			{/* Deadline Selection */}
-			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
+			<View style={styles.inputGroup}>
+				<Text category="s1" style={styles.inputLabel}>
 					Quest Deadline
 				</Text>
-
-				<View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Quest Deadline
-					</Text>
-					<Button
-						style={styles.dateButton}
-						onPress={showDatepicker}
-						appearance="outline"
-					>
-						{deadline.toLocaleDateString()}
-					</Button>
-
-					{showDatePicker && (
-						<DateTimePicker
-							testID="dateTimePicker"
-							value={deadline}
-							mode="date"
-							onChange={onChange}
-							minimumDate={new Date()}
-						/>
-					)}
-
-					<Text category="c1" style={styles.dateInfo}>
-						Selected: {deadline.toLocaleDateString()}
-					</Text>
-				</View>
-			</Card>
-
-			{/* Submit Button */}
-			<Card style={styles.section}>
 				<Button
-					style={styles.submitButton}
-					onPress={submitQuest}
-					disabled={submitting || !title.trim() || prompts.length === 0}
+					style={styles.dateButton}
+					onPress={showDatepicker}
+					appearance="outline"
 				>
-					{submitting ? 'Creating Quest...' : 'Create Quest!'}
+					{deadline.toLocaleDateString()}
 				</Button>
 
-				<Text category="c1" style={styles.helpText}>
-					* Required fields
+				{showDatePicker && (
+					<DateTimePicker
+						testID="dateTimePicker"
+						value={deadline}
+						mode="date"
+						onChange={onChange}
+						minimumDate={new Date()}
+					/>
+				)}
+
+				<Text category="c1" style={styles.dateInfo}>
+					Selected: {deadline.toLocaleDateString()}
 				</Text>
-			</Card>
-		</ScrollView>
-	);
+			</View>
+		</Card>
+
+		{/* Submit Button */}
+		<Card style={styles.section}>
+			<Button
+				style={styles.submitButton}
+				onPress={submitQuest}
+				disabled={submitting || !title.trim() || prompts.length === 0}
+			>
+				{submitting ? 'Creating Quest...' : 'Create Quest!'}
+			</Button>
+
+			<Text category="c1" style={styles.helpText}>
+				* Required fields
+			</Text>
+		</Card>
+	</ScrollView>
 }
 
 const styles = StyleSheet.create({

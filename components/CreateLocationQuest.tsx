@@ -3,10 +3,10 @@ import React, { useState, useCallback } from "react";
 import { View, StyleSheet, ScrollView, TextInput, Alert, } from "react-native";
 import MapView, { Marker, MapPressEvent, Callout } from "react-native-maps";
 import GenerateLocationCode from '@/components/GenerateLocation';
-import { Redirect, router } from "expo-router";
+import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/Auth";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Session } from "@supabase/supabase-js";
 
 type MarkerType = {
 	id: string;
@@ -19,8 +19,11 @@ type LocationType = {
 	message: string;
 }
 
-export default function MultiMarkerMap() {
-	const { session, loading } = useAuth();
+interface CreateLocationQuestProps {
+	session: Session
+}
+
+export default function CreateLocationQuest({ session }: CreateLocationQuestProps ) {
 	const [markers, setMarkers] = useState<MarkerType[]>([]);
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
@@ -78,14 +81,6 @@ export default function MultiMarkerMap() {
 		}
 	}, []);
 
-
-	if (loading) return (
-		<Layout style={styles.loadingContainer}>
-			<Text category="h6">Loading...</Text>
-		</Layout>
-	);
-
-	if (!session) return <Redirect href="/(auth)" />;
 
 	const onChange = (_event: DateTimePickerEvent, selectedDate: Date) => {
 		setShowDatePicker(false);

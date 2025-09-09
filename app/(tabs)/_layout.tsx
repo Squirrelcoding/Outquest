@@ -65,9 +65,31 @@ export default function TabsLayout() {
 		/>
 
 		<Tabs.Screen
+			name="leaderboard/index"
+			options={{
+				title: 'Leaderboard',
+				tabBarIcon: ({ color, size }) => (
+					<Ionicons name="people" size={size} color={color} />
+				),
+				tabBarIconStyle: { marginBottom: -3 },
+			}}
+		/>
+
+		<Tabs.Screen
 			name="settings"
 			options={{
 				title: 'Settings',
+				tabBarIcon: ({ color, size }) => (
+					<Ionicons name="settings-outline" size={size} color={color} />
+				),
+				tabBarIconStyle: { marginBottom: -3 },
+			}}
+		/>
+
+		<Tabs.Screen
+			name="debug"
+			options={{
+				title: 'Debug',
 				tabBarIcon: ({ color, size }) => (
 					<Ionicons name="settings-outline" size={size} color={color} />
 				),
@@ -97,16 +119,8 @@ export default function TabsLayout() {
 			}}
 		/>
 
-
 		<Tabs.Screen
 			name="profile/[id]"
-			options={{
-				href: null,
-			}}
-		/>
-
-		<Tabs.Screen
-			name="debug"
 			options={{
 				href: null,
 			}}
