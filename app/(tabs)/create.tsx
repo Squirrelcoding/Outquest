@@ -14,7 +14,7 @@ export default function CreateQuest() {
 
 	return <>
 		<Button onPress={() => setState(!state)}>Click to switch</Button>
-		{state && <CreateClassicQuest session={session}/>}
-		{!state && <CreateLocationQuest session={session}/>}
+		{state && <CreateClassicQuest session={session} />}
+		{!state && <CreateLocationQuest session={session} />}
 	</>
 }

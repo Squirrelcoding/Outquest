@@ -11,6 +11,7 @@ export default function Page() {
 	const [completedQuests, setCompletedQuests] = useState<Quest[]>([]);
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 	const [usernames, setUsernames] = useState<string[]>([]);
+	const [streak, setStreak] = useState<number>(1);
 
 	// Load user's completed quests
 	useEffect(() => {
@@ -52,6 +53,23 @@ export default function Page() {
 			}
 		};
 
+		const loadUserStreak = async () => {
+			const { data: rawLoginData } = await supabase
+				.from("login")
+				.select('*');
+			let dates = rawLoginData?.map((x) => new Date(x.created_at))!;
+			dates.sort((a, b) => b.getTime() - a.getTime());
+			let res = 1;
+			for (let i = dates.length - 1; i > 0; i--) {
+				// Ensure that the two dates are within a day
+				if (dates[i].getTime() - dates[i-1].getTime() > 86400) {
+					break;
+				}
+				res++;
+			}
+			setStreak(res);
+		}
+		loadUserStreak();
 		loadCompletedQuests();
 	}, [session]);
 
@@ -71,7 +89,7 @@ export default function Page() {
 			{/* Header Section */}
 			<Layout style={styles.header}>
 				<Text category="h4" style={styles.welcomeText}>
-					Welcome back!
+					Streak is {streak}
 				</Text>
 				<Text category="s1" style={styles.emailText}>
 					{session.user.email}

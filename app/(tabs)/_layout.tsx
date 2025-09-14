@@ -42,7 +42,7 @@ export default function TabsLayout() {
 			}}
 		/>
 		<Tabs.Screen
-			name="create/index"
+			name="create"
 			options={{
 				title: 'Create',
 				tabBarIcon: ({ color, size }) => (
@@ -85,7 +85,7 @@ export default function TabsLayout() {
 				tabBarIconStyle: { marginBottom: -3 },
 			}}
 		/>
-
+		{/* 
 		<Tabs.Screen
 			name="debug"
 			options={{
@@ -96,6 +96,14 @@ export default function TabsLayout() {
 				tabBarIconStyle: { marginBottom: -3 },
 			}}
 		/>
+ */}
+		<Tabs.Screen
+			name="debug"
+			options={{
+				href: null
+			}}
+		/>
+
 
 		{/* Hidden screens - not shown in tab bar */}
 		<Tabs.Screen

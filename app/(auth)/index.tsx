@@ -38,15 +38,21 @@ export default function Auth() {
 	if (session) return <Redirect href="/(tabs)" />
 
 	async function signInWithEmail() {
-		setLoading(true)
+		setLoading(true);
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email,
 			password,
 		});
-		console.log(data);
+		console.log(`DATA: ${JSON.stringify(data)}`);
 
 		if (error) Alert.alert('Sign in error', error.message)
 		setLoading(false);
+
+		// Count towards the daily login streak
+		await supabase.from("login").insert({
+			user_id: data.user!.id
+		});
+
 		router.replace("/(tabs)");
 	}
 
