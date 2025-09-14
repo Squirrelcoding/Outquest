@@ -53,6 +53,13 @@ export default function Page() {
 			}
 		};
 
+		// Count towards the daily login streak
+		const insertLogin = async () => {
+			await supabase.from("login").insert({
+				user_id: session.user.id
+			});
+		}
+
 		const loadUserStreak = async () => {
 			const { data: rawLoginData } = await supabase
 				.from("login")
@@ -62,13 +69,14 @@ export default function Page() {
 			let res = 1;
 			for (let i = dates.length - 1; i > 0; i--) {
 				// Ensure that the two dates are within a day
-				if (dates[i].getTime() - dates[i-1].getTime() > 86400) {
+				if (dates[i].getTime() - dates[i - 1].getTime() > 86400) {
 					break;
 				}
 				res++;
 			}
 			setStreak(res);
 		}
+		insertLogin();
 		loadUserStreak();
 		loadCompletedQuests();
 	}, [session]);

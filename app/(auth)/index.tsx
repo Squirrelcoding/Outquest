@@ -48,11 +48,6 @@ export default function Auth() {
 		if (error) Alert.alert('Sign in error', error.message)
 		setLoading(false);
 
-		// Count towards the daily login streak
-		await supabase.from("login").insert({
-			user_id: data.user!.id
-		});
-
 		router.replace("/(tabs)");
 	}
 
@@ -76,6 +71,10 @@ export default function Auth() {
 		setLoading(false);
 	}
 
+	const registerPage = () => {
+		router.replace("/(auth)/page0");
+	}
+
 	const { width: imageWidth, height: imageHeight } = RNImage.resolveAssetSource(imageSource);
 	const scaledHeight = (imageHeight / imageWidth) * screenWidth;
 
@@ -88,7 +87,7 @@ export default function Auth() {
 				contentFit="contain" // scales correctly
 			/>
 			<View style={styles.container}>
-				<Text style={styles.titleText}>Start touching grass today{'\n'}</Text>
+				<Text style={styles.titleText}>Get started today!{'\n'}</Text>
 				<View style={styles.inputContainer}>
 					<TextInput
 						style={styles.input}
@@ -122,7 +121,7 @@ export default function Auth() {
 				</TouchableOpacity>
 
 				<View style={styles.centerBox}>
-					<Text>Not a member? <TouchableOpacity onPress={signUpWithEmail}>
+					<Text>Not a member? <TouchableOpacity onPress={registerPage}>
 						<Text style={styles.forgotPasswordText}>Sign up!</Text>
 					</TouchableOpacity></Text>
 

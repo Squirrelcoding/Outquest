@@ -66,7 +66,7 @@ export default function Comment({ comment, session }: CommentProps) {
 					<Text>Unlike</Text>
 				</Button> :
 				<Button onPress={() => likeComment(comment.comment.id)}>
-					<Text>Like {comment.comment.id}</Text>
+					<Text>Like</Text>
 				</Button>
 			}
 		</View>
