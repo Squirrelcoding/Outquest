@@ -395,6 +395,8 @@ const styles = StyleSheet.create({
 	},
 	searchButton: {
 		flex: 1,
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 	clearButton: {
 		flex: 1,

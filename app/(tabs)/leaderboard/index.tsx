@@ -114,20 +114,6 @@ export default function Page() {
 						<Text category="s1" style={styles.emptyText}>
 							You haven&apos;t joined any leaderboards yet.
 						</Text>
-						<View style={styles.emptyButtons}>
-							<Button
-								style={styles.emptyButton}
-								onPress={() => router.push('/leaderboard/make')}
-							>
-								Create Leaderboard
-							</Button>
-							<Button
-								style={styles.emptyButton}
-								onPress={() => router.push('/leaderboard/join')}
-							>
-								Join Leaderboard
-							</Button>
-						</View>
 					</View>
 				) : (
 					<View style={styles.leaderboardsList}>
@@ -241,6 +227,8 @@ const styles = StyleSheet.create({
 	actionButton: {
 		width: '48%',
 		marginBottom: 10,
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 	leaderboardSection: {
 		gap: 15,
@@ -251,6 +239,8 @@ const styles = StyleSheet.create({
 	},
 	leaderboardButton: {
 		width: '48%',
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 	leaderboardInputSection: {
 		gap: 10,
@@ -289,6 +279,8 @@ const styles = StyleSheet.create({
 	},
 	emptyButton: {
 		width: '48%',
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 	browseButton: {
 		width: '100%',
@@ -313,7 +305,7 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 	},
 	ownerBadge: {
-		color: '#007AFF',
+		color: '#32908F',
 		fontWeight: 'bold',
 		fontSize: 12,
 	},

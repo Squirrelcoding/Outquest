@@ -4,6 +4,7 @@ import { useAuth } from '@/context/Auth';
 import { Button, Text } from "@ui-kitten/components";
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
+import { StyleSheet } from 'react-native';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
@@ -13,8 +14,15 @@ export default function CreateQuest() {
 	if (!session) return <Redirect href="/(auth)" />
 
 	return <>
-		<Button onPress={() => setState(!state)}>Click to switch</Button>
+		<Button onPress={() => setState(!state)} style={styles.button}>Click to switch</Button>
 		{state && <CreateClassicQuest session={session} />}
 		{!state && <CreateLocationQuest session={session} />}
 	</>
 }
+
+const styles = StyleSheet.create({
+	button: {
+		backgroundColor: "#32908F",
+		borderColor: "white"
+	}
+})

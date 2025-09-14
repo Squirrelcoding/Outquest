@@ -171,14 +171,14 @@ const styles = StyleSheet.create({
 		height: 100,
 		borderRadius: 50,
 		borderWidth: 3,
-		borderColor: '#007AFF',
+		borderColor: '#32908F',
 	},
 	defaultAvatar: {
 		width: 100,
 		height: 100,
 		borderRadius: 50,
 		borderWidth: 3,
-		borderColor: '#007AFF',
+		borderColor: '#32908F',
 		justifyContent: 'center',
 		alignItems: 'center',
 		backgroundColor: '#f0f0f0',
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
 	avatarText: {
 		fontSize: 40,
 		fontWeight: 'bold',
-		color: '#007AFF',
+		color: '#32908F',
 	},
 	userInfo: {
 		alignItems: 'center',
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
 	},
 	statNumber: {
 		fontWeight: 'bold',
-		color: '#007AFF',
+		color: '#32908F',
 		marginBottom: 5,
 	},
 	statLabel: {

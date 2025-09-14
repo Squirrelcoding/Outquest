@@ -10,18 +10,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 export default function App() {
 	return (
 		<SafeAreaProvider>
-			<SafeAreaView style={{ flex: 1 }}>
-				<AuthProvider>
-					<LocationProvider>
-						<ApplicationProvider {...eva} theme={eva.light}>
-							<Stack>
-								<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-								<Stack.Screen name="(auth)" options={{ headerShown: false }} />
-							</Stack>
-						</ApplicationProvider>
-					</LocationProvider>
-				</AuthProvider>
-			</SafeAreaView>
+			<AuthProvider>
+				<LocationProvider>
+					<ApplicationProvider {...eva} theme={eva.light}>
+						<Stack>
+							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+							<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+						</Stack>
+					</ApplicationProvider>
+				</LocationProvider>
+			</AuthProvider>
 		</SafeAreaProvider>
 	)
 }

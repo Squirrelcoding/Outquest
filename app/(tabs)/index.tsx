@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 	},
 	ownerBadge: {
-		color: '#007AFF',
+		color: '#32908F',
 		fontWeight: 'bold',
 		fontSize: 12,
 	},

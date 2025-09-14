@@ -120,12 +120,15 @@ export default function Auth() {
 					{loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
 				</TouchableOpacity>
 
-				<View style={styles.centerBox}>
-					<Text>Not a member? <TouchableOpacity onPress={registerPage}>
-						<Text style={styles.forgotPasswordText}>Sign up!</Text>
-					</TouchableOpacity></Text>
-
+				<View style={{ alignItems: "center", marginTop: 20 }}>
+					<View style={{ flexDirection: "row", alignItems: "center" }}>
+						<Text>Don&apos;t have an account? </Text>
+						<TouchableOpacity onPress={registerPage}>
+							<Text style={styles.forgotPasswordText}>Sign up!</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
+
 			</View>
 		</>
 	)
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 	},
 	button: {
-		backgroundColor: '#007AFF',
+		backgroundColor: '#32908F',
 		padding: 12,
 		borderRadius: 6,
 		alignItems: 'center',
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
 	},
 	forgotPasswordText: {
 		fontWeight: 'bold',
-		color: "#007AFF"
+		color: "#32908F"
 	},
 	disabledButton: {
 		backgroundColor: '#aaa',

@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
 	promptText: {
 		lineHeight: 20,
 		fontStyle: 'italic',
-		color: '#007AFF',
+		color: '#32908F',
 	},
 	imagePlaceholder: {
 		alignItems: 'center',

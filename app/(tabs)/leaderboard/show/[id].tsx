@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
 		marginBottom: 5,
 	},
 	ownerBadge: {
-		color: '#007AFF',
+		color: '#32908F',
 		fontWeight: 'bold',
 	},
 	statsCard: {
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
 	},
 	statNumber: {
 		fontWeight: 'bold',
-		color: '#007AFF',
+		color: '#32908F',
 		marginBottom: 5,
 	},
 	statLabel: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
 	},
 	rank: {
 		fontWeight: 'bold',
-		color: '#007AFF',
+		color: '#32908F',
 	},
 	userInfo: {
 		flex: 1,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
 	},
 	questCount: {
 		fontWeight: 'bold',
-		color: '#007AFF',
+		color: '#32908F',
 	},
 	questLabel: {
 		color: '#666',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
 	leaderboardId: {
 		textAlign: 'center',
 		fontWeight: 'bold',
-		color: '#007AFF',
+		color: '#32908F',
 		marginBottom: 15,
 		padding: 10,
 		backgroundColor: '#f0f0f0',
