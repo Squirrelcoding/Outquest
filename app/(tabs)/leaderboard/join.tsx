@@ -1,23 +1,22 @@
 import { useState } from 'react'
 import {
 	View,
-	Text,
 	TextInput,
 	StyleSheet,
-	Button,
 	Alert,
 } from 'react-native'
+import { Button, Text } from "@ui-kitten/components";
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/Auth';
 import { Redirect, router } from 'expo-router';
 
 export default function CreateQuest() {
 	const { session, loading } = useAuth();
-	
+
 	const [leaderboardID, setLeaderboardID] = useState<string>('');
 
 	if (loading) return <Text>Loading...</Text>
-	if (!session) return <Redirect href="/(auth)"/>
+	if (!session) return <Redirect href="/(auth)" />
 
 	async function joinLeaderboard() {
 		if (!session) return;
@@ -33,15 +32,34 @@ export default function CreateQuest() {
 		router.back();
 	}
 
+	const navigateToLeaderboard = () => {
+		if (!leaderboardID.trim()) {
+			Alert.alert('Error', 'Please enter a leaderboard ID');
+			return;
+		}
+		router.push(`/leaderboard/show/${leaderboardID.trim()}`);
+	};
+
 	return (
-		<View>
-			<Text style={styles.label}>Leaderboard ID</Text>
+		<View style={styles.leaderboardInputSection}>
+			<Text category="s1" style={styles.inputLabel}>
+				Enter Leaderboard ID:
+			</Text>
 			<TextInput
+				value={leaderboardID}
 				onChangeText={setLeaderboardID}
-				style={styles.input}
+				placeholder="Leaderboard ID"
+				style={styles.leaderboardInput}
 			/>
-			<Button title={'Enter leaderboard ID'} onPress={joinLeaderboard}/>
+			<Button
+				style={styles.goButton}
+				onPress={navigateToLeaderboard}
+				disabled={!leaderboardID.trim()}
+			>
+				Go to Leaderboard
+			</Button>
 		</View>
+
 	)
 }
 
@@ -99,5 +117,147 @@ const styles = StyleSheet.create({
 		color: '#32908F',
 		fontWeight: 'bold',
 		fontSize: 16,
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	header: {
+		padding: 20,
+		alignItems: 'center',
+		backgroundColor: '#fff',
+		marginBottom: 10,
+	},
+	welcomeText: {
+		fontWeight: 'bold',
+		marginBottom: 5,
+	},
+	emailText: {
+		color: '#666',
+	},
+	section: {
+		margin: 10,
+		marginBottom: 10,
+	},
+	sectionTitle: {
+		marginBottom: 15,
+		fontWeight: 'bold',
+	},
+	buttonGrid: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		justifyContent: 'space-between',
+	},
+	actionButton: {
+		width: '48%',
+		marginBottom: 10,
+		backgroundColor: "#32908F",
+		borderColor: "white"
+	},
+	leaderboardSection: {
+		gap: 15,
+	},
+	leaderboardButtons: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	leaderboardButton: {
+		width: '48%',
+		backgroundColor: "#32908F",
+		borderColor: "white"
+	},
+	leaderboardInputSection: {
+		gap: 10,
+	},
+	inputLabel: {
+		fontWeight: 'bold',
+	},
+	leaderboardInput: {
+		borderWidth: 1,
+		borderColor: '#ddd',
+		borderRadius: 8,
+		padding: 12,
+		fontSize: 16,
+		backgroundColor: '#fff',
+	},
+	goButton: {
+		marginTop: 5,
+	},
+	loadingSection: {
+		alignItems: 'center',
+		padding: 20,
+	},
+	emptySection: {
+		alignItems: 'center',
+		padding: 20,
+	},
+	emptyText: {
+		textAlign: 'center',
+		marginBottom: 15,
+		color: '#666',
+	},
+	emptyButtons: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		width: '100%',
+	},
+	emptyButton: {
+		width: '48%',
+		backgroundColor: "#32908F",
+		borderColor: "white"
+	},
+	browseButton: {
+		width: '100%',
+	},
+	leaderboardsList: {
+		gap: 10,
+	},
+	leaderboardCard: {
+		marginBottom: 10,
+	},
+	leaderboardTitle: {
+		fontWeight: 'bold',
+		marginBottom: 8,
+	},
+	leaderboardInfo: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	leaderboardDate: {
+		color: '#666',
+		fontSize: 12,
+	},
+	ownerBadge: {
+		color: '#32908F',
+		fontWeight: 'bold',
+		fontSize: 12,
+	},
+	questsList: {
+		gap: 10,
+	},
+	questCard: {
+		marginBottom: 10,
+	},
+	questTitle: {
+		fontWeight: 'bold',
+		marginBottom: 5,
+	},
+	questAuthor: {
+		color: '#666',
+		marginBottom: 8,
+	},
+	questDescription: {
+		marginBottom: 10,
+		lineHeight: 20,
+	},
+	questDates: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	questDate: {
+		color: '#888',
+		fontSize: 12,
 	},
 })

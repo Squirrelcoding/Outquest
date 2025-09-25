@@ -92,10 +92,7 @@ export default function Page() {
 			{/* Header Section */}
 			<Layout style={styles.header}>
 				<Text category="h4" style={styles.welcomeText}>
-					Welcome back!
-				</Text>
-				<Text category="s1" style={styles.emailText}>
-					{session.user.email}
+					Leaderboards
 				</Text>
 			</Layout>
 
@@ -163,24 +160,7 @@ export default function Page() {
 						</Button>
 					</View>
 
-					<View style={styles.leaderboardInputSection}>
-						<Text category="s1" style={styles.inputLabel}>
-							Enter Leaderboard ID:
-						</Text>
-						<TextInput
-							value={leaderboardID}
-							onChangeText={setLeaderboardID}
-							placeholder="Leaderboard ID"
-							style={styles.leaderboardInput}
-						/>
-						<Button
-							style={styles.goButton}
-							onPress={navigateToLeaderboard}
-							disabled={!leaderboardID.trim()}
-						>
-							Go to Leaderboard
-						</Button>
-					</View>
+
 				</View>
 			</Card>
 

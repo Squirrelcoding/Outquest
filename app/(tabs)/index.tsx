@@ -97,10 +97,10 @@ export default function Page() {
 			{/* Header Section */}
 			<Layout style={styles.header}>
 				<Text category="h4" style={styles.welcomeText}>
-					Streak is {streak}
+					Welcome back, {session.user.email}
 				</Text>
 				<Text category="s1" style={styles.emailText}>
-					{session.user.email}
+					Your daily streak {streak} days!
 				</Text>
 			</Layout>
 
