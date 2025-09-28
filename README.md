@@ -32,18 +32,16 @@ You can create many different types of leaderboards and scoring options for what
 
 Whenever a user completes a quest, you can configure your quest to send them an email with prizes, such as gift card codes!
 
-
-
 ## Under Development
 
 - [x] Basic quests with multiple photos
 - [x] Improve landing and sign-up pages
 - [x] Add feature to message winners
-- [ ] (IN PROGRESS) Get rid of AI-generated IA
+- [ ] (IN PROGRESS) Get rid of AI-generated UI
 - [ ] Clean up the database because it is awful
 - [x] Add location mode
 - [ ] (99% done) Add QR code mode
 - [ ] Path tracker mode
 - [ ] Implement anti-cheating
 - [ ] Refactor code
-- [ ] Review security stuff
+- [ ] Add achievements

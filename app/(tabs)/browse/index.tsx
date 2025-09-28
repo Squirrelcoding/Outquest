@@ -89,7 +89,7 @@ export default function BrowseQuests() {
 		if (session) {
 			loadQuests();
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [session, showExpired]);
 
 	const submitQuery = async () => {
@@ -268,7 +268,11 @@ export default function BrowseQuests() {
 							onPress={clearFilters}
 							appearance="ghost"
 						>
-							Clear Filters
+							{evaProps => (
+								<Text {...evaProps} style={[evaProps.style, styles.greenTextStyle]}>
+									Clear Filters
+								</Text>
+							)}
 						</Button>
 					</View>
 				</Card>
@@ -444,4 +448,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		padding: 40,
 	},
+	greenTextStyle: {
+		color: "#32908F",
+	}
 });

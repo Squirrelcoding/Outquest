@@ -342,6 +342,8 @@ const styles = StyleSheet.create({
 	},
 	imageButton: {
 		width: '100%',
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 	inputGroup: {
 		marginBottom: 15,
@@ -367,6 +369,8 @@ const styles = StyleSheet.create({
 	},
 	saveButton: {
 		width: '100%',
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 	signOutButton: {
 		width: '100%',
