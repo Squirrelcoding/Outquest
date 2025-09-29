@@ -4,7 +4,7 @@ import { Redirect, router } from 'expo-router';
 import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Completion, Quest } from '@/types';
+import { Achievement, Completion, Quest } from '@/types';
 
 export default function Page() {
 	const { session, loading } = useAuth();
@@ -12,6 +12,7 @@ export default function Page() {
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 	const [usernames, setUsernames] = useState<string[]>([]);
 	const [streak, setStreak] = useState<number>(1);
+	const [achievements, setAchievements] = useState<Achievement[]>([]);
 
 	// Load user's completed quests
 	useEffect(() => {
@@ -27,9 +28,16 @@ export default function Page() {
 					.select('*')
 					.eq('user_id', session.user.id);
 
+				const { data: rawAchievementData } = await supabase
+					.from("achievement")
+					.select('*')
+					.eq('user_id', session.user.id);
+					
 				const completedQuests: Completion[] = rawQuestData!;
+				const achievements: Achievement[] = rawAchievementData!;
 				const completedQuestIDs = completedQuests.map((q) => q.quest_id);
-
+				const achievementIDs = achievements.map((q) => q.achievement_name);
+				console.log(achievementIDs);
 				const usernames = await Promise.all(
 					completedQuests!.map(async (quest) => {
 						const { data: usernameData, error: usernameError } = await supabase.from("profile").select("*").eq('id', quest.user_id);
@@ -38,6 +46,11 @@ export default function Page() {
 					})
 				);
 
+				const { data: achievementData, error: achievementError } = await supabase.from("achievement id").select("*").in('id', achievementIDs);
+				console.log(achievementData);
+				if (achievementError) throw achievementError;
+
+
 				const { data: questData } = await supabase
 					.from("quest")
 					.select("*")
@@ -45,6 +58,7 @@ export default function Page() {
 
 				setUsernames(usernames);
 				setCompletedQuests(questData || []);
+				setAchievements(achievementData!);
 			} catch (error) {
 				console.error('Error loading completed quests:', error);
 				Alert.alert('Error', 'Failed to load your completed quests');
@@ -158,6 +172,15 @@ export default function Page() {
 					</View>
 				)}
 			</Card>
+
+
+			{/* Completed Quests Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Your Achievements
+				</Text>
+			</Card>
+
 		</ScrollView>
 	);
 }
