@@ -4,6 +4,10 @@
  * @param {number[]} latlngB [lat, lng] point B
 */
 
+import { Achievement, Completion } from "@/types";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "./supabase";
+
 export const haversineDistance = (
 	[lat1, lon1]: [number, number],
 	[lat2, lon2]: [number, number], 
@@ -28,3 +32,24 @@ export const haversineDistance = (
 
 	return finalDistance;
 };
+
+export async function awardAchievement(user: User, achievement: Achievement) {
+	await supabase.from("achievemement").insert({
+		user_id: user.id,
+		achievement_id: achievement.id
+	});
+}
+
+/// Returns `true` if the actual achievement can be awarded. `false` otherwise.
+export async function addAchievementProgress(user: User, achievement: Achievement, quest: Completion) {
+	// Check if the quest is associated with any achievement
+	// If so, insert a new record into the progress table
+	// Check if the requirements of the achievement are satisfied
+	// If so, then award the user and return true
+	await supabase.from("achievemement").insert({
+		user_id: user.id,
+		achievement_id: achievement.id
+	});
+
+	return false;
+}

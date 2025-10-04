@@ -61,12 +61,15 @@ export default function QuestBox() {
 					if (messages) {
 						setMessage(messages.content);
 					} else {
+						// Send the user a message
 						const { data: defaultMessage } = await supabase.from("message")
 							.select("*")
 							.eq("quest_id", id)
 							.eq("place", 0)
 							.single();
-						setMessage(defaultMessage.content);
+						Alert.alert(defaultMessage.content);
+
+						// Attempt to insert an achievement progress
 					}
 
 					return;
