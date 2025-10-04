@@ -45,7 +45,7 @@ export async function addAchievementProgress(user: User, achievement: Achievemen
 	// Check if the quest is associated with any achievement
 	// If so, insert a new record into the progress table
 	// Check if the requirements of the achievement are satisfied
-	// If so, then award the user and return true
+	// If so, then award the user and return true and message
 	await supabase.from("achievemement").insert({
 		user_id: user.id,
 		achievement_id: achievement.id

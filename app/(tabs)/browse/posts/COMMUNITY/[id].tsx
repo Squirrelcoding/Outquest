@@ -7,9 +7,9 @@ import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 
 import Comment from '@/components/Comment';
-import ImageCard from '@/components/ImageCard';
+import LocationCard from '@/components/LocationCard';
+import { useLocation } from '@/context/Location';
 import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
-import { addAchievementProgress } from '@/lib/utils';
 
 interface CommentType {
 	comment: DBComment,
@@ -17,9 +17,17 @@ interface CommentType {
 	likes: string[];
 }
 
+// TODO:
+// - Implement register functionality by first getting the geographic location 
+//   and then displaying a list of active community quests within that area so
+//   that the user can display it. This should be the actual thing and the actual submit UI
+//		should just be a component. This also makes it easy to leave the community quest.
+
 export default function QuestBox() {
-	const { session, loading } = useAuth();
+	const { session, loading: authLoading } = useAuth();
+	const { location, loading: locationLoading } = useLocation();
 	const { id } = useLocalSearchParams();
+
 
 	// State management
 	const [quest, setQuest] = useState<Quest | null>(null);
@@ -35,12 +43,10 @@ export default function QuestBox() {
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
 	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
 
-	const [message, setMessage] = useState<string>("");
 
-	// Run when user completes the quest
+	// Run this code when the user completes the quest
 	useEffect(() => {
 		if (!session) return;
-		console.log("HERE");
 		(async () => {
 			if (subquestsCompleted.length === subquests.length) {
 				// Check if user already completed quest
@@ -50,29 +56,7 @@ export default function QuestBox() {
 					.order("created_at", { ascending: true })
 				const winnerIDs = winners!.map((winner) => winner.user_id)!;
 				if (winnerIDs.includes(session.user.id)) {
-					const place = winnerIDs.indexOf(session.user.id);
-					setMessage(`PLACE: ${place}`);
 
-					// Try to get the winner messages with current place from the database.
-					const { data: messages } = await supabase.from("message")
-						.select("*")
-						.eq("quest_id", id)
-						.eq("place", place + 1)
-						.single();
-					if (messages) {
-						setMessage(messages.content);
-					} else {
-						// Send the user a message
-						const { data: defaultMessage } = await supabase.from("message")
-							.select("*")
-							.eq("quest_id", id)
-							.eq("place", 0)
-							.single();
-						Alert.alert(defaultMessage.content);
-
-						// Attempt to insert an achievement progress
-						// const result = await addAchievementProgress(user)
-					}
 
 					return;
 				}
@@ -114,7 +98,6 @@ export default function QuestBox() {
 					.select("*")
 					.eq('id', questData.author)
 					.single();
-
 
 				if (authorError) {
 					console.error('Error loading author:', authorError);
@@ -179,13 +162,14 @@ export default function QuestBox() {
 			setComments(comments);
 		};
 
-
 		const loadSubquests = async () => {
-			const { data: subquests } = await supabase.from("subquest")
+			let { data: rawSubquests } = await supabase.from("subquest")
 				.select("*")
 				.eq('quest_id', id);
 
-			setSubquests(subquests!);
+			const subquests: Subquest[] = rawSubquests!;
+
+			setSubquests(subquests);
 
 			const subquestIDS = subquests!.map((s) => s.id);
 
@@ -208,6 +192,7 @@ export default function QuestBox() {
 
 	const postComment = async () => {
 		if (!session) return;
+		console.log("posted comment")
 		const { error } = await supabase.from("comment")
 			.insert({
 				quest_id: id,
@@ -243,7 +228,7 @@ export default function QuestBox() {
 		}
 	}
 
-	if (loading) return (
+	if (authLoading || locationLoading) return (
 		<Layout style={styles.loadingContainer}>
 			<Text category="h6">Loading...</Text>
 		</Layout>
@@ -262,7 +247,6 @@ export default function QuestBox() {
 			<Text category="h6">Quest not found</Text>
 		</Layout>
 	);
-
 
 	return (
 		<>
@@ -319,7 +303,6 @@ export default function QuestBox() {
 					</View>
 				</Card>
 
-
 				{/* Like quest */}
 				<Card style={styles.promptCard}>
 					<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
@@ -338,12 +321,11 @@ export default function QuestBox() {
 					</Text>
 				</Card>
 
-				{subquestsCompleted.length === subquests.length && <Text>{message}</Text>}
-
 				{subquests.map((subquest, idx) => {
-					return <ImageCard
+					return <LocationCard
 						key={idx}
 						session={session}
+						location={location!}
 						quest={quest}
 						subquest={subquest}
 						hasSubmitted={subquestsCompleted.includes(subquest.id)}

@@ -39,20 +39,37 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 - [x] Add feature to message winners
 - [x] Clean up the database because it is awful
 - [x] Add location mode
-- [ ] Add achievements by October 4th
-	- [ ] Add achievement for signing up by October 4th
-	- [ ] Add option for users to create achievement options by October 5th
-	- [ ] Add achievement notification by October 5th
-	- [ ] Make it so that quests can grant achievements in series by October 7th
-	- [ ] Add streak achievements by October 8th
-	- [ ] Make some AI-detected achievements by October 10th
-	- [ ] Add achievments to profiles by October 11th
-- [ ] Add kudos by October 12th
-- [ ] (IN PROGRESS) Get rid of AI-generated UI by October 15th
-- [ ] (99% done) Add QR code mode by October 16
-- [ ] Implement anti-cheating by October 20
-- [ ] Refactor code and add final features by October 25
 
+- [ ] Add achievements by October 4th
+- [ ] add achievement for signing up by october 4th
+
+- [ ] Add option for users to create achievement options by October 5th
+- [ ] Add achievement notification by October 5th
+
+- [ ] Make it so that quests can grant achievements in series by October 7th
+
+- [ ] Add streak achievements by October 8th
+- [ ] Add achievments to profiles by October 8th
+
+- [ ] Add reflection sections and kudos
+	- [ ] Turn comment section into a reflection section by October 9th
+	- [ ] Add prompts to the reflection section by October 10th
+	- [ ] Add kudos by October 11th
+
+- [ ] Get rid of AI-generated UI by October 14th
+
+- [ ] Repurpose QR mode to a community mode
+	- A community mode is a mode where people gather all at once to start a quest together. Time and space will be limited. If time allows, an event-specific leaderboard can be made.
+	- [ ] Add registering functionality by October 15th
+	- [ ] Implement leaderboard by October 17th
+	- [ ] Implement time limit by October 18th
+	- [ ] Implement winner functionality by October 20th
+
+- [ ] Implement basic anti-cheating by October 22
+
+- [ ] Refactor code and add final features by October 23
+
+- [ ] Work on presentation and submit by October 25
 
 ## Future features
 

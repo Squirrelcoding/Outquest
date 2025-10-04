@@ -13,6 +13,8 @@ export default function CreateQuest() {
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Redirect href="/(auth)" />
 
+	/// TODO: Add an option to create a community quest.
+
 	return <>
 		<Button onPress={() => setState(!state)} style={styles.button}>Click to switch</Button>
 		{state && <CreateClassicQuest session={session} />}
