@@ -40,8 +40,8 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 - [x] Clean up the database because it is awful
 - [x] Add location mode
 
-- [ ] Add achievements by October 4th
-- [ ] add achievement for signing up by october 4th
+- [x] Add achievements by October 4th
+- [x] add achievement for signing up by october 4th
 
 - [ ] Add option for users to create achievement options by October 5th
 - [ ] Add achievement notification by October 5th

@@ -41,15 +41,14 @@ export async function awardAchievement(user: User, achievement: Achievement) {
 }
 
 /// Returns `true` if the actual achievement can be awarded. `false` otherwise.
-export async function addAchievementProgress(user: User, achievement: Achievement, quest: Completion) {
+export async function addAchievementProgress(userID: string, achievementID: number) {
 	// Check if the quest is associated with any achievement
 	// If so, insert a new record into the progress table
 	// Check if the requirements of the achievement are satisfied
 	// If so, then award the user and return true and message
 	await supabase.from("achievemement").insert({
-		user_id: user.id,
-		achievement_id: achievement.id
+		user_id: userID,
+		achievement_id: achievementID
 	});
-
 	return false;
 }

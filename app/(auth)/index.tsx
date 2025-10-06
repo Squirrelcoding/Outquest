@@ -16,6 +16,7 @@ import { Redirect, router } from 'expo-router'
 import { useAuth } from '@/context/Auth'
 import { Image } from 'expo-image';
 import { EmailVerification } from '@/components/EmailVerification'
+import { addAchievementProgress } from '@/lib/utils'
 
 const imageSource = require("../../assets/images/grass-touching.jpg");
 const screenWidth = Dimensions.get('window').width;
@@ -47,6 +48,17 @@ export default function Auth() {
 
 		if (error) Alert.alert('Sign in error', error.message)
 		setLoading(false);
+
+		// Check if this is the first time that the user has signed in.
+		const loginCountRequest = await supabase.from("login")
+			.select("*", { count: 'exact', head: true })
+			.eq("user_id", data.user!.id);
+		const loginCount = loginCountRequest["count"];
+
+		// Award the outquester achievement
+		if (loginCount === 1) {
+			await addAchievementProgress(data.user!.id, 1);
+		}
 
 		router.replace("/(tabs)");
 	}

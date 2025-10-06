@@ -12,6 +12,7 @@ export default function Page() {
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 	const [usernames, setUsernames] = useState<string[]>([]);
 	const [streak, setStreak] = useState<number>(1);
+	const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
 	const [achievements, setAchievements] = useState<Achievement[]>([]);
 
 	// Load user's completed quests
@@ -90,9 +91,26 @@ export default function Page() {
 			}
 			setStreak(res);
 		}
+
+		const fetchPendingAchievements = async () => {
+			const { data } = await supabase.from("achievement")
+				.select("*")
+				.eq("user_id", session.user.id)
+				.eq("announced", false);
+			setAchievementQueue(data!);
+
+			// Set all of them to true now.
+			const { error } = await supabase.from("achievement")
+				.update({ "announced": true })
+				.eq("user_id", session.user.id);
+			console.log("updated info")
+			if (error) throw error;
+		}
+
 		insertLogin();
 		loadUserStreak();
 		loadCompletedQuests();
+		fetchPendingAchievements();
 	}, [session]);
 
 
@@ -104,6 +122,10 @@ export default function Page() {
 
 	if (!session) {
 		return <Redirect href={`/(auth)`} />;
+	}
+
+	for (const achievement of achievementQueue) {
+		Alert.alert(`Congratulations! You won the achievement: ${achievement.achievement_name}`);
 	}
 
 	return (
