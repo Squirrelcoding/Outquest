@@ -92,12 +92,14 @@ export default function Page() {
 			setStreak(res);
 		}
 
-		const fetchPendingAchievements = async () => {
+		const loadAchievements = async () => {
 			const { data } = await supabase.from("achievement")
 				.select("*")
 				.eq("user_id", session.user.id)
-				.eq("announced", false);
-			setAchievementQueue(data!);
+				// .eq("announced", false);
+			
+			const unnanouncedAchievements = data!.filter((achievement) => achievement!.announced === false);
+			setAchievementQueue(unnanouncedAchievements!);
 
 			// Set all of them to true now.
 			const { error } = await supabase.from("achievement")
@@ -105,12 +107,15 @@ export default function Page() {
 				.eq("user_id", session.user.id);
 			console.log("updated info")
 			if (error) throw error;
+
+			// Set all of the achievements so the viewer can see them
+			setAchievements(data!);
 		}
 
 		insertLogin();
 		loadUserStreak();
 		loadCompletedQuests();
-		fetchPendingAchievements();
+		loadAchievements();
 	}, [session]);
 
 
@@ -139,8 +144,6 @@ export default function Page() {
 					Your daily streak is {streak} days - good job!
 				</Text>
 			</Layout>
-
-
 
 			{/* Completed Quests Section */}
 			<Card style={styles.section}>
@@ -201,6 +204,17 @@ export default function Page() {
 				<Text category="h6" style={styles.sectionTitle}>
 					Your Achievements
 				</Text>
+				<View>
+					{achievements.map((achievement, idx) => (
+						<Card
+							key={idx}
+							style={styles.questCard}	
+							onPress={() => router.push(`/(tabs)/viewAchievement/${achievement.id}`)}
+						>
+							<Text>{achievement["name"]}</Text>
+						</Card>
+					))}
+				</View>
 			</Card>
 
 		</ScrollView>

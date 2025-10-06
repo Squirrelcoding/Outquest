@@ -106,9 +106,16 @@ export default function TabsLayout() {
 			/>
 
 
-			{/* Hidden screens - not shown in tab bar */}
+			{/* Hidden screens that are not shown in tab bar */}
 			<Tabs.Screen
 				name="leaderboard/join"
+				options={{
+					href: null
+				}}
+			/>
+
+			<Tabs.Screen
+				name="viewAchievement/[id]"
 				options={{
 					href: null
 				}}
@@ -159,6 +166,13 @@ export default function TabsLayout() {
 				name="browse/posts/PHOTO/[id]"
 				options={{
 					href: null,
+				}}
+			/>
+		
+			<Tabs.Screen
+				name="browse/posts/COMMUNITY/[id]"
+				options={{
+					href: null
 				}}
 			/>
 		</Tabs>

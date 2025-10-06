@@ -44,7 +44,7 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 - [x] add achievement for signing up by october 4th
 
 - [ ] Add option for users to create achievement options by October 5th
-- [ ] Add achievement notification by October 5th
+- [x] Add achievement notification by October 5th
 
 - [ ] Make it so that quests can grant achievements in series by October 7th
 
