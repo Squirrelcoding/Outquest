@@ -218,7 +218,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 		{/* Winner messages */}
 		<Card style={styles.section}>
 			<Text category="h6" style={styles.sectionTitle}>
-				Winner messages
+				Add achievements
 			</Text>
 			{
 				Array(winnerMessages.length).fill(0).map((_, idx) => {
@@ -230,7 +230,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 					/>
 				})
 			}
-			<Button onPress={addMessage}>Add new winner message</Button>
+			<Button onPress={addMessage}>Add new achievement</Button>
 		</Card>
 
 		{/* Deadline Selection */}

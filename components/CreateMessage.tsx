@@ -26,7 +26,7 @@ export default function CreateMessage({idx, messages, setMessages}: CreateMessag
 	return <>
 		<View style={styles.inputGroup}>
 			<Text category="s1" style={styles.inputLabel}>
-				{idx + 1 === messages.length ? "Default" : idx + 1} Winner message
+				{idx + 1 === messages.length ? "Default" : idx + 1} Achievement
 			</Text>
 			<TextInput
 				value={messages[idx]}
