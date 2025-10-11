@@ -8,8 +8,7 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 
 import Comment from '@/components/Comment';
 import ImageCard from '@/components/ImageCard';
-import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
-import { addAchievementProgress } from '@/lib/utils';
+import { CommentLike, DBComment, Profile, Quest, Subquest } from '@/types';
 
 interface CommentType {
 	comment: DBComment,
@@ -17,7 +16,7 @@ interface CommentType {
 	likes: string[];
 }
 
-export default function QuestBox() {
+export default function Post() {
 	const { session, loading } = useAuth();
 	const { id } = useLocalSearchParams();
 
@@ -37,25 +36,46 @@ export default function QuestBox() {
 
 	const [message, setMessage] = useState<string>("");
 
-	// Run when user completes the quest
+	// Run this code when the user completes the quest
 	useEffect(() => {
 		if (!session) return;
-		console.log("HERE");
 		(async () => {
 			if (subquestsCompleted.length === subquests.length) {
 				// Check if user already completed quest
 				const { data: winners } = await supabase.from("completion")
 					.select("*")
 					.eq("quest_id", id)
-					.order("created_at", { ascending: true })
+					.order("created_at", { ascending: true });
 				const winnerIDs = winners!.map((winner) => winner.user_id)!;
+				if (winnerIDs.includes(session.user.id)) {
+					console.log("WE ALREADY DID")
+					const place = winnerIDs.indexOf(session.user.id);
+					setMessage(`PLACE: ${place}`);
+
+					// Try to get the winner messages with current place from the database.
+					const { data: messages } = await supabase.from("message")
+						.select("*")
+						.eq("quest_id", id)
+						.eq("place", place + 1)
+						.single();
+					if (messages) {
+						setMessage(messages.content);
+					} else {
+						const { data: defaultMessage } = await supabase.from("message")
+							.select("*")
+							.eq("quest_id", id)
+							.eq("place", 0)
+							.single();
+						setMessage(defaultMessage.content);
+					}
+					return;
+				}
 
 				// If quest is not completed, get the number of people who completed the quest before
 				const place = winners!.length;
 				console.log(`USER GOT PLACE: ${place}`)
 				// Get the appropiate winner message.
 			}
-
 
 		})();
 	}, [subquestsCompleted, subquests, session, id]);
@@ -152,7 +172,6 @@ export default function QuestBox() {
 			setComments(comments);
 		};
 
-
 		const loadSubquests = async () => {
 			const { data: subquests } = await supabase.from("subquest")
 				.select("*")
@@ -236,7 +255,6 @@ export default function QuestBox() {
 		</Layout>
 	);
 
-
 	return (
 		<>
 			<ScrollView style={styles.container}>
@@ -291,7 +309,6 @@ export default function QuestBox() {
 						</View>
 					</View>
 				</Card>
-
 
 				{/* Like quest */}
 				<Card style={styles.promptCard}>

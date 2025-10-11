@@ -71,7 +71,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
-			})
+			});
 			const { data: quest, error } = await supabase.from('quest').insert({
 				author: session.user.id,
 				description,
@@ -97,21 +97,9 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 			});
 			const { error: bulkError } = await supabase.from("subquest").insert(processedSubquests);
 
-			// Insert all of the winner messages if any.
-			const processedMessages = winnerMessages.map((message, idx) => {
-				return {
-					quest_id: quest!.id,
-					content: message,
-					place: (idx + 1 === winnerMessages.length ? 0 : idx + 1)
-				}
-			});
-			const { error: messageError } = await supabase.from("message")
-				.insert(processedMessages);
-
-			if (error || bulkError || messageError) {
+			if (error || bulkError) {
 				console.error('Error creating quest:', error);
 				console.error('Error creating quest:', bulkError);
-				console.error('Error creating quest:', messageError);
 				Alert.alert('Error', 'Failed to create quest. Please try again.');
 				return;
 			}
@@ -216,7 +204,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 		</Card>
 
 		{/* Winner messages */}
-		<Card style={styles.section}>
+		{/* <Card style={styles.section}>
 			<Text category="h6" style={styles.sectionTitle}>
 				Add achievements
 			</Text>
@@ -231,7 +219,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				})
 			}
 			<Button onPress={addMessage}>Add new achievement</Button>
-		</Card>
+		</Card> */}
 
 		{/* Deadline Selection */}
 		<Card style={styles.section}>

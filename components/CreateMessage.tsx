@@ -7,7 +7,7 @@ interface CreateMessageFormat {
 	setMessages: React.Dispatch<React.SetStateAction<string[]>>
 }
 
-export default function CreateMessage({idx, messages, setMessages}: CreateMessageFormat) {
+export default function CreateAchievement({idx, messages, setMessages}: CreateMessageFormat) {
 	const updateMessages = (content: string) => {
 		console.log(`[create messages] Text changed at index ${idx}. Content: ${content}`);
 		let newMessages = [...messages];
