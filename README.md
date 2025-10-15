@@ -43,11 +43,9 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 - [x] Add achievements by October 4th
 - [x] add achievement for signing up by october 4th
 
-- [ ] Add option for users to create achievement options by October 5th
+- [x] Add option for users to create achievement options by October 5th
 	- This will be achieved by re-purposing winner messages to achievements
 - [x] Add achievement notification by October 5th
-
-- [ ] Make it so that quests can grant achievements in series by October 7th
 
 - [ ] Add streak achievements by October 8th
 - [ ] Add achievments to profiles by October 8th

@@ -40,7 +40,8 @@ export default function Post() {
 				.eq('id', id)
 				.single();
 
-			// Get all the profiles of the winners 
+			// Get all the profiles of the winners !
+			// commenting to add to the ghithub streak
 
 			if (questError) {
 				console.error('Error loading quest:', questError);
