@@ -3,7 +3,9 @@ import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
+import ProfileCard from "@/components/ProfileCard";
+import { StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
+import { Text } from "@ui-kitten/components";
 
 import { Profile, Subquest } from '@/types';
 
@@ -14,7 +16,8 @@ export default function Post() {
 
 	// State management
 	const [loadingProfiles, setLoadingProfiles] = useState<boolean>(true);
-	const [profiles, setProfiles] = useState<Profile | null>(null);
+	const [profiles, setProfiles] = useState<Profile[]>([]);
+	const [completions, setCompletions] = useState<Subquest[]>([]);
 
 	// Photo upload state management
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
@@ -29,45 +32,70 @@ export default function Post() {
 	useEffect(() => {
 		if (!session) return;
 
-		const loadQuestData = async () => {
+		const loadCompletions = async () => {
 			setLoadingProfiles(true);
 
-			// Load people who have completed the quest
-			const { data: winnerIDs, error: questError } = await supabase
-				.from('completion')
-				.select('*')
-				.eq('id', id)
-				.single();
+			try {
+				const { data: completionData, error: completionError } = await supabase
+					.from('completion')
+					.select('*')
+					.eq('quest_id', id);
 
-			// Get all the profiles of the winners !
-			// commenting to add to the ghithub streak
+				console.log(`Quest id: ${id}`)
+				console.log(`COMPLETION DATA: ${completionData}`);
+				if (completionError) throw completionError;
 
-			if (questError) {
-				console.error('Error loading quest:', questError);
-				Alert.alert('Error', 'Failed to load quest details');
-				return;
+				if (!completionData) {
+					setProfiles([]);
+					setCompletions([]);
+					return;
+				}
+
+				setCompletions(completionData);
+
+				// Fetch profiles for each completion
+				const profileIds = completionData.map((c: any) => c.user_id).filter(Boolean);
+				if (profileIds.length === 0) {
+					setProfiles([]);
+					return;
+				}
+
+				const { data: profileData, error: profileError } = await supabase
+					.from('profile')
+					.select('*')
+					.in('id', profileIds as string[]);
+
+				if (profileError) throw profileError;
+
+				profileData.reverse();
+
+				setProfiles(profileData || []);
+			} catch (err) {
+				console.error('Error loading completions:', err);
+				Alert.alert('Error', 'Failed to load completions');
+			} finally {
+				setLoadingProfiles(false);
 			}
 		};
-	});
+
+		loadCompletions();
+	}, [session, id]);
 
 	if (!session) return <Redirect href="/(auth)" />;
 
 	return (
 		<>
 			<ScrollView style={styles.container}>
-
-				{subquests.map((subquest, idx) => {
-					return <ProfileCard
-						key={idx}
-						session={session}
-						quest={quest}
-						subquest={subquest}
-						hasSubmitted={subquestsCompleted.includes(subquest.id)}
-						submittedSubquests={subquestsCompleted}
-						setSubmittedSubquests={setSubquestsCompleted}
-						totalSubquests={subquests.length}
-					/>
-				})}
+				{loadingProfiles ? (
+					<Text style={{ padding: 20, textAlign: 'center' }}>Loading completed users...</Text>
+				) : profiles.length === 0 ? (
+					<Text style={{ padding: 20, textAlign: 'center' }}>No completions found for this quest.</Text>
+				) : (
+					profiles.map((p: Profile, idx: number) => {
+						const completion = completions.find((c: any) => c.user_id === p.id) as any;
+						return <ProfileCard key={p.id} profile={p} completion={completion} rank={idx + 1} />
+					})
+				)}
 			</ScrollView>
 		</>
 	);

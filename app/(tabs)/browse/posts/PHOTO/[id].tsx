@@ -280,6 +280,9 @@ export default function QuestBox() {
 							</Text>
 						</View>
 						<View>
+							<Button onPress={() => router.push(`/(tabs)/browse/completion/${id}`)}>Click here to see everybody who has completed the quest so far</Button>
+						</View>
+						<View>
 							<Text category='s1' style={styles.infoLabel}>
 								{quest.location}
 							</Text>

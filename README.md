@@ -47,7 +47,7 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 	- This will be achieved by re-purposing winner messages to achievements
 - [x] Add achievement notification by October 5th
 
-- [ ] Add stuff so that we can see people who have completed a particular quest, in order.
+- [x] Add stuff so that we can see people who have completed a particular quest, in order.
 - [ ] Add achievement for being the first to complete a task
 - [ ] Add streak achievements by October 8th
 - [ ] Add achievments to profiles by October 8th
