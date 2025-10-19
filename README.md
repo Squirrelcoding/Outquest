@@ -52,10 +52,10 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 - [x] Add streak achievements by October 8th
 - [x] Add achievments to profiles by October 8th
 
-- [ ] Add reflection sections and kudos
-	- [ ] Turn comment section into a reflection section by October 9th
-	- [ ] Add prompts to the reflection section by October 10th
-	- [ ] Add kudos by October 11th
+- [x] Add reflection sections and kudos
+	- [x] Turn comment section into a reflection section by October 9th
+	- [x] Add prompts to the reflection section by October 10th
+	- [x] Add kudos by October 11th
 
 - [ ] Get rid of AI-generated UI by October 14th
 

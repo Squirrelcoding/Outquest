@@ -26,10 +26,10 @@ export default function QuestBox() {
 	const [authorUsername, setAuthorUsername] = useState<string>("");
 	const [submissions, setSubmissions] = useState<number>(0);
 	const [loadingQuest, setLoadingQuest] = useState<boolean>(true);
-	const [comments, setComments] = useState<CommentType[]>([]);
-	const [commentInput, setCommentInput] = useState<string | null>(null);
-	const [liked, setLiked] = useState<boolean>(false);
-	const [questLikes, setQuestLikes] = useState<number>(0);
+	const [reflections, setReflections] = useState<CommentType[]>([]);
+	const [reflectionInput, setReflectionInput] = useState<string | null>(null);
+	const [gavekudos, setGaveKudos] = useState<boolean>(false);
+	const [questKudos, setQuestKudos] = useState<number>(0);
 
 	// Photo upload state management
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
@@ -93,18 +93,18 @@ export default function QuestBox() {
 
 				setSubmissions(submissionsCount!);
 
-				// Check if post is liked
-				let { data: likeData } = await supabase
+				// Check if post has kudos
+				let { data: kudosData } = await supabase
 					.from('quest score')
 					.select("*")
 					.eq('quest_id', id);
 
-				let likers = likeData!.map((like) => like.user_id);
+				let kudosGivers = kudosData!.map((kudos) => kudos.user_id);
 
-				if (likers.includes(session.user.id)) {
-					setLiked(true);
+				if (kudosGivers.includes(session.user.id)) {
+					setGaveKudos(true);
 				}
-				setQuestLikes(likers.length);
+				setQuestKudos(kudosGivers.length);
 
 			} catch (error) {
 				console.error('Error loading quest data:', error);
@@ -114,12 +114,12 @@ export default function QuestBox() {
 			}
 		};
 
-		const loadCommentData = async () => {
+		const loadReflectionData = async () => {
 			const { data: rawComments } = await supabase.from("comment")
 				.select("*")
 				.eq('quest_id', id);
 
-			const comments = await Promise.all(rawComments!.map(async (comment: DBComment) => {
+			const reflections = await Promise.all(rawComments!.map(async (comment: DBComment) => {
 				let { data: rawCommentAuthor } = await supabase.from("profile")
 					.select("*")
 					.eq('id', comment.user_id)
@@ -136,7 +136,7 @@ export default function QuestBox() {
 					likes
 				}
 			}));
-			setComments(comments);
+			setReflections(reflections);
 		};
 
 
@@ -162,17 +162,17 @@ export default function QuestBox() {
 		}
 
 		loadQuestData();
-		loadCommentData();
+		loadReflectionData();
 		loadSubquests();
 	}, [id, session]);
 
-	const postComment = async () => {
+	const postReflection = async () => {
 		if (!session) return;
 		const { error } = await supabase.from("comment")
 			.insert({
 				quest_id: id,
 				user_id: session.user.id,
-				content: commentInput
+				content: reflectionInput
 			});
 		if (error) {
 			console.error(error);
@@ -180,26 +180,26 @@ export default function QuestBox() {
 		}
 	}
 
-	const setLike = async () => {
+	const giveKudos = async () => {
 		if (!session) return;
 
-		if (!liked) {
+		if (!gavekudos) {
 			const { error } = await supabase.from("quest score")
 				.insert({
 					quest_id: id,
 					user_id: session.user.id
 				});
 			if (error) console.error(error);
-			setLiked(true);
-			setQuestLikes(questLikes + 1);
+			setGaveKudos(true);
+			setQuestKudos(questKudos + 1);
 		} else {
 			const { error } = await supabase.from("quest score")
 				.delete()
 				.eq('quest_id', id)
 				.eq('user_id', session.user.id);
 			if (error) console.error(error);
-			setLiked(false);
-			setQuestLikes(questLikes - 1);
+			setGaveKudos(false);
+			setQuestKudos(questKudos - 1);
 		}
 	}
 
@@ -283,11 +283,11 @@ export default function QuestBox() {
 				</Card>
 
 
-				{/* Like quest */}
+				{/* Give Kudos */}
 				<Card style={styles.promptCard}>
-					<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
-					<Button onPress={setLike}>
-						<Text>{liked ? "Unlike" : "Like"}</Text>
+					<Text>{questKudos} {questKudos === 1 ? "kudos" : "kudos"}</Text>
+					<Button onPress={giveKudos}>
+						<Text>{gavekudos ? "Remove Kudos" : "Give Kudos"}</Text>
 					</Button>
 				</Card>
 
@@ -317,19 +317,19 @@ export default function QuestBox() {
 					/>
 				})}
 
-				{/* Comment section */}
+				{/* Reflection section */}
 				<Text>{"\n"}</Text>
 				<Text>{"\n"}</Text>
 				<TextInput style={styles.input}
-					placeholder='Type your comment here'
-					onChangeText={setCommentInput}
+					placeholder='Share your reflection on this quest...'
+					onChangeText={setReflectionInput}
 				/>
-				<Button onPress={postComment}><Text>Post comment</Text></Button>
+				<Button onPress={postReflection}><Text>Post Reflection</Text></Button>
 
-				<Text category="h6" style={styles.sectionTitle}>Comments</Text>
-				{comments && <View>
-					{comments.map((comment: CommentType, idx: number) => {
-						return <Comment comment={comment} session={session} key={idx} />
+				<Text category="h6" style={styles.sectionTitle}>Reflections</Text>
+				{reflections && <View>
+					{reflections.map((reflection: CommentType, idx: number) => {
+						return <Comment comment={reflection} session={session} key={idx} />
 					})}
 				</View>}
 			</ScrollView>

@@ -17,12 +17,12 @@ interface CommentProps {
 }
 
 export default function Comment({ comment, session }: CommentProps) {
-	const [liked, setLiked] = useState<boolean>(comment.likes.includes(session.user.id));
-	const [likes, setLikes] = useState<number>(comment.likes.length);
+	const [gaveKudos, setGaveKudos] = useState<boolean>(comment.likes.includes(session.user.id));
+	const [kudos, setKudos] = useState<number>(comment.likes.length);
 
-	const likeComment = async (commentID: number) => {
-		setLiked(true);
-		setLikes(likes + 1);
+	const giveKudosToReflection = async (commentID: number) => {
+		setGaveKudos(true);
+		setKudos(kudos + 1);
 		if (!session) return;
 		const { error } = await supabase.from("comment score")
 			.insert({
@@ -32,9 +32,9 @@ export default function Comment({ comment, session }: CommentProps) {
 		if (error) console.error(error);
 	}
 
-	const unlikeComment = async (commentID: number) => {
-		setLiked(false);
-		setLikes(likes - 1);
+	const removeKudosFromReflection = async (commentID: number) => {
+		setGaveKudos(false);
+		setKudos(kudos - 1);
 		if (!session) return;
 		const { error } = await supabase.from("comment score")
 			.delete()
@@ -60,13 +60,13 @@ export default function Comment({ comment, session }: CommentProps) {
 					{new Date(comment.comment.created_at).toLocaleDateString()}
 				</Text>
 			</View>
-			<Text>{likes} {likes === 1 ? "like" : "likes"}</Text>
-			{liked ?
-				<Button onPress={() => unlikeComment(comment.comment.id)}>
-					<Text>Unlike</Text>
+			<Text>{kudos} kudos</Text>
+			{gaveKudos ?
+				<Button onPress={() => removeKudosFromReflection(comment.comment.id)}>
+					<Text>Remove Kudos</Text>
 				</Button> :
-				<Button onPress={() => likeComment(comment.comment.id)}>
-					<Text>Like</Text>
+				<Button onPress={() => giveKudosToReflection(comment.comment.id)}>
+					<Text>Give Kudos</Text>
 				</Button>
 			}
 		</View>
