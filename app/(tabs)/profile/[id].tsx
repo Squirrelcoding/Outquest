@@ -13,6 +13,7 @@ export default function ProfilePage() {
 	const [user, setUser] = useState<Profile | null>(null);
 	const [profilePic, setProfilePic] = useState<string | null>(null);
 	const [completedQuests, setCompletedQuests] = useState<number>(0);
+	const [achievements, setAchievements] = useState<any[]>([]);
 	const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
 
 	useEffect(() => {
@@ -35,7 +36,7 @@ export default function ProfilePage() {
 
 				// Get completed quests count
 				const { data: submissionData, error: submissionError } = await supabase
-					.from('submission')
+					.from('completion')
 					.select('quest_id')
 					.eq('user_id', id);
 				
@@ -57,6 +58,25 @@ export default function ProfilePage() {
 				} catch (imageError) {
 					console.error(imageError);
 					throw imageError;
+				}
+
+				// Get user's achievements
+				const { data: achievementData, error: achievementError } = await supabase
+					.from('achievement')
+					.select('*')
+					.eq('user_id', id);
+				
+				if (achievementError) {
+					console.error('Achievement error:', achievementError);
+				} else {
+					// Get achievement details
+					const achievementIds = achievementData?.map(a => a.achievement_name) || [];
+					const { data: achievementDetails } = await supabase
+						.from('achievement id')
+						.select('*')
+						.in('id', achievementIds);
+					
+					setAchievements(achievementDetails || []);
 				}
 
 			} catch (error) {
@@ -122,6 +142,33 @@ export default function ProfilePage() {
 						</Text>
 					</View>
 				</View>
+			</Card>
+
+			{/* Achievements Section */}
+			<Card style={styles.achievementsCard}>
+				<Text category="h6" style={styles.achievementsTitle}>
+					Achievements ({achievements.length})
+				</Text>
+				{achievements.length === 0 ? (
+					<Text category="p1" style={styles.noAchievements}>
+						No achievements yet
+					</Text>
+				) : (
+					<View style={styles.achievementsList}>
+						{achievements.map((achievement, idx) => (
+							<Card key={idx} style={styles.achievementItem}>
+								<Text category="s1" style={styles.achievementName}>
+									🏆 {achievement.name}
+								</Text>
+								{achievement.description && (
+									<Text category="c1" style={styles.achievementDescription}>
+										{achievement.description}
+									</Text>
+								)}
+							</Card>
+						))}
+					</View>
+				)}
 			</Card>
 
 			{/* Additional Info */}
@@ -226,8 +273,35 @@ const styles = StyleSheet.create({
 		color: '#666',
 		textAlign: 'center',
 	},
+	achievementsCard: {
+		margin: 10,
+		marginBottom: 10,
+	},
+	achievementsTitle: {
+		marginBottom: 15,
+	},
+	noAchievements: {
+		color: '#666',
+		textAlign: 'center',
+		fontStyle: 'italic',
+	},
+	achievementsList: {
+		gap: 10,
+	},
+	achievementItem: {
+		marginBottom: 8,
+		backgroundColor: '#f9f9f9',
+	},
+	achievementName: {
+		fontWeight: 'bold',
+		marginBottom: 4,
+	},
+	achievementDescription: {
+		color: '#666',
+	},
 	infoCard: {
 		margin: 10,
+		marginBottom: 20,
 	},
 	infoTitle: {
 		marginBottom: 10,
