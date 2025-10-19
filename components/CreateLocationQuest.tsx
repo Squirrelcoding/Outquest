@@ -22,6 +22,7 @@ type MarkerType = {
 type CommunityType = {
 	id: string;
 	message: string;
+	type: string;
 }
 
 interface CreateCommunityQuestProps {
@@ -35,7 +36,6 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 	const [prompts, setPrompts] = useState<CommunityType[]>([]);
-	const [winnerMessages, setWinnerMessages] = useState<string[]>([]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	// Bottom sheet animation
@@ -100,7 +100,7 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 			console.log('Adding marker:', newMarker);
 
 			setMarkers((prev) => [...prev, newMarker]);
-			setPrompts((prev) => [...prev, { id, message: "" }])
+			setPrompts((prev) => [...prev, { id, message: "", type: "SCAN" }])
 		} catch (error) {
 			console.error('Error in handleMapPress:', error);
 		}
@@ -150,38 +150,22 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 		try {
 			setSubmitting(true);
 
-			const { data: quest, error } = await supabase.from('quest').insert({
+			const { error } = await supabase.from('quest').insert({
 				author: session.user.id,
 				description,
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
 				type: "Community"
-			})
-				.select("id")
-				.single();
+			});
+			
+			// Get all the prompts, their locations, and their descriptions
+			console.log(prompts);
+			// const subquests = 
 
 			if (error) {
 				console.error('Insert error:', error);
 				throw error;
-			}
-
-			const processedSubquests = prompts.map((prompt, i) => ({
-				quest_id: quest!.id,
-				prompt: JSON.stringify({ ...prompt, ...markers[i] }),
-			}));
-			const { error: bulkError } = await supabase.from("subquest").insert(processedSubquests);
-
-			const processedMessages = winnerMessages.map((message, idx) => ({
-				quest_id: quest!.id,
-				content: message,
-				place: (idx + 1 === winnerMessages.length ? 0 : idx + 1)
-			}));
-			const { error: messageError } = await supabase.from("message").insert(processedMessages);
-
-			if (bulkError || messageError) {
-				console.error('Error creating quest:', bulkError || messageError);
-				throw bulkError || messageError;
 			}
 
 			Alert.alert('Success!', 'Your quest has been created and is now live!');

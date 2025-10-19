@@ -58,7 +58,7 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 	- [x] Add kudos by October 11th
 
 
-- [ ] Repurpose QR mode to a community mode
+- [x] Repurpose QR mode to a community mode
 	- A community mode is a mode where people gather all at once to start a quest together. A code will be shared.
 		- Live chat
 		- Polls and stuff to make it like a live stream or something

@@ -1,28 +1,52 @@
 import { View, TextInput, StyleSheet } from "react-native";
 import { IndexPath, Layout, Select, SelectItem, Text } from "@ui-kitten/components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type QRType = {
+type Subquest = {
 	id: string;
 	message: string;
+	type: string;
+	radius?: number;
 }
 
 interface SubquestInputFormat {
 	idx: number,
-	prompts: QRType[],
-	setPrompts: React.Dispatch<React.SetStateAction<QRType[]>>
+	prompts: Subquest[],
+	setPrompts: React.Dispatch<React.SetStateAction<Subquest[]>>
 }
 
 export default function SubquestInput({ idx, prompts, setPrompts }: SubquestInputFormat) {
+	const [selectedIndex, setSelectedIndex] = useState<IndexPath | IndexPath[]>(new IndexPath(0));
+	const [radius, setRadius] = useState<string>(prompts[idx].radius?.toString() || '');
+	
 	const updatePrompts = (content: string) => {
 		console.log(`Text changed at index ${idx}. Content: ${content}`);
 		let newPrompts = [...prompts];
 		newPrompts[idx].message = content;
+		if (selectedIndex instanceof IndexPath && selectedIndex.row === 0) {
+			newPrompts[idx].type = "SCAN";
+		} else {
+			newPrompts[idx].type = "PHOTO";
+			const radiusValue = parseFloat(radius);
+			newPrompts[idx].radius = isNaN(radiusValue) ? undefined : radiusValue;
+		}
 		setPrompts(newPrompts);
 	}
-  	const [selectedIndex, setSelectedIndex] = useState<IndexPath | IndexPath[]>(new IndexPath(0));
-
-
+	
+	const updateRadius = (radiusText: string) => {
+		setRadius(radiusText);
+		let newPrompts = [...prompts];
+		const radiusValue = parseFloat(radiusText);
+		newPrompts[idx].radius = isNaN(radiusValue) ? undefined : radiusValue;
+		if (selectedIndex instanceof IndexPath && selectedIndex.row === 1) {
+			newPrompts[idx].type = "PHOTO";
+		}
+		setPrompts(newPrompts);
+	}
+	
+	// Check if second option (index 1) is selected
+	const isRadiusOptionSelected = selectedIndex instanceof IndexPath && selectedIndex.row === 1;
+	
 	return <>
 		<View style={styles.inputGroup}>
 			<Text category="s1" style={styles.inputLabel}>
@@ -44,13 +68,26 @@ export default function SubquestInput({ idx, prompts, setPrompts }: SubquestInpu
 					selectedIndex={selectedIndex}
 					onSelect={index => setSelectedIndex(index)}
 				>
-					<SelectItem title='Scan something at this location' />
-					<SelectItem title='Go to this location within a radius' />
+					<SelectItem title='Scan something' />
 					<SelectItem title='Find something at this location within a radius' />
 				</Select>
 			</Layout>
+			
+			{isRadiusOptionSelected && (
+				<View style={styles.radiusInputGroup}>
+					<Text category="s1" style={styles.inputLabel}>
+						Radius (meters)
+					</Text>
+					<TextInput
+						value={radius}
+						onChangeText={updateRadius}
+						style={styles.input}
+						placeholder="Enter radius in meters"
+						keyboardType="numeric"
+					/>
+				</View>
+			)}
 		</View>
-
 	</>
 }
 
@@ -88,6 +125,9 @@ const styles = StyleSheet.create({
 	},
 	inputGroup: {
 		marginBottom: 15,
+	},
+	radiusInputGroup: {
+		marginTop: 15,
 	},
 	inputLabel: {
 		fontWeight: 'bold',

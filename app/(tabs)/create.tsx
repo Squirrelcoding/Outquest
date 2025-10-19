@@ -1,5 +1,5 @@
 import CreateClassicQuest from '@/components/CreateClassicQuest';
-import CreateLocationQuest from '@/components/CreateLocationQuest';
+import CreateCommunityQuest from '@/components/CreateLocationQuest';
 import { useAuth } from '@/context/Auth';
 import { Button, Text } from "@ui-kitten/components";
 import { Redirect } from 'expo-router';
@@ -13,12 +13,10 @@ export default function CreateQuest() {
 	if (loading) return <Text>Loading...</Text>
 	if (!session) return <Redirect href="/(auth)" />
 
-	/// TODO: Add an option to create a community quest.
-
 	return <>
 		<Button onPress={() => setState(!state)} style={styles.button}>Click to switch</Button>
 		{state && <CreateClassicQuest session={session} />}
-		{!state && <CreateLocationQuest session={session} />}
+		{!state && <CreateCommunityQuest session={session} />}
 	</>
 }
 
