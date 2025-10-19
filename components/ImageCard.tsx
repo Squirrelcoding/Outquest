@@ -18,7 +18,8 @@ interface ImageCardParams {
 	hasSubmitted: boolean,
 	submittedSubquests: number[],
 	setSubmittedSubquests: React.Dispatch<React.SetStateAction<number[]>>,
-	totalSubquests: number
+	totalSubquests: number,
+	onSubmissionComplete: any
 }
 
 export default function ImageCard({
@@ -28,7 +29,8 @@ export default function ImageCard({
 	hasSubmitted,
 	submittedSubquests,
 	setSubmittedSubquests,
-	totalSubquests
+	totalSubquests,
+	onSubmissionComplete
 }: ImageCardParams) {
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -137,6 +139,34 @@ export default function ImageCard({
 
 				setIsSubmissionValid(true);
 				Alert.alert('Success!', 'Your submission has been accepted!');
+
+
+				// Check if the user is the first to complete the quest
+
+				console.log("Running quest completion function");
+				
+				// Get the number of people who already completed the quest.
+				const { data: winners } = await supabase.from("completion")
+					.select("*", {head: false, count: 'exact'})
+					.eq("quest_id", quest.id);
+				
+				console.log(`Past winners: ${JSON.stringify(winners)}`);
+				console.log(!winners);
+				console.log(winners!.length);
+				// The winners list is empty so the user is the first to complete it
+				if (!winners || winners.length === 1) {
+					console.log("USER IS FIRST. AWARDING ACHIEVEMENT...");
+					// Award a user an achievement
+					const { error: achievementError } = await supabase.from("achievement").insert({
+						user_id: session.user.id,
+						achievement_name: 2,
+						announced: true
+					});
+					if (achievementError) throw achievementError;
+				}
+
+				// Call the function that 
+				onSubmissionComplete();
 			} else {
 				Alert.alert('Submission Rejected', 'Your image does not match the quest requirements. Please try again.');
 			}

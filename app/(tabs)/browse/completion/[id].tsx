@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
 		lineHeight: 20,
 		fontStyle: 'italic',
 	},
-	input: {
+	input:{
 		borderWidth: 1,
 		borderColor: '#ddd',
 		borderRadius: 8,

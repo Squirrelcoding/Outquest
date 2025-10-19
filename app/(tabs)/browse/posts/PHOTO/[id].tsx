@@ -37,28 +37,15 @@ export default function QuestBox() {
 
 	const [message, setMessage] = useState<string>("");
 
-	// Run when user completes the quest
-	useEffect(() => {
+	// Function to check and award achievement when quest is completed
+	const checkQuestCompletion = async (updatedSubquestsCompleted: number[]) => {
 		if (!session) return;
-		console.log("HERE");
-		(async () => {
-			if (subquestsCompleted.length === subquests.length) {
-				// Check if user already completed quest
-				const { data: winners } = await supabase.from("completion")
-					.select("*")
-					.eq("quest_id", id)
-					.order("created_at", { ascending: true })
-				const winnerIDs = winners!.map((winner) => winner.user_id)!;
+		
+		// Only run if user has completed all subquests
+		if (updatedSubquestsCompleted.length !== subquests.length || subquests.length === 0) return;
+		
 
-				// If quest is not completed, get the number of people who completed the quest before
-				const place = winners!.length;
-				console.log(`USER GOT PLACE: ${place}`)
-				// Get the appropiate winner message.
-			}
-
-
-		})();
-	}, [subquestsCompleted, subquests, session, id]);
+	};
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -326,6 +313,7 @@ export default function QuestBox() {
 						submittedSubquests={subquestsCompleted}
 						setSubmittedSubquests={setSubquestsCompleted}
 						totalSubquests={subquests.length}
+						onSubmissionComplete={checkQuestCompletion}
 					/>
 				})}
 
