@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Achievement, Completion, Quest } from '@/types';
 
+const STREAK_MILESTONES = [3, 5, 10, 20, 50, 100, 200, 365];
+const STREAK_MILESTONE_IDs = [3, 4, 5, 6, 7, 8, 9, 10];
+
 export default function Page() {
 	const { session, loading } = useAuth();
 	const [completedQuests, setCompletedQuests] = useState<Quest[]>([]);
@@ -33,7 +36,7 @@ export default function Page() {
 					.from("achievement")
 					.select('*')
 					.eq('user_id', session.user.id);
-					
+
 				const completedQuests: Completion[] = rawQuestData!;
 				const achievements: Achievement[] = rawAchievementData!;
 				const completedQuestIDs = completedQuests.map((q) => q.quest_id);
@@ -75,29 +78,97 @@ export default function Page() {
 			});
 		}
 
-		const loadUserStreak = async () => {
+		const awardStreakAchievement = async (streak: number) => {
+			// Get the user's current achievements
+			const { data: userAchievements, error: achievementErrors } = await supabase
+				.from("achievement")
+				.select("*")
+				.eq("user_id", session.user.id);
+
+			if (achievementErrors) throw achievementErrors;
+
+			// Get achievement names the user already has
+			const existingAchievementIDs = userAchievements?.map(a => a.id) || [];
+
+			// Check which milestones the user has reached
+			for (let i = 0; i < STREAK_MILESTONES.length; i++) {
+				const milestone = STREAK_MILESTONES[i];
+				const achievementId = STREAK_MILESTONE_IDs[i];
+
+				// If user's streak meets or exceeds this milestone
+				if (streak >= milestone) {
+					// Check if they already have this achievement
+					if (!existingAchievementIDs.includes(achievementId)) {
+						// Award the achievement
+						const { error: insertError } = await supabase
+							.from("achievement")
+							.insert({
+								user_id: session.user.id,
+								achievement_name: achievementId,
+								announced: false
+							});
+
+						if (insertError) {
+							console.error(`Error awarding achievement ${achievementId}:`, insertError);
+						}
+					}
+				}
+			}
+		}
+
+		const calculateLoginStreak = async () => {
 			const { data: rawLoginData } = await supabase
 				.from("login")
 				.select('*');
 			let dates = rawLoginData?.map((x) => new Date(x.created_at))!;
-			dates.sort((a, b) => b.getTime() - a.getTime());
-			let res = 1;
-			for (let i = dates.length - 1; i > 0; i--) {
-				// Ensure that the two dates are within a day
-				if (dates[i].getTime() - dates[i - 1].getTime() > 86400) {
+
+
+			if (!dates || dates.length === 0) return 0;
+
+			// Get unique dates (just the date part, not time)
+			const uniqueDates = [...new Set(
+				dates.map(d => new Date(d.setHours(0, 0, 0, 0)).getTime())
+			)].sort((a, b) => b - a); // Sort descending (most recent first)
+
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const todayTime = today.getTime();
+
+			// Check if most recent login is today or yesterday
+			const mostRecentLogin = uniqueDates[0];
+			const daysSinceMostRecent = Math.floor((todayTime - mostRecentLogin) / (1000 * 60 * 60 * 24));
+
+			// If last login was more than 1 day ago, streak is broken
+			if (daysSinceMostRecent > 1) return 0;
+
+			// If last login was today, streak starts at 1
+			// If last login was yesterday, streak starts at 1 (yesterday counts)
+			let streak = 1;
+
+			// Count consecutive days going backwards
+			for (let i = 1; i < uniqueDates.length; i++) {
+				const currentDate = uniqueDates[i];
+				const previousDate = uniqueDates[i - 1];
+				const daysDiff = Math.floor((previousDate - currentDate) / (1000 * 60 * 60 * 24));
+
+				// If exactly 1 day apart, continue streak
+				if (daysDiff === 1) {
+					streak++;
+				} else {
+					// Gap in logins, streak ends
 					break;
 				}
-				res++;
 			}
-			setStreak(res);
+
+			awardStreakAchievement(streak);
 		}
 
 		const loadAchievements = async () => {
 			const { data } = await supabase.from("achievement")
 				.select("*")
 				.eq("user_id", session.user.id)
-				// .eq("announced", false);
-			
+			// .eq("announced", false);
+
 			const unnanouncedAchievements = data!.filter((achievement) => achievement!.announced === false);
 			setAchievementQueue(unnanouncedAchievements!);
 
@@ -113,7 +184,7 @@ export default function Page() {
 		}
 
 		insertLogin();
-		loadUserStreak();
+		calculateLoginStreak();
 		loadCompletedQuests();
 		loadAchievements();
 	}, [session]);
@@ -141,7 +212,7 @@ export default function Page() {
 					Welcome back!
 				</Text>
 				<Text category="s1" style={styles.emailText}>
-					Your daily streak is {streak} days - good job!
+					Your daily streak is {streak} {streak === 1 ? 'day' : 'days'} - good job!
 				</Text>
 			</Layout>
 
@@ -205,10 +276,10 @@ export default function Page() {
 					Your Achievements
 				</Text>
 				<View>
-					{achievements.map((achievement, idx) => (
+					{achievements.map((achievement: any, idx) => (
 						<Card
 							key={idx}
-							style={styles.questCard}	
+							style={styles.questCard}
 							onPress={() => router.push(`/(tabs)/viewAchievement/${achievement.id}`)}
 						>
 							<Text>{achievement["name"]}</Text>
