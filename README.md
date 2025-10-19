@@ -57,15 +57,21 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 	- [x] Add prompts to the reflection section by October 10th
 	- [x] Add kudos by October 11th
 
-- [ ] Get rid of AI-generated UI by October 14th
 
 - [ ] Repurpose QR mode to a community mode
-	- A community mode is a mode where people gather all at once to start a quest together. Time and space will be limited. If time allows, an event-specific leaderboard can be made.
+	- A community mode is a mode where people gather all at once to start a quest together. A code will be shared.
+		- Live chat
+		- Polls and stuff to make it like a live stream or something
+		- Leaderboard
+		- Teams and random teams
+		- Time will be limited. If time allows, an event-specific leaderboard can be made.
+		- In a community quest, multiple types of subquests can be allowed.
 	- [ ] Add registering functionality by October 15th
 	- [ ] Implement leaderboard by October 17th
 	- [ ] Implement time limit by October 18th
 	- [ ] Implement winner functionality by October 20th
 
+- [ ] Get rid of AI-generated UI by October 14th
 - [ ] Implement basic anti-cheating by October 22
 
 - [ ] Refactor code and add final features by October 23

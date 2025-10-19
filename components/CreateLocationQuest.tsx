@@ -1,12 +1,17 @@
 import { Button, Card, Layout, Text } from "@ui-kitten/components";
-import React, { useState, useCallback } from "react";
-import { View, StyleSheet, ScrollView, TextInput, Alert, } from "react-native";
+import React, { useState, useCallback, useRef } from "react";
+import { View, StyleSheet, ScrollView, TextInput, Alert, Animated, PanResponder, Dimensions } from "react-native";
 import MapView, { Marker, MapPressEvent, Callout } from "react-native-maps";
-import GenerateLocationCode from '@/components/GenerateLocation';
+import GenerateCommunityCode from '@/components/GenerateLocation';
 import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Session } from "@supabase/supabase-js";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const COLLAPSED_HEIGHT = 120;
+const HALF_HEIGHT = SCREEN_HEIGHT * 0.5;
+const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.85;
 
 type MarkerType = {
 	id: string;
@@ -14,24 +19,72 @@ type MarkerType = {
 	longitude: number;
 };
 
-type LocationType = {
+type CommunityType = {
 	id: string;
 	message: string;
 }
 
-interface CreateLocationQuestProps {
+interface CreateCommunityQuestProps {
 	session: Session
 }
 
-export default function CreateLocationQuest({ session }: CreateLocationQuestProps ) {
+export default function CreateCommunityQuest({ session }: CreateCommunityQuestProps) {
 	const [markers, setMarkers] = useState<MarkerType[]>([]);
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-	const [prompts, setPrompts] = useState<LocationType[]>([]);
+	const [prompts, setPrompts] = useState<CommunityType[]>([]);
 	const [winnerMessages, setWinnerMessages] = useState<string[]>([]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
+
+	// Bottom sheet animation
+	const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - HALF_HEIGHT)).current;
+	const lastGestureDy = useRef(0);
+
+	const panResponder = useRef(
+		PanResponder.create({
+			onStartShouldSetPanResponder: () => true,
+			onMoveShouldSetPanResponder: (_, gestureState) => {
+				// Only respond to vertical drags
+				return Math.abs(gestureState.dy) > 10;
+			},
+			onPanResponderGrant: () => {
+				translateY.setOffset(lastGestureDy.current);
+			},
+			onPanResponderMove: (_, gestureState) => {
+				translateY.setValue(gestureState.dy);
+			},
+			onPanResponderRelease: (_, gestureState) => {
+				translateY.flattenOffset();
+				lastGestureDy.current += gestureState.dy;
+
+				const currentPosition = lastGestureDy.current;
+				let finalPosition;
+
+				// Snap to nearest position
+				if (gestureState.vy > 0.5 || currentPosition > SCREEN_HEIGHT - HALF_HEIGHT + 50) {
+					// Snap to collapsed
+					finalPosition = SCREEN_HEIGHT - COLLAPSED_HEIGHT;
+				} else if (gestureState.vy < -0.5 || currentPosition < SCREEN_HEIGHT - EXPANDED_HEIGHT + 50) {
+					// Snap to expanded
+					finalPosition = SCREEN_HEIGHT - EXPANDED_HEIGHT;
+				} else {
+					// Snap to half
+					finalPosition = SCREEN_HEIGHT - HALF_HEIGHT;
+				}
+
+				lastGestureDy.current = finalPosition;
+
+				Animated.spring(translateY, {
+					toValue: finalPosition,
+					useNativeDriver: true,
+					tension: 50,
+					friction: 10,
+				}).start();
+			},
+		})
+	).current;
 
 	const handleMapPress = useCallback((event: MapPressEvent) => {
 		try {
@@ -47,12 +100,7 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 			console.log('Adding marker:', newMarker);
 
 			setMarkers((prev) => [...prev, newMarker]);
-
-			// Also add a new thing to the Location codes at the bottom
-			setPrompts((prev) => [...prev, {
-				id,
-				message: ""
-			}])
+			setPrompts((prev) => [...prev, { id, message: "" }])
 		} catch (error) {
 			console.error('Error in handleMapPress:', error);
 		}
@@ -61,26 +109,12 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 	const handleMarkerDelete = useCallback((id: string) => {
 		try {
 			console.log(`Attempting to delete marker: ${id}`);
-
-			setMarkers((prevMarkers) => {
-				console.log('Current markers before delete:', prevMarkers.length);
-				const markerToDelete = prevMarkers.find(m => m.id === id);
-
-				if (!markerToDelete) {
-					console.warn(`Marker with id ${id} not found in current markers`);
-					return prevMarkers;
-				}
-
-				const newMarkers = prevMarkers.filter((m) => m.id !== id);
-				console.log('Markers after delete:', newMarkers.length);
-				return newMarkers;
-			});
+			setMarkers((prevMarkers) => prevMarkers.filter((m) => m.id !== id));
 			setPrompts((prevPrompts) => prevPrompts.filter((m) => m.id !== id));
 		} catch (error) {
 			console.error('Error in handleMarkerDelete:', error);
 		}
 	}, []);
-
 
 	const onChange = (_event: DateTimePickerEvent, selectedDate: Date) => {
 		setShowDatePicker(false);
@@ -94,7 +128,6 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 	};
 
 	const submitQuest = async () => {
-		// Validate required fields
 		if (!title.trim()) {
 			Alert.alert('Error', 'Please enter a quest title');
 			return;
@@ -107,12 +140,7 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 			Alert.alert('Error', 'Please enter photo requirements');
 			return;
 		}
-		if (prompts.length < 1) {
-			Alert.alert('Error', 'Please enter a valid number of photos (minimum 1)');
-			return;
-		}
 
-		// Validate deadline is in the future
 		const now = new Date();
 		if (deadline <= now) {
 			Alert.alert('Error', 'Deadline must be in the future');
@@ -122,56 +150,38 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 		try {
 			setSubmitting(true);
 
-
-			// Insert the quest to the quest table
-			console.log({
-				author: session.user.id,
-				created_at: new Date(),
-				deadline: deadline,
-				title: title.trim(),
-			})
 			const { data: quest, error } = await supabase.from('quest').insert({
 				author: session.user.id,
 				description,
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
-				type: "LOCATION"
+				type: "Community"
 			})
 				.select("id")
 				.single();
+
 			if (error) {
 				console.error('Insert error:', error);
-			} else {
-				console.log('New record ID:', quest.id);
+				throw error;
 			}
 
-			// Insert in all of the subqeusts of the quest into the subquest table
-			const processedSubquests = prompts.map((prompt, i) => {
-				return {
-					quest_id: quest!.id,
-					prompt: JSON.stringify({...prompt, ...markers[i]}),
-				}
-			});
+			const processedSubquests = prompts.map((prompt, i) => ({
+				quest_id: quest!.id,
+				prompt: JSON.stringify({ ...prompt, ...markers[i] }),
+			}));
 			const { error: bulkError } = await supabase.from("subquest").insert(processedSubquests);
 
-			// Insert all of the winner messages if any.
-			const processedMessages = winnerMessages.map((message, idx) => {
-				return {
-					quest_id: quest!.id,
-					content: message,
-					place: (idx + 1 === winnerMessages.length ? 0 : idx + 1)
-				}
-			});
-			const { error: messageError } = await supabase.from("message")
-				.insert(processedMessages);
+			const processedMessages = winnerMessages.map((message, idx) => ({
+				quest_id: quest!.id,
+				content: message,
+				place: (idx + 1 === winnerMessages.length ? 0 : idx + 1)
+			}));
+			const { error: messageError } = await supabase.from("message").insert(processedMessages);
 
-			if (error || bulkError || messageError) {
-				console.error('Error creating quest:', error);
-				console.error('Error creating quest:', bulkError);
-				console.error('Error creating quest:', messageError);
-				Alert.alert('Error', 'Failed to create quest. Please try again.');
-				return;
+			if (bulkError || messageError) {
+				console.error('Error creating quest:', bulkError || messageError);
+				throw bulkError || messageError;
 			}
 
 			Alert.alert('Success!', 'Your quest has been created and is now live!');
@@ -184,12 +194,11 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 		}
 	};
 
-
-
 	return (
 		<View style={styles.container}>
+			{/* Full screen map */}
 			<MapView
-				style={styles.map}
+				style={styles.fullMap}
 				initialRegion={{
 					latitude: 37.78825,
 					longitude: -122.4324,
@@ -199,9 +208,7 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 				onPress={handleMapPress}
 			>
 				{markers.map((marker) => {
-					// Add safety check for marker data
 					if (!marker || typeof marker.latitude !== 'number' || typeof marker.longitude !== 'number') {
-						console.warn('Invalid marker data:', marker);
 						return null;
 					}
 
@@ -216,8 +223,6 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 							<Callout
 								tooltip={false}
 								onPress={() => {
-									console.log(`Callout pressed for marker: ${marker.id}`);
-									// Use setTimeout to delay the deletion slightly
 									setTimeout(() => {
 										handleMarkerDelete(marker.id);
 									}, 100);
@@ -232,133 +237,143 @@ export default function CreateLocationQuest({ session }: CreateLocationQuestProp
 				})}
 			</MapView>
 
-			{/* Debug info */}
-			<View style={styles.debugInfo}>
-				<Text style={styles.debugText}>Markers: {markers.length}</Text>
-			</View>
-			<ScrollView style={styles.container}>
-				<Layout style={styles.header}>
-					<Text category="h4" style={styles.headerTitle}>
-						Create Location Quest
-					</Text>
-					<Text category="s1" style={styles.headerSubtitle}>
-						Design a Location-based challenge for other adventurers
-					</Text>
-				</Layout>
-
-				{/* Quest Details */}
-				<Card style={styles.section}>
-					<Text category="h6" style={styles.sectionTitle}>
-						Quest Information
-					</Text>
-
-					<View style={styles.inputGroup}>
-						<Text category="s1" style={styles.inputLabel}>
-							Quest Title *
-						</Text>
-						<TextInput
-							value={title}
-							onChangeText={setTitle}
-							placeholder="Find three black bikes"
-							style={styles.input}
-						/>
-					</View>
-
-					<View style={styles.inputGroup}>
-						<Text category="s1" style={styles.inputLabel}>
-							Description *
-						</Text>
-						<TextInput
-							value={description}
-							onChangeText={setDescription}
-							multiline
-							style={[styles.input, styles.textArea]}
-							placeholder="Your task is to go around your neighborhood and take three pictures of three different black bikes."
-							numberOfLines={4}
-						/>
-					</View>
-				</Card>
-
-				{/* Photo Requirements */}
-				<Card style={styles.section}>
-					<Text category="h6" style={styles.sectionTitle}>
-						Location Code Messages
-					</Text>
-					<Text>
-						Tap on the map to add a new point
-					</Text>
-
+			{/* Draggable bottom sheet */}
+			<Animated.View
+				style={[
+					styles.bottomSheet,
 					{
-						Array(prompts.length).fill(0).map((_, idx) => {
-							return <GenerateLocationCode
+						transform: [{ translateY }],
+					},
+				]}
+			>
+				{/* Drag handle */}
+				<View style={styles.dragHandleContainer} {...panResponder.panHandlers}>
+					<View style={styles.dragHandle} />
+					<Text category="h5" style={styles.sheetTitle}>
+						Create Community Quest
+					</Text>
+				</View>
+
+				{/* Scrollable content */}
+				<ScrollView
+					style={styles.scrollContent}
+					contentContainerStyle={styles.scrollContentContainer}
+					showsVerticalScrollIndicator={false}
+				>
+					<Text category="s1" style={styles.subtitle}>
+						Design a Community-based challenge for other adventurers
+					</Text>
+
+					{/* Quest Details */}
+					<Card style={styles.section}>
+						<Text category="h6" style={styles.sectionTitle}>
+							Quest Information
+						</Text>
+
+						<View style={styles.inputGroup}>
+							<Text category="s1" style={styles.inputLabel}>
+								Quest Title *
+							</Text>
+							<TextInput
+								value={title}
+								onChangeText={setTitle}
+								placeholder="Find three black bikes"
+								style={styles.input}
+							/>
+						</View>
+
+						<View style={styles.inputGroup}>
+							<Text category="s1" style={styles.inputLabel}>
+								Description *
+							</Text>
+							<TextInput
+								value={description}
+								onChangeText={setDescription}
+								multiline
+								style={[styles.input, styles.textArea]}
+								placeholder="Your task is to go around your neighborhood..."
+								numberOfLines={4}
+							/>
+						</View>
+					</Card>
+
+					{/* Community Code Messages */}
+					<Card style={styles.section}>
+						<Text category="h6" style={styles.sectionTitle}>
+							Community Code Messages ({markers.length})
+						</Text>
+						<Text style={styles.helperText}>
+							Tap on the map to add a new point
+						</Text>
+
+						{prompts.map((_, idx) => (
+							<GenerateCommunityCode
 								idx={idx}
 								key={idx}
 								prompts={prompts}
 								setPrompts={setPrompts}
 							/>
-						})
-					}
+						))}
+					</Card>
 
-				</Card>
-
-
-
-				{/* Deadline Selection */}
-				<Card style={styles.section}>
-					<Text category="h6" style={styles.sectionTitle}>
-						Quest Deadline
-					</Text>
-
-					<View style={styles.inputGroup}>
-						<Text category="s1" style={styles.inputLabel}>
+					{/* Deadline Selection */}
+					<Card style={styles.section}>
+						<Text category="h6" style={styles.sectionTitle}>
 							Quest Deadline
 						</Text>
+
+						<View style={styles.inputGroup}>
+							<Button
+								style={styles.dateButton}
+								onPress={showDatepicker}
+								appearance="outline"
+							>
+								{deadline.toLocaleDateString()}
+							</Button>
+
+							{showDatePicker && (
+								<DateTimePicker
+									testID="dateTimePicker"
+									value={deadline}
+									mode="date"
+									onChange={(event, date) => onChange(event, date!)}
+									minimumDate={new Date()}
+								/>
+							)}
+
+							<Text category="c1" style={styles.dateInfo}>
+								Selected: {deadline.toLocaleDateString()}
+							</Text>
+						</View>
+					</Card>
+
+					{/* Submit Button */}
+					<Card style={styles.section}>
 						<Button
-							style={styles.dateButton}
-							onPress={showDatepicker}
-							appearance="outline"
+							style={styles.submitButton}
+							onPress={submitQuest}
+							disabled={submitting || !title.trim() || prompts.length === 0}
 						>
-							{deadline.toLocaleDateString()}
+							{submitting ? 'Creating Quest...' : 'Create Quest!'}
 						</Button>
 
-						{showDatePicker && (
-							<DateTimePicker
-								testID="dateTimePicker"
-								value={deadline}
-								mode="date"
-								onChange={(event, date) => onChange(event, date!)}
-								minimumDate={new Date()}
-							/>
-						)}
-
-						<Text category="c1" style={styles.dateInfo}>
-							Selected: {deadline.toLocaleDateString()}
+						<Text category="c1" style={styles.helpText}>
+							* Required fields
 						</Text>
-					</View>
-				</Card>
-
-				{/* Submit Button */}
-				<Card style={styles.section}>
-					<Button
-						style={styles.submitButton}
-						onPress={submitQuest}
-						disabled={submitting || !title.trim() || prompts.length === 0}
-					>
-						{submitting ? 'Creating Quest...' : 'Create Quest!'}
-					</Button>
-
-					<Text category="c1" style={styles.helpText}>
-						* Required fields
-					</Text>
-				</Card>
-			</ScrollView>
+					</Card>
+				</ScrollView>
+			</Animated.View>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1 },
-	map: { height: "50%" },
+	container: {
+		flex: 1,
+	},
+	fullMap: {
+		...StyleSheet.absoluteFillObject,
+	},
 	callout: {
 		padding: 6,
 		borderRadius: 6,
@@ -371,44 +386,58 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		textAlign: "center",
 	},
-	debugInfo: {
+	bottomSheet: {
 		position: 'absolute',
-		top: 50,
-		left: 10,
-		backgroundColor: 'rgba(0,0,0,0.7)',
-		padding: 8,
-		borderRadius: 4,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		height: SCREEN_HEIGHT,
+		backgroundColor: '#f8f9fa',
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -3 },
+		shadowOpacity: 0.1,
+		shadowRadius: 10,
+		elevation: 10,
 	},
-	debugText: {
-		color: 'white',
-		fontSize: 12,
-	},
-	loadingContainer: {
-		flex: 1,
-		justifyContent: 'center',
+	dragHandleContainer: {
 		alignItems: 'center',
-	},
-	header: {
-		padding: 20,
-		alignItems: 'center',
+		paddingVertical: 12,
 		backgroundColor: '#fff',
-		marginBottom: 10,
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+		borderBottomWidth: 1,
+		borderBottomColor: '#e0e0e0',
 	},
-	headerTitle: {
+	dragHandle: {
+		width: 40,
+		height: 5,
+		backgroundColor: '#ccc',
+		borderRadius: 3,
+		marginBottom: 8,
+	},
+	sheetTitle: {
 		fontWeight: 'bold',
-		marginBottom: 5,
 	},
-	headerSubtitle: {
+	scrollContent: {
+		flex: 1,
+	},
+	scrollContentContainer: {
+		padding: 16,
+		paddingBottom: 100,
+	},
+	subtitle: {
 		color: '#666',
 		textAlign: 'center',
+		marginBottom: 16,
 	},
 	section: {
-		margin: 10,
-		marginBottom: 10,
+		marginBottom: 16,
 	},
 	sectionTitle: {
 		fontWeight: 'bold',
-		marginBottom: 15,
+		marginBottom: 12,
 	},
 	inputGroup: {
 		marginBottom: 15,
@@ -429,6 +458,11 @@ const styles = StyleSheet.create({
 	textArea: {
 		minHeight: 80,
 		textAlignVertical: 'top',
+	},
+	helperText: {
+		fontSize: 14,
+		color: '#666',
+		marginBottom: 12,
 	},
 	dateButton: {
 		width: '100%',

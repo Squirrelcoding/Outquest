@@ -1,5 +1,6 @@
 import { View, TextInput, StyleSheet } from "react-native";
-import { Text } from "@ui-kitten/components";
+import { IndexPath, Layout, Select, SelectItem, Text } from "@ui-kitten/components";
+import { useState } from "react";
 
 type QRType = {
 	id: string;
@@ -12,14 +13,15 @@ interface SubquestInputFormat {
 	setPrompts: React.Dispatch<React.SetStateAction<QRType[]>>
 }
 
-export default function SubquestInput({idx, prompts, setPrompts}: SubquestInputFormat) {
+export default function SubquestInput({ idx, prompts, setPrompts }: SubquestInputFormat) {
 	const updatePrompts = (content: string) => {
 		console.log(`Text changed at index ${idx}. Content: ${content}`);
 		let newPrompts = [...prompts];
 		newPrompts[idx].message = content;
 		setPrompts(newPrompts);
 	}
-	
+  	const [selectedIndex, setSelectedIndex] = useState<IndexPath | IndexPath[]>(new IndexPath(0));
+
 
 	return <>
 		<View style={styles.inputGroup}>
@@ -31,9 +33,22 @@ export default function SubquestInput({idx, prompts, setPrompts}: SubquestInputF
 				onChangeText={(c) => updatePrompts(c)}
 				multiline
 				style={[styles.input, styles.textArea]}
-				placeholder="Congratulations!"
+				placeholder="Find the pole on ABC street."
 				numberOfLines={3}
 			/>
+			<Layout
+				style={styles.container}
+				level='1'
+			>
+				<Select
+					selectedIndex={selectedIndex}
+					onSelect={index => setSelectedIndex(index)}
+				>
+					<SelectItem title='Scan something at this location' />
+					<SelectItem title='Go to this location within a radius' />
+					<SelectItem title='Find something at this location within a radius' />
+				</Select>
+			</Layout>
 		</View>
 
 	</>
