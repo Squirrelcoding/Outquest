@@ -12,6 +12,7 @@ const STREAK_MILESTONE_IDs = [3, 4, 5, 6, 7, 8, 9, 10];
 export default function Page() {
 	const { session, loading } = useAuth();
 	const [completedQuests, setCompletedQuests] = useState<Quest[]>([]);
+	const [userOwnedQuests, setUserOwnedQuests] = useState<Quest[]>([]);
 	const [loadingQuests, setLoadingQuests] = useState<boolean>(false);
 	const [usernames, setUsernames] = useState<string[]>([]);
 	const [streak, setStreak] = useState<number>(1);
@@ -183,10 +184,20 @@ export default function Page() {
 			setAchievements(data!);
 		}
 
+		const loadUserOwnedQuests = async () => {
+			const { data } = await supabase.from("quest")
+				.select("*")
+				.eq("author", session.user.id);
+
+			// Set all of the achievements so the viewer can see them
+			setUserOwnedQuests(data!);
+		}
+
 		insertLogin();
 		calculateLoginStreak();
 		loadCompletedQuests();
 		loadAchievements();
+		loadUserOwnedQuests();
 	}, [session]);
 
 
@@ -269,7 +280,6 @@ export default function Page() {
 				)}
 			</Card>
 
-
 			{/* Completed Quests Section */}
 			<Card style={styles.section}>
 				<Text category="h6" style={styles.sectionTitle}>
@@ -286,6 +296,56 @@ export default function Page() {
 						</Card>
 					))}
 				</View>
+			</Card>
+
+			{/* user-owned quests Section */}
+			<Card style={styles.section}>
+				<Text category="h6" style={styles.sectionTitle}>
+					Your Quests ({userOwnedQuests.length})
+				</Text>
+
+				{loadingQuests ? (
+					<View style={styles.loadingSection}>
+						<Text category="s1">Loading your quests...</Text>
+					</View>
+				) : userOwnedQuests.length === 0 ? (
+					<View style={styles.emptySection}>
+						<Text category="s1" style={styles.emptyText}>
+							You haven&apos;t created any quests yet.
+						</Text>
+						<Button
+							style={styles.browseButton}
+							onPress={() => router.push('/create')}
+						>
+							Create Your First Quest
+						</Button>
+					</View>
+				) : (
+					<View style={styles.questsList}>
+						{userOwnedQuests.map((quest, idx) => (
+							<Card
+								key={idx}
+								style={styles.questCard}
+								onPress={() => router.push(`/browse/posts/${quest.type}/${quest.id}`)}
+							>
+								<Text category="h6" style={styles.questTitle}>
+									{quest.title}
+								</Text>
+								<Text category="p2" style={styles.questDescription}>
+									{quest.description}
+								</Text>
+								<View style={styles.questDates}>
+									<Text category="c1" style={styles.questDate}>
+										Created: {new Date(quest.created_at!).toLocaleDateString()}
+									</Text>
+									<Text category="c1" style={styles.questDate}>
+										Ends: {new Date(quest.deadline!).toLocaleDateString()}
+									</Text>
+								</View>
+							</Card>
+						))}
+					</View>
+				)}
 			</Card>
 
 		</ScrollView>
