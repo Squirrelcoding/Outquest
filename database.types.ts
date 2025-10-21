@@ -389,6 +389,7 @@ export type Database = {
           description: string | null
           id: number
           location: string | null
+          public: boolean | null
           title: string | null
           type: Database["public"]["Enums"]["QUEST_TYPE"]
         }
@@ -399,6 +400,7 @@ export type Database = {
           description?: string | null
           id?: number
           location?: string | null
+          public?: boolean | null
           title?: string | null
           type?: Database["public"]["Enums"]["QUEST_TYPE"]
         }
@@ -409,6 +411,7 @@ export type Database = {
           description?: string | null
           id?: number
           location?: string | null
+          public?: boolean | null
           title?: string | null
           type?: Database["public"]["Enums"]["QUEST_TYPE"]
         }

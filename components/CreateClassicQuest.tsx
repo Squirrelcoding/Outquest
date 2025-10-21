@@ -5,7 +5,6 @@ import { Session } from '@supabase/supabase-js'
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Layout, Text } from "@ui-kitten/components";
 import SubquestInput from '../components/SubquestInput';
-import CreateMessage from "./CreateMessage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface CreateQuestProps {
@@ -21,6 +20,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 	const [prompts, setPrompts] = useState<string[]>([""]);
 	const [winnerMessages, setWinnerMessages] = useState<string[]>([""]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
+	const [isPublic, setIsPublic] = useState<boolean>(true);
 
 
 	const onChange = (event: any, selectedDate: any) => {
@@ -79,6 +79,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
+				public: isPublic
 			})
 				.select("id")
 				.single();
@@ -147,6 +148,31 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 			<Text category="h6" style={styles.sectionTitle}>
 				Quest Information
 			</Text>
+
+			<View style={styles.inputGroup}>
+				<Text category="s1" style={styles.inputLabel}>
+					Quest Visibility *
+				</Text>
+				<View style={styles.visibilityContainer}>
+					<Button
+						style={[styles.visibilityButton, isPublic && styles.visibilityButtonActive]}
+						appearance={isPublic ? 'filled' : 'outline'}
+						onPress={() => setIsPublic(true)}
+					>
+						Public
+					</Button>
+					<Button
+						style={[styles.visibilityButton, !isPublic && styles.visibilityButtonActive]}
+						appearance={!isPublic ? 'filled' : 'outline'}
+						onPress={() => setIsPublic(false)}
+					>
+						Private
+					</Button>
+				</View>
+				<Text category="c1" style={styles.helperText}>
+					{isPublic ? 'Anyone can discover and join this quest' : 'Only you can see and complete this quest'}
+				</Text>
+			</View>
 
 			<View style={styles.inputGroup}>
 				<Text category="s1" style={styles.inputLabel}>
@@ -340,5 +366,20 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		color: '#666',
 		fontStyle: 'italic',
+	},
+	visibilityContainer: {
+		flexDirection: 'row',
+		gap: 10,
+	},
+	visibilityButton: {
+		flex: 1,
+	},
+	visibilityButtonActive: {
+		borderWidth: 2,
+	},
+	helperText: {
+		fontSize: 14,
+		color: '#666',
+		marginBottom: 12,
 	},
 });

@@ -1,4 +1,4 @@
-import { Button, Card, Layout, Text } from "@ui-kitten/components";
+import { Button, Card, Text } from "@ui-kitten/components";
 import React, { useState, useCallback, useRef } from "react";
 import { View, StyleSheet, ScrollView, TextInput, Alert, Animated, PanResponder, Dimensions } from "react-native";
 import MapView, { Marker, MapPressEvent, Callout } from "react-native-maps";
@@ -32,6 +32,7 @@ interface CreateCommunityQuestProps {
 export default function CreateCommunityQuest({ session }: CreateCommunityQuestProps) {
 	const [markers, setMarkers] = useState<MarkerType[]>([]);
 	const [title, setTitle] = useState<string>('');
+	const [isPublic, setIsPublic] = useState<boolean>(true);
 	const [description, setDescription] = useState<string>('');
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
@@ -153,7 +154,7 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 			console.log(markers);
 
 			const subquests = prompts.map((prompt: CommunityType, i: number) => {
-				return { ...prompt, ...markers[i]};
+				return { ...prompt, ...markers[i] };
 			});
 
 			// Submit the main quest 
@@ -163,7 +164,8 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
-				type: "COMMUNITY"
+				type: "COMMUNITY",
+				public: isPublic
 			}).select("id").single();
 
 			if (error) {
@@ -175,7 +177,7 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 			for (const subquest of subquests) {
 				let code: null | string = null;
 				if (subquest.type === "SCAN") {
-					code = generateRandomCode(6);	
+					code = generateRandomCode(6);
 				}
 				await supabase.from("subquest").insert({
 					quest_id: data.id,
@@ -270,10 +272,36 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 					</Text>
 
 					{/* Quest Details */}
+					{/* Quest Details */}
 					<Card style={styles.section}>
 						<Text category="h6" style={styles.sectionTitle}>
 							Quest Information
 						</Text>
+
+						<View style={styles.inputGroup}>
+							<Text category="s1" style={styles.inputLabel}>
+								Quest Visibility *
+							</Text>
+							<View style={styles.visibilityContainer}>
+								<Button
+									style={[styles.visibilityButton, isPublic && styles.visibilityButtonActive]}
+									appearance={isPublic ? 'filled' : 'outline'}
+									onPress={() => setIsPublic(true)}
+								>
+									Public
+								</Button>
+								<Button
+									style={[styles.visibilityButton, !isPublic && styles.visibilityButtonActive]}
+									appearance={!isPublic ? 'filled' : 'outline'}
+									onPress={() => setIsPublic(false)}
+								>
+									Private
+								</Button>
+							</View>
+							<Text category="c1" style={styles.helperText}>
+								{isPublic ? 'Anyone can discover and join this quest' : 'Only you can see and complete this quest'}
+							</Text>
+						</View>
 
 						<View style={styles.inputGroup}>
 							<Text category="s1" style={styles.inputLabel}>
@@ -485,6 +513,16 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		color: '#666',
 		fontStyle: 'italic',
+	},
+	visibilityContainer: {
+		flexDirection: 'row',
+		gap: 10,
+	},
+	visibilityButton: {
+		flex: 1,
+	},
+	visibilityButtonActive: {
+		borderWidth: 2,
 	},
 });
 
