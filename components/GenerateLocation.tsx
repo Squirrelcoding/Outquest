@@ -1,6 +1,6 @@
 import { View, TextInput, StyleSheet } from "react-native";
 import { IndexPath, Layout, Select, SelectItem, Text } from "@ui-kitten/components";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Subquest = {
 	id: string;

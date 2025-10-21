@@ -66,6 +66,7 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 		- Teams and random teams
 		- Time will be limited. If time allows, an event-specific leaderboard can be made.
 		- In a community quest, multiple types of subquests can be allowed.
+	- [ ] Make all quests private or public
 	- [ ] Add registering functionality by October 15th
 	- [ ] Implement leaderboard by October 17th
 	- [ ] Implement time limit by October 18th

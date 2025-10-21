@@ -149,24 +149,45 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 
 		try {
 			setSubmitting(true);
+			console.log(prompts);
+			console.log(markers);
 
-			const { error } = await supabase.from('quest').insert({
+			const subquests = prompts.map((prompt: CommunityType, i: number) => {
+				return { ...prompt, ...markers[i]};
+			});
+
+			// Submit the main quest 
+			const { data, error } = await supabase.from('quest').insert({
 				author: session.user.id,
 				description,
 				created_at: new Date(),
 				deadline: deadline,
 				title: title.trim(),
-				type: "Community"
-			});
-			
-			// Get all the prompts, their locations, and their descriptions
-			console.log(prompts);
-			// const subquests = 
+				type: "COMMUNITY"
+			}).select("id").single();
 
 			if (error) {
 				console.error('Insert error:', error);
 				throw error;
 			}
+
+			// Submit all the subquests
+			for (const subquest of subquests) {
+				let code: null | string = null;
+				if (subquest.type === "SCAN") {
+					code = generateRandomCode(6);	
+				}
+				await supabase.from("subquest").insert({
+					quest_id: data.id,
+					prompt: subquest.message,
+					type: subquest.type,
+					latitude: subquest.latitude,
+					longitude: subquest.longitude,
+					code,
+				});
+			}
+
+
 
 			Alert.alert('Success!', 'Your quest has been created and is now live!');
 			router.back();
@@ -466,3 +487,7 @@ const styles = StyleSheet.create({
 		fontStyle: 'italic',
 	},
 });
+
+function generateRandomCode(arg0: number): string {
+	throw new Error("Function not implemented.");
+}

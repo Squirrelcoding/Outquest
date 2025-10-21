@@ -17,22 +17,22 @@ export type Database = {
       achievement: {
         Row: {
           achievement_name: number | null
+          announced: boolean | null
           created_at: string
-          icon: string | null
           id: number
           user_id: string | null
         }
         Insert: {
           achievement_name?: number | null
+          announced?: boolean | null
           created_at?: string
-          icon?: string | null
           id?: number
           user_id?: string | null
         }
         Update: {
           achievement_name?: number | null
+          announced?: boolean | null
           created_at?: string
-          icon?: string | null
           id?: number
           user_id?: string | null
         }
@@ -73,6 +73,52 @@ export type Database = {
           name?: string | null
         }
         Relationships: []
+      }
+      "achievement progress": {
+        Row: {
+          achievement: number | null
+          completion: number | null
+          created_at: string
+          id: number
+          user_id: string | null
+        }
+        Insert: {
+          achievement?: number | null
+          completion?: number | null
+          created_at?: string
+          id?: number
+          user_id?: string | null
+        }
+        Update: {
+          achievement?: number | null
+          completion?: number | null
+          created_at?: string
+          id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievement progress_achievement_fkey"
+            columns: ["achievement"]
+            isOneToOne: false
+            referencedRelation: "achievement id"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "achievement progress_completion_fkey"
+            columns: ["completion"]
+            isOneToOne: false
+            referencedRelation: "submission"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "achievement progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cities: {
         Row: {
@@ -314,38 +360,6 @@ export type Database = {
           },
         ]
       }
-      message: {
-        Row: {
-          content: string | null
-          created_at: string
-          id: number
-          place: number | null
-          quest_id: number | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string
-          id?: number
-          place?: number | null
-          quest_id?: number | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string
-          id?: number
-          place?: number | null
-          quest_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "message_quest_id_fkey"
-            columns: ["quest_id"]
-            isOneToOne: false
-            referencedRelation: "quest"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profile: {
         Row: {
           age: number | null
@@ -482,19 +496,31 @@ export type Database = {
       }
       subquest: {
         Row: {
+          code: string | null
           id: number
+          latitude: number | null
+          longitude: number | null
           prompt: string | null
           quest_id: number | null
+          type: string | null
         }
         Insert: {
+          code?: string | null
           id?: number
+          latitude?: number | null
+          longitude?: number | null
           prompt?: string | null
           quest_id?: number | null
+          type?: string | null
         }
         Update: {
+          code?: string | null
           id?: number
+          latitude?: number | null
+          longitude?: number | null
           prompt?: string | null
           quest_id?: number | null
+          type?: string | null
         }
         Relationships: [
           {
@@ -572,7 +598,7 @@ export type Database = {
       }
     }
     Enums: {
-      QUEST_TYPE: "PHOTO" | "LOCATION" | "PATH"
+      QUEST_TYPE: "PHOTO" | "LOCATION" | "PATH" | "COMMUNITY"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -700,7 +726,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      QUEST_TYPE: ["PHOTO", "LOCATION", "PATH"],
+      QUEST_TYPE: ["PHOTO", "LOCATION", "PATH", "COMMUNITY"],
     },
   },
 } as const
