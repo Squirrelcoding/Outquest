@@ -1,5 +1,5 @@
 import { Button, Card, Text } from "@ui-kitten/components";
-import React, { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { View, StyleSheet, ScrollView, TextInput, Alert, Animated, PanResponder, Dimensions } from "react-native";
 import MapView, { Marker, MapPressEvent, Callout } from "react-native-maps";
 import GenerateCommunityCode from '@/components/GenerateLocation';
@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Session } from "@supabase/supabase-js";
+import { generateRandomCode } from "@/lib/utils";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const COLLAPSED_HEIGHT = 120;
@@ -168,6 +169,8 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 				public: isPublic
 			}).select("id").single();
 
+			const questID = data!.id;
+
 			if (error) {
 				console.error('Insert error:', error);
 				throw error;
@@ -179,16 +182,29 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 				if (subquest.type === "SCAN") {
 					code = generateRandomCode(6);
 				}
-				await supabase.from("subquest").insert({
-					quest_id: data.id,
+				const { error: insertSubquestError } = await supabase.from("subquest").insert({
+					quest_id: questID,
 					prompt: subquest.message,
 					type: subquest.type,
 					latitude: subquest.latitude,
 					longitude: subquest.longitude,
 					code,
 				});
+
+				if (insertSubquestError){
+					throw insertSubquestError;		
+				}
 			}
 
+			// Generate a unique join code
+			const code = generateRandomCode();
+			const { error: insertCodeError } = await supabase.from("code").insert({
+				quest_id: questID,
+				code,
+			});
+			if (insertCodeError) {
+				throw insertCodeError;
+			}
 
 
 			Alert.alert('Success!', 'Your quest has been created and is now live!');
@@ -525,7 +541,3 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 	},
 });
-
-function generateRandomCode(arg0: number): string {
-	throw new Error("Function not implemented.");
-}

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Button, Card, Layout, Text } from "@ui-kitten/components";
 import SubquestInput from '../components/SubquestInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { generateRandomCode } from "@/lib/utils";
 
 interface CreateQuestProps {
 	session: Session
@@ -65,13 +66,6 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 
 
 			// Insert the quest to the quest table
-			console.log({
-				author: session.user.id,
-				location: location.trim() || null,
-				created_at: new Date(),
-				deadline: deadline,
-				title: title.trim(),
-			});
 			const { data: quest, error } = await supabase.from('quest').insert({
 				author: session.user.id,
 				description,
@@ -105,6 +99,16 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				return;
 			}
 
+			// Generate a unique join code
+			const code = generateRandomCode();
+			const { error: insertCodeError } = await supabase.from("code").insert({
+				quest_id: quest.id,
+				code,
+			});
+			if (insertCodeError) {
+				throw insertCodeError;
+			}
+
 			Alert.alert('Success!', 'Your quest has been created and is now live!');
 			router.back();
 		} catch (error) {
@@ -124,14 +128,6 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 		setPrompts([...prompts, ""]);
 	}
 
-	const addMessage = () => {
-		// Check if latest message is non-empty
-		console.log(winnerMessages)
-		if (winnerMessages[winnerMessages.length - 1] === "") {
-			return;
-		}
-		setWinnerMessages([...winnerMessages, ""]);
-	}
 
 	return <ScrollView style={styles.container}>
 		<Layout style={styles.header}>

@@ -53,7 +53,7 @@ export async function addAchievementProgress(userID: string, achievementID: numb
 	return false;
 }
 
-function generateRandomCode(length: number = 6): string {
+export function generateRandomCode(length: number = 6): string {
   	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   	let result = '';
   
