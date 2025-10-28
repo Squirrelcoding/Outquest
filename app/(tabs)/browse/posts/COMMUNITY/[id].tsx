@@ -46,6 +46,27 @@ export default function QuestBox() {
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
 	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
 
+	const channel = supabase.channel(`event:${id}`);
+
+	// When session is done loading send a new message to the big chat
+	if (!authLoading) {
+		channel.send({
+			type: "broadcast",
+			event: "join",
+			payload: session?.user.id
+		})
+	}
+
+	channel.on('broadcast', { event: 'chat_message' }, (payload) => {
+		console.log('New chat message:', payload);
+	});
+	channel.subscribe();
+
+	channel.send({
+		event: "",
+		type: 'presence'
+	})
+
 
 	// Run this code when the user completes the quest
 	useEffect(() => {

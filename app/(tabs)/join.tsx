@@ -14,6 +14,7 @@ export default function JoinByCode() {
 	if (!session) return <Redirect href="/(auth)" />
 
 	async function handleJoin() {
+		if (!session) return;
 		const trimmed = code.trim()
 		if (!trimmed) {
 			Alert.alert('Enter code', 'Please enter a valid join code.')
@@ -55,6 +56,15 @@ export default function JoinByCode() {
 
 			// Navigate to the appropriate post page based on quest type
 			const routeType = quest.type || 'COMMUNITY'
+
+			// Make the user join the participant table when they join a live community event and subscribe them to some the event channels
+			if (routeType === "COMMUNITY") {
+				await supabase.from("event participant").insert({
+					user_id: session.user.id,
+					quest_id: quest.id
+				});
+			}
+
 			// router.push typing is strict in generated router types; cast to any for dynamic route
 			router.push((`/browse/posts/${routeType}/${quest.id}`) as any)
 		} finally {

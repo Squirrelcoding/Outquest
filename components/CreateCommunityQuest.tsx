@@ -9,12 +9,9 @@ import CreateMessage from "./CreateMessage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 // TODO:
-// - Community quests are a bit different.
-// - They include starting/rendezvous points
-// - They also include leaderboards
-// 	- The leaderboardss should keep track of current active users
-// - There should probably be geographical limits
-// - There is also obviously a time limit
+// - Chat
+// 	- Leaderboard
+// - Time limit
 // - Multiple badges can be awarded instead of just one.
 
 interface CreateQuestProps {

@@ -128,7 +128,7 @@ export type Database = {
           id: number
           lat: number | null
           lng: number | null
-          location: unknown | null
+          location: unknown
           place: string | null
           population: number | null
           state_id: string | null
@@ -141,7 +141,7 @@ export type Database = {
           id: number
           lat?: number | null
           lng?: number | null
-          location?: unknown | null
+          location?: unknown
           place?: string | null
           population?: number | null
           state_id?: string | null
@@ -154,13 +154,42 @@ export type Database = {
           id?: number
           lat?: number | null
           lng?: number | null
-          location?: unknown | null
+          location?: unknown
           place?: string | null
           population?: number | null
           state_id?: string | null
           timezone?: string | null
         }
         Relationships: []
+      }
+      code: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: number
+          quest_id: number | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          quest_id?: number | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          quest_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private codes_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "quest"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comment: {
         Row: {
@@ -268,6 +297,71 @@ export type Database = {
             foreignKeyName: "completion_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      "event message": {
+        Row: {
+          author: string | null
+          content: string | null
+          created_at: string
+          id: number
+        }
+        Insert: {
+          author?: string | null
+          content?: string | null
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          author?: string | null
+          content?: string | null
+          created_at?: string
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event message_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "event participant"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      "event participant": {
+        Row: {
+          created_at: string
+          id: number
+          quest_id: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          quest_id?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          quest_id?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event participant_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "quest"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event participant_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profile"
             referencedColumns: ["id"]
           },
@@ -540,10 +634,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_email_verified: {
-        Args: { p_email: string }
-        Returns: boolean
-      }
+      check_email_verified: { Args: { p_email: string }; Returns: boolean }
       get_search_results: {
         Args: {
           current_lat: number
@@ -557,26 +648,6 @@ export type Database = {
           long: number
         }[]
       }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       nearby_restaurants: {
         Args: { lat: number; long: number }
         Returns: {
@@ -587,18 +658,8 @@ export type Database = {
           name: string
         }[]
       }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       QUEST_TYPE: "PHOTO" | "LOCATION" | "PATH" | "COMMUNITY"
