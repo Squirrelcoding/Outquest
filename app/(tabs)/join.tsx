@@ -22,12 +22,12 @@ export default function JoinByCode() {
 
 		setSubmitting(true)
 		try {
-			// Look for a subquest with this code. Community/scan codes are stored on subquests.
-			const { data: subquest, error: subError } = await supabase
-				.from('subquest')
-				.select('quest_id, code')
-				.ilike('code', trimmed)
-				.maybeSingle()
+			// Look for a subquest with this code. Community/scan codes are stored in a `code` table.
+			const { data: questData, error: subError } = await supabase
+				.from('code')
+				.select("*")
+				.eq("code", code)
+				.single();
 
 			if (subError) {
 				console.error('Error finding code:', subError)
@@ -35,7 +35,7 @@ export default function JoinByCode() {
 				return
 			}
 
-			if (!subquest) {
+			if (!questData) {
 				Alert.alert('Not found', 'Code not found. Check the code and try again.')
 				return
 			}
@@ -43,19 +43,14 @@ export default function JoinByCode() {
 			// Load parent quest to check type and privacy
 			const { data: quest, error: questError } = await supabase
 				.from('quest')
-				.select('id, title, type, public')
-				.eq('id', subquest.quest_id)
-				.maybeSingle()
+				.select("*")
+				.eq('id', questData.id)
+				.maybeSingle();
 
 			if (questError || !quest) {
 				console.error('Error loading quest for code:', questError)
 				Alert.alert('Error', 'Could not load quest for this code.')
-				return
-			}
-
-			// If quest is public, inform the user (they can also browse to it)
-			if (quest.public) {
-				Alert.alert('Info', 'This quest is public — you can find it in Browse.')
+				return;
 			}
 
 			// Navigate to the appropriate post page based on quest type

@@ -17,6 +17,9 @@ interface CommentType {
 	likes: string[];
 }
 
+// The event page is one where the user is temporarily "locked" into one event. They cannot complete any other quests as long as they are here.
+// It's a special type of quest.
+
 // TODO:
 // - Implement register functionality by first getting the geographic location 
 //   and then displaying a list of active community quests within that area so
