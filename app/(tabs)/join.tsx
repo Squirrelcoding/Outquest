@@ -69,10 +69,10 @@ export default function JoinByCode() {
 
 	return (
 		<View style={styles.container}>
-			<Text category="h5">Join private quest</Text>
+			<Text category="h5">Join Event</Text>
 
 			<Text category="s1" style={styles.label}>
-				Enter the invitation code shared by the quest host
+				Enter the invitation code shared by the event host
 			</Text>
 
 			<TextInput
