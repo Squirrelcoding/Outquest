@@ -301,7 +301,7 @@ export default function Page() {
 			{/* user-owned quests Section */}
 			<Card style={styles.section}>
 				<Text category="h6" style={styles.sectionTitle}>
-					Your Quests ({userOwnedQuests.length})
+					Manage your Quests ({userOwnedQuests.length})
 				</Text>
 
 				{loadingQuests ? (
@@ -326,7 +326,7 @@ export default function Page() {
 							<Card
 								key={idx}
 								style={styles.questCard}
-								onPress={() => router.push(`/browse/posts/${quest.type}/${quest.id}`)}
+								onPress={() => router.push(`/admin/${quest.id}`)}
 							>
 								<Text category="h6" style={styles.questTitle}>
 									{quest.title}
