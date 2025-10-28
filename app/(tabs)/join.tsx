@@ -45,7 +45,7 @@ export default function JoinByCode() {
 			const { data: quest, error: questError } = await supabase
 				.from('quest')
 				.select("*")
-				.eq('id', questData.id)
+				.eq('id', questData.quest_id)
 				.maybeSingle();
 
 			if (questError || !quest) {

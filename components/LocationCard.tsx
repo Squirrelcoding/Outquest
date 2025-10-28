@@ -38,7 +38,10 @@ export default function LocationCard({
 
 	console.log(location);
 	const { latitude: userLat, longitude: userLon } = location.coords;
-	const { latitude: goalLat, longitude: goalLon } = JSON.parse(subquest.prompt!);
+
+	const goalLat = subquest.latitude!;
+	const goalLon = subquest.longitude!;
+
 	console.log(userLat, userLon, goalLat, goalLon)
 
 	// Submit quest entry
@@ -81,7 +84,7 @@ export default function LocationCard({
 		}
 	}
 
-	const details = JSON.parse(subquest.prompt!);
+	const details = subquest.prompt!;
 
 	return <>
 		<Card style={styles.imageCard}>
@@ -90,9 +93,9 @@ export default function LocationCard({
 			</>
 				: <>
 					<Text category="h6" style={styles.sectionTitle}>
-						{details.message} {'\n'}
-						Longitude: {details.longitude} {'\n'}
-						Latitude: {details.latitude}
+						{subquest.prompt} {'\n'}
+						Longitude: {goalLon} {'\n'}
+						Latitude: {goalLat}
 					</Text>
 
 					<Button

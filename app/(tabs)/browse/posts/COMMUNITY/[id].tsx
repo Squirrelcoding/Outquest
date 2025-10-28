@@ -60,12 +60,8 @@ export default function QuestBox() {
 	channel.on('broadcast', { event: 'chat_message' }, (payload) => {
 		console.log('New chat message:', payload);
 	});
-	channel.subscribe();
 
-	channel.send({
-		event: "",
-		type: 'presence'
-	})
+	channel.subscribe();
 
 
 	// Run this code when the user completes the quest
