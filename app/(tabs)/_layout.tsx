@@ -105,6 +105,20 @@ export default function TabsLayout() {
 				}}
 			/>
 
+			<Tabs.Screen
+				name="admin/[id]"
+				options={{
+					href: null
+				}}
+			/>
+
+			<Tabs.Screen
+				name="browse/completion/[id]"
+				options={{
+					href: null
+				}}
+			/>
+
 
 			{/* Hidden screens that are not shown in tab bar */}
 			<Tabs.Screen

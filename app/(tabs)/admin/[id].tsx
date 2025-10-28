@@ -166,7 +166,7 @@ export default function AdminQuestPage() {
 		<ScrollView style={styles.container}>
 			<Card style={styles.card}>
 				<Text category="h5" style={styles.header}>Edit Quest</Text>
-				
+
 				<Input
 					label="Title"
 					value={title}
@@ -209,6 +209,7 @@ export default function AdminQuestPage() {
 					>
 						End Date: {endDate.toLocaleDateString()}
 					</Button>
+
 
 					{showStartPicker && (
 						<DateTimePicker

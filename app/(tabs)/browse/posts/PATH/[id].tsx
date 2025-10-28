@@ -278,7 +278,7 @@ export default function Post() {
 					<View style={styles.questInfo}>
 						<View style={styles.infoRow}>
 							<Text category="s1" style={styles.infoLabel}>
-								Created:
+								Starts:
 							</Text>
 							<Text category="s1" style={styles.infoValue}>
 								{new Date(quest.created_at!).toLocaleDateString()}

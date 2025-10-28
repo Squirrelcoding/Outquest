@@ -54,7 +54,7 @@ export default function Comment({ comment, session }: CommentProps) {
 		<View style={styles.questInfo}>
 			<View style={styles.infoRow}>
 				<Text category="s1" style={styles.infoLabel}>
-					Created:
+					Starts:
 				</Text>
 				<Text category="s1" style={styles.infoValue}>
 					{new Date(comment.comment.created_at).toLocaleDateString()}

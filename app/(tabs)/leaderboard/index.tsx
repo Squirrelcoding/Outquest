@@ -125,7 +125,7 @@ export default function Page() {
 								</Text>
 								<View style={styles.leaderboardInfo}>
 									<Text category="s1" style={styles.leaderboardDate}>
-										Created: {new Date(leaderboard.created_at).toLocaleDateString()}
+										Starts: {new Date(leaderboard.created_at).toLocaleDateString()}
 									</Text>
 									{leaderboard.owner_id === session.user.id && (
 										<Text category="c1" style={styles.ownerBadge}>

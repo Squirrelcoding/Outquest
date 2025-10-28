@@ -268,7 +268,7 @@ export default function Page() {
 								</Text>
 								<View style={styles.questDates}>
 									<Text category="c1" style={styles.questDate}>
-										Created: {new Date(quest.created_at!).toLocaleDateString()}
+										Starts: {new Date(quest.created_at!).toLocaleDateString()}
 									</Text>
 									<Text category="c1" style={styles.questDate}>
 										Ends: {new Date(quest.deadline!).toLocaleDateString()}
@@ -336,7 +336,7 @@ export default function Page() {
 								</Text>
 								<View style={styles.questDates}>
 									<Text category="c1" style={styles.questDate}>
-										Created: {new Date(quest.created_at!).toLocaleDateString()}
+										Starts: {new Date(quest.created_at!).toLocaleDateString()}
 									</Text>
 									<Text category="c1" style={styles.questDate}>
 										Ends: {new Date(quest.deadline!).toLocaleDateString()}
