@@ -84,10 +84,8 @@ export default function JoinByCode() {
 			<TextInput
 				value={code}
 				onChangeText={setCode}
-				placeholder="Enter code"
+				placeholder="Enter code..."
 				style={styles.input}
-				autoCapitalize="characters"
-				autoCorrect={false}
 			/>
 
 			<Button onPress={handleJoin} disabled={submitting || !code.trim()} style={styles.button}>
