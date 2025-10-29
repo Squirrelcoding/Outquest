@@ -46,6 +46,7 @@ export default function QuestBox() {
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
 	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
 
+	console.log(`event:${id}`)
 	const channel = supabase.channel(`event:${id}`);
 
 	// When session is done loading send a new message to the big chat
@@ -53,13 +54,11 @@ export default function QuestBox() {
 		channel.send({
 			type: "broadcast",
 			event: "join",
-			payload: session?.user.id
-		})
+			payload: {
+				user_id: session?.user.id,
+			}
+		});
 	}
-
-	channel.on('broadcast', { event: 'chat_message' }, (payload) => {
-		console.log('New chat message:', payload);
-	});
 
 	channel.subscribe();
 

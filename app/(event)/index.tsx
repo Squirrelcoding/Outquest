@@ -1,0 +1,1 @@
+// the index should redirect to the other one or current
