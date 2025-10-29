@@ -183,12 +183,6 @@ export default function TabsLayout() {
 				}}
 			/>
 		
-			<Tabs.Screen
-				name="browse/posts/COMMUNITY/[id]"
-				options={{
-					href: null
-				}}
-			/>
 		</Tabs>
 
 	</SafeAreaView>
