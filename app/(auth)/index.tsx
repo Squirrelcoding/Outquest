@@ -15,8 +15,9 @@ import { supabase } from '../../lib/supabase'
 import { Redirect, router } from 'expo-router'
 import { useAuth } from '@/context/Auth'
 import { Image } from 'expo-image';
-import { EmailVerification } from '@/components/EmailVerification'
 import { addAchievementProgress } from '@/lib/utils'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const imageSource = require("../../assets/images/grass-touching.jpg");
 const screenWidth = Dimensions.get('window').width;
@@ -60,27 +61,8 @@ export default function Auth() {
 			await addAchievementProgress(data.user!.id, 1);
 		}
 
+		await AsyncStorage.setItem('currentEvent', "-1");
 		router.replace("/(tabs)");
-	}
-
-	async function signUpWithEmail() {
-		setLoading(true)
-		const {
-			data: { session },
-			error,
-		} = await supabase.auth.signUp({
-			email,
-			password,
-		});
-
-		if (error) {
-			Alert.alert('Sign up error', error.message);
-		}
-		if (!session) {
-			Alert.alert('Please check your inbox for email verification!');
-			router.replace(`/(auth)/onboarding/page1/${email}/${password}`);
-		}
-		setLoading(false);
 	}
 
 	const registerPage = () => {

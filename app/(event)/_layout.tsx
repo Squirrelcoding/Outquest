@@ -66,7 +66,7 @@ export default function TabsLayout() {
 			/>
 
 			<Tabs.Screen
-				name="leaderboard/index"
+				name="leaderboard"
 				options={{
 					title: 'Leaderboard',
 					tabBarIcon: ({ color, size }) => (
@@ -77,7 +77,7 @@ export default function TabsLayout() {
 			/>
 
 			<Tabs.Screen
-				name="settings"
+				name="chat"
 				options={{
 					title: 'Settings',
 					tabBarIcon: ({ color, size }) => (
@@ -86,109 +86,9 @@ export default function TabsLayout() {
 					tabBarIconStyle: { marginBottom: -3 },
 				}}
 			/>
-			{/* 
-		<Tabs.Screen
-			name="debug"
-			options={{
-				title: 'Debug',
-				tabBarIcon: ({ color, size }) => (
-					<Ionicons name="settings-outline" size={size} color={color} />
-				),
-				tabBarIconStyle: { marginBottom: -3 },
-			}}
-		/>
- */}
-			<Tabs.Screen
-				name="debug"
-				options={{
-					href: null
-				}}
-			/>
-
-			<Tabs.Screen
-				name="admin/[id]"
-				options={{
-					href: null
-				}}
-			/>
-
-			<Tabs.Screen
-				name="browse/completion/[id]"
-				options={{
-					href: null
-				}}
-			/>
 
 
-			{/* Hidden screens that are not shown in tab bar */}
-			<Tabs.Screen
-				name="leaderboard/join"
-				options={{
-					href: null
-				}}
-			/>
 
-			<Tabs.Screen
-				name="viewAchievement/[id]"
-				options={{
-					href: null
-				}}
-			/>
-
-			<Tabs.Screen
-				name="leaderboard/make"
-				options={{
-					href: null
-				}}
-			/>
-
-			<Tabs.Screen
-				name="leaderboard/show/[id]"
-				options={{
-					href: null
-				}}
-			/>
-
-			<Tabs.Screen
-				name="profile/[id]"
-				options={{
-					href: null,
-				}}
-			/>
-
-			<Tabs.Screen
-				name="browse/submission/[userID]/[questID]"
-				options={{
-					href: null,
-				}}
-			/>
-
-			<Tabs.Screen
-				name="browse/posts/LOCATION/[id]"
-				options={{
-					href: null,
-				}}
-			/>
-			<Tabs.Screen
-				name="browse/posts/PATH/[id]"
-				options={{
-					href: null,
-				}}
-			/>
-
-			<Tabs.Screen
-				name="browse/posts/PHOTO/[id]"
-				options={{
-					href: null,
-				}}
-			/>
-		
-			<Tabs.Screen
-				name="browse/posts/COMMUNITY/[id]"
-				options={{
-					href: null
-				}}
-			/>
 		</Tabs>
 
 	</SafeAreaView>

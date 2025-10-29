@@ -4,7 +4,7 @@ import { Alert, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Session } from '@supabase/supabase-js'
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Layout, Text } from "@ui-kitten/components";
-import SubquestInput from './SubquestInput';
+import SubquestInput from '../SubquestInput';
 import CreateMessage from "./CreateMessage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 

@@ -7,9 +7,7 @@ interface SubquestInputFormat {
 	setPrompts: React.Dispatch<React.SetStateAction<string[]>>
 }
 
-
 export default function SubquestInput({idx, prompts, setPrompts}: SubquestInputFormat) {
-
 	const updatePrompts = (content: string) => {
 		console.log(`Text changed at index ${idx}. Content: ${content}`);
 		let newPrompts = [...prompts];

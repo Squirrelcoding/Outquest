@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 
-import Comment from '@/components/Comment';
-import ImageCard from '@/components/ImageCard';
+import Comment from '@/components/boxes/Comment';
+import ImageCard from '@/components/boxes/ImageCard';
 import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
 import { addAchievementProgress } from '@/lib/utils';
 

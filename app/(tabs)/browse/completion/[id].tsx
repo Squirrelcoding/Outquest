@@ -3,7 +3,7 @@ import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/Auth';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import ProfileCard from "@/components/ProfileCard";
+import ProfileCard from "@/components/boxes/ProfileCard";
 import { StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 import { Text } from "@ui-kitten/components";
 

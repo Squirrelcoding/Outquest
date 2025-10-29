@@ -4,6 +4,7 @@ import { Button, Text } from '@ui-kitten/components'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/Auth'
 import { Redirect, router } from 'expo-router'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function JoinByCode() {
 	const { session, loading } = useAuth()
@@ -55,18 +56,18 @@ export default function JoinByCode() {
 			}
 
 			// Navigate to the appropriate post page based on quest type
-			const routeType = quest.type || 'COMMUNITY'
 
 			// Make the user join the participant table when they join a live community event and subscribe them to some the event channels
-			if (routeType === "COMMUNITY") {
-				await supabase.from("event participant").insert({
-					user_id: session.user.id,
-					quest_id: quest.id
-				});
-			}
+			await supabase.from("event participant").insert({
+				user_id: session.user.id,
+				quest_id: quest.id
+			});
+			// Set the current event ID in the global state and send the user to the page
+			AsyncStorage.setItem('currentEvent', String(quest.id)).then(() => {
+				console.log("Right after");
+				router.push((`/(event)`) as any)
+			});
 
-			// router.push typing is strict in generated router types; cast to any for dynamic route
-			router.push((`/browse/posts/${routeType}/${quest.id}`) as any)
 		} finally {
 			setSubmitting(false)
 		}

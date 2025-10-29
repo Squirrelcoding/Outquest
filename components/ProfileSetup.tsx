@@ -168,15 +168,6 @@ export default function ProfileSetup({ email, onComplete }: ProfileSetupProps) {
 					Account Information
 				</Text>
 
-				{/* <View style={styles.inputGroup}>
-					<Text category="s1" style={styles.inputLabel}>
-						Email
-					</Text>
-					<Text category="p1" style={styles.emailText}>
-						email
-					</Text>
-				</View> */}
-
 				<View style={styles.inputGroup}>
 					<Text category="s1" style={styles.inputLabel}>
 						Username

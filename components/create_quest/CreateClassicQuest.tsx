@@ -4,7 +4,7 @@ import { Alert, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Session } from '@supabase/supabase-js'
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Layout, Text } from "@ui-kitten/components";
-import SubquestInput from '../components/SubquestInput';
+import SubquestInput from '../SubquestInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { generateRandomCode } from "@/lib/utils";
 
@@ -19,7 +19,6 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 	const [deadline, setDeadline] = useState<Date>(new Date());
 	const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 	const [prompts, setPrompts] = useState<string[]>([""]);
-	const [winnerMessages, setWinnerMessages] = useState<string[]>([""]);
 	const [submitting, setSubmitting] = useState<boolean>(false);
 	const [isPublic, setIsPublic] = useState<boolean>(true);
 
@@ -224,24 +223,6 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 			<Button onPress={addPrompt}>Add new prompt</Button>
 
 		</Card>
-
-		{/* Winner messages */}
-		{/* <Card style={styles.section}>
-			<Text category="h6" style={styles.sectionTitle}>
-				Add achievements
-			</Text>
-			{
-				Array(winnerMessages.length).fill(0).map((_, idx) => {
-					return <CreateMessage
-						idx={idx}
-						key={idx}
-						messages={winnerMessages}
-						setMessages={setWinnerMessages}
-					/>
-				})
-			}
-			<Button onPress={addMessage}>Add new achievement</Button>
-		</Card> */}
 
 		{/* Deadline Selection */}
 		<Card style={styles.section}>

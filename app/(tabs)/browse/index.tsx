@@ -14,7 +14,7 @@ import { Button, Card, Text, Layout } from '@ui-kitten/components';
 import { useLocation } from '@/context/Location';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import QuestBox from '@/components/QuestBox';
+import QuestBox from '@/components/boxes/QuestBox';
 import { Redirect } from 'expo-router';
 import { Quest } from '@/types';
 

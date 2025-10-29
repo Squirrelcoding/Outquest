@@ -5,6 +5,7 @@ import { Button, Card, Layout, Text } from '@ui-kitten/components';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Achievement, Completion, Quest } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STREAK_MILESTONES = [3, 5, 10, 20, 50, 100, 200, 365];
 const STREAK_MILESTONE_IDs = [3, 4, 5, 6, 7, 8, 9, 10];
@@ -22,6 +23,7 @@ export default function Page() {
 	// Load user's completed quests
 	useEffect(() => {
 		if (!session) return;
+
 
 		const loadCompletedQuests = async () => {
 			try {
@@ -74,6 +76,8 @@ export default function Page() {
 
 		// Count towards the daily login streak
 		const insertLogin = async () => {
+			await AsyncStorage.setItem('currentEvent', "0");
+			console.log("SET THE CURRENT EVENT!!!");
 			await supabase.from("login").insert({
 				user_id: session.user.id
 			});

@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 
-import Comment from '@/components/Comment';
-import LocationCard from '@/components/LocationCard';
+import Comment from '@/components/boxes/Comment';
+import LocationCard from '@/components/boxes/LocationCard';
 import { useLocation } from '@/context/Location';
 import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
 
