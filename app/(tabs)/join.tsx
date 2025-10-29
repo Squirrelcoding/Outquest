@@ -65,7 +65,7 @@ export default function JoinByCode() {
 			// Set the current event ID in the global state and send the user to the page
 			AsyncStorage.setItem('currentEvent', String(quest.id)).then(() => {
 				console.log("Right after");
-				router.push((`/(event)`) as any)
+				router.push((`event/${quest.id}`) as any)
 			});
 
 		} finally {

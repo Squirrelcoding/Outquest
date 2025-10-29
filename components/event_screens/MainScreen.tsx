@@ -1,4 +1,3 @@
-// app/posts/[id].tsx
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { Button, Card, Text, Layout } from "@ui-kitten/components";
 import { useAuth } from '@/context/Auth';
@@ -11,28 +10,19 @@ import LocationCard from '@/components/boxes/LocationCard';
 import { useLocation } from '@/context/Location';
 import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
 
+interface MainScreenProps {
+	session: any,
+	location: any,
+	id: number
+}
+
 interface CommentType {
 	comment: DBComment,
 	commentAuthor: Profile;
 	likes: string[];
 }
 
-// The event page is one where the user is temporarily "locked" into one event. They cannot complete any other quests as long as they are here.
-// It's a special type of quest.
-
-// TODO:
-// - Implement register functionality by first getting the geographic location 
-//   and then displaying a list of active community quests within that area so
-//   that the user can display it. This should be the actual thing and the actual submit UI
-//		should just be a component. This also makes it easy to leave the community quest.
-
-export default function QuestBox() {
-	const { session, loading: authLoading } = useAuth();
-	const { location, loading: locationLoading } = useLocation();
-	const { id } = useLocalSearchParams();
-
-
-	// State management
+export default function MainScreen({ session, location, id }: MainScreenProps) {
 	const [quest, setQuest] = useState<Quest | null>(null);
 	const [authorUsername, setAuthorUsername] = useState<string>("");
 	const [submissions, setSubmissions] = useState<number>(0);
@@ -45,22 +35,6 @@ export default function QuestBox() {
 	// Photo upload state management
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
 	const [subquestsCompleted, setSubquestsCompleted] = useState<number[]>([]);
-
-	console.log(`event:${id}`)
-	const channel = supabase.channel(`event:${id}`);
-
-	// When session is done loading send a new message to the big chat
-	if (!authLoading) {
-		channel.send({
-			type: "broadcast",
-			event: "join",
-			payload: {
-				user_id: session?.user.id,
-			}
-		});
-	}
-
-	channel.subscribe();
 
 
 	// Run this code when the user completes the quest
@@ -85,8 +59,6 @@ export default function QuestBox() {
 				console.log(`USER GOT PLACE: ${place}`)
 				// Get the appropiate winner message.
 			}
-
-
 		})();
 	}, [subquestsCompleted, subquests, session, id]);
 
@@ -223,7 +195,6 @@ export default function QuestBox() {
 			throw error;
 		}
 	}
-
 	const setLike = async () => {
 		if (!session) return;
 
@@ -246,14 +217,6 @@ export default function QuestBox() {
 			setQuestLikes(questLikes - 1);
 		}
 	}
-
-	if (authLoading || locationLoading) return (
-		<Layout style={styles.loadingContainer}>
-			<Text category="h6">Loading...</Text>
-		</Layout>
-	);
-
-	if (!session) return <Redirect href="/(auth)" />;
 
 	if (loadingQuest) return (
 		<Layout style={styles.loadingContainer}>
@@ -281,7 +244,7 @@ export default function QuestBox() {
 				{/* Quest Details */}
 				<Card style={styles.detailsCard}>
 					<Text category="h6" style={styles.sectionTitle}>
-						Quest Details
+						Quest Detailssss
 					</Text>
 					<Text category="p1" style={styles.description}>
 						{quest.description}
@@ -371,8 +334,10 @@ export default function QuestBox() {
 				</View>}
 			</ScrollView>
 		</>
-	);
+
+	)
 }
+
 
 const styles = StyleSheet.create({
 	container: {
