@@ -3,9 +3,7 @@ import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/Auth';
 
 import { useLocation } from '@/context/Location';
-import Chat from '../../../components/event_screens/Chat';
-import Leaderboard from '../../../components/event_screens/Leaderboard';
-import { Button, Card, Text, Layout } from "@ui-kitten/components";
+import { Button, Card, Text, Layout, Input } from "@ui-kitten/components";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react-native';
@@ -47,7 +45,10 @@ export default function QuestBox() {
 	const [comments, setComments] = useState<CommentType[]>([]);
 	const [commentInput, setCommentInput] = useState<string | null>(null);
 	const [liked, setLiked] = useState<boolean>(false);
+	const [joined, setJoined] = useState<boolean>(false);
 	const [questLikes, setQuestLikes] = useState<number>(0);
+	const [chatMessages, setChatMessages] = useState<string[]>([]);
+	const [message, setMessage] = useState<string>("");
 
 	// Photo upload state management
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
@@ -55,7 +56,7 @@ export default function QuestBox() {
 
 
 	// When session is done loading send a new message to the big chat
-	if (!authLoading) {
+	if (!authLoading && !joined) {
 		channel.send({
 			type: "broadcast",
 			event: "join",
@@ -63,10 +64,44 @@ export default function QuestBox() {
 				user_id: session?.user.id,
 			}
 		});
+		setJoined(true);
 	}
 
-	channel.subscribe();
+	const handlePayload = (payload: any) => {
+		console.log(payload)
+	};
 
+
+	useEffect(() => {
+		if (authLoading || !session || !id) return;
+
+		console.log(`event:${id}`);
+		const channel = supabase.channel(`event:${id}`);
+
+		// Subscribe to the channel
+		channel
+			.on("broadcast", { event: "*" }, (payload) => {
+				handlePayload(payload);
+			})
+			.subscribe((status) => {
+				if (status === 'SUBSCRIBED') {
+					// Send join message after successfully subscribed
+					channel.send({
+						type: "broadcast",
+						event: "join",
+						payload: {
+							user_id: session.user.id,
+						}
+					});
+					setJoined(true);
+				}
+			});
+
+		// Cleanup function
+		return () => {
+			channel.unsubscribe();
+		};
+	}, [id, session, authLoading]);
 
 	// Run this code when the user completes the quest
 	useEffect(() => {
@@ -250,6 +285,18 @@ export default function QuestBox() {
 		}
 	}
 
+	const sendMessage = async () => {
+		channel.send({
+			type: "broadcast",
+			event: "message",
+			payload: {
+				user_id: session?.user.id,
+				message
+			}
+		});
+		setMessage("");
+	}
+
 	if (!session) return <Redirect href="/(auth)" />;
 
 	if (loadingQuest) return (
@@ -263,7 +310,6 @@ export default function QuestBox() {
 			<Text category="h6">Quest not found</Text>
 		</Layout>
 	);
-
 
 	return (
 		<>
@@ -374,8 +420,27 @@ export default function QuestBox() {
 					</ScrollView>
 				</>
 			}
-			{state === 1 && <Chat />}
-			{state === 2 && <Leaderboard />}
+			{state === 1 && <>
+				<ScrollView>
+					<Text>Chat!!</Text>
+				</ScrollView>
+				<View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
+					<Input
+						placeholder='Message'
+						style={{ flex: 1, marginRight: 10 }}
+						value={message}
+						onChangeText={setMessage}
+					/>
+					<Button onPress={sendMessage}>
+						Send
+					</Button>
+				</View>
+			</>}
+			{state === 2 &&
+				<>
+					<Text>Leaderboard</Text>
+				</>
+			}
 		</>
 	);
 }
