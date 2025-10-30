@@ -134,7 +134,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				Create New Quest
 			</Text>
 			<Text category="s1" style={styles.headerSubtitle}>
-				Design a challenge for other adventurers
+				Make a quest for other users!
 			</Text>
 		</Layout>
 
@@ -151,14 +151,16 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				<View style={styles.visibilityContainer}>
 					<Button
 						style={[styles.visibilityButton, isPublic && styles.visibilityButtonActive]}
-						appearance={isPublic ? 'filled' : 'outline'}
+						// appearance={isPublic ? 'filled' : 'outline'}
+						appearance="filled"
 						onPress={() => setIsPublic(true)}
 					>
 						Public
 					</Button>
 					<Button
 						style={[styles.visibilityButton, !isPublic && styles.visibilityButtonActive]}
-						appearance={!isPublic ? 'filled' : 'outline'}
+						// appearance={!isPublic ? 'filled' : 'outline'}
+						appearance="filled"
 						onPress={() => setIsPublic(false)}
 					>
 						Private
@@ -220,8 +222,13 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				})
 			}
 
-			<Button onPress={addPrompt}>Add new prompt</Button>
 
+			<Button
+				onPress={addPrompt}
+				style={styles.addPromptButton}
+			>
+				Add new prompt
+			</Button>
 		</Card>
 
 		{/* Deadline Selection */}
@@ -234,36 +241,27 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				<Text category="s1" style={styles.inputLabel}>
 					Quest Deadline
 				</Text>
-				<Button
-					style={styles.dateButton}
-					onPress={showDatepicker}
-					appearance="outline"
-				>
-					{deadline.toLocaleDateString()}
-				</Button>
-
-				{showDatePicker && (
-					<DateTimePicker
-						testID="dateTimePicker"
-						value={deadline}
-						mode="date"
-						onChange={onChange}
-						minimumDate={new Date()}
-					/>
-				)}
-
-				<Text category="c1" style={styles.dateInfo}>
-					Selected: {deadline.toLocaleDateString()}
-				</Text>
+				<DateTimePicker
+					testID="dateTimePicker"
+					value={deadline}
+					mode="date"
+					onChange={onChange}
+					minimumDate={new Date()}
+				/>
 			</View>
 		</Card>
 
 		{/* Submit Button */}
 		<Card style={styles.section}>
 			<Button
-				style={styles.submitButton}
+				// Apply styles conditionally in an array
+				style={[
+					styles.submitButton,
+					(submitting || !title.trim() || prompts.length === 0) && styles.submitButtonDisabled
+				]}
 				onPress={submitQuest}
 				disabled={submitting || !title.trim() || prompts.length === 0}
+				appearance="filled"
 			>
 				{submitting ? 'Creating Quest...' : 'Create Quest!'}
 			</Button>
@@ -335,10 +333,6 @@ const styles = StyleSheet.create({
 		marginTop: 10,
 		fontWeight: 'bold',
 	},
-	submitButton: {
-		width: '100%',
-		marginBottom: 10,
-	},
 	helpText: {
 		textAlign: 'center',
 		color: '#666',
@@ -348,15 +342,33 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		gap: 10,
 	},
+	submitButton: {
+		width: '100%',
+		marginBottom: 10,
+		backgroundColor: "#32908F",
+		borderColor: "white",
+	},
 	visibilityButton: {
 		flex: 1,
+		borderColor: "#32908F",
+		backgroundColor: "#4ea1a0ff"
 	},
 	visibilityButtonActive: {
 		borderWidth: 2,
+		backgroundColor: "#32908F",
+		borderColor: "#32908F"
 	},
 	helperText: {
 		fontSize: 14,
 		color: '#666',
 		marginBottom: 12,
+	},
+	addPromptButton: {
+		backgroundColor: "#32908F",
+		borderColor: "white"
+	},
+	submitButtonDisabled: {
+		backgroundColor: "#32908F",
+		opacity: 0.6,
 	},
 });

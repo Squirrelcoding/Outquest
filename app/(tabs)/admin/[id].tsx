@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
-import { Text, Card, Input, Toggle, Button, Divider, Spinner } from '@ui-kitten/components';
+import { Text, Card, Input, Toggle, Button, CheckBox, Spinner } from '@ui-kitten/components';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -148,13 +148,6 @@ export default function AdminQuestPage() {
 		);
 	}
 
-	const onStartDateChange = (_: DateTimePickerEvent, selectedDate?: Date) => {
-		setShowStartPicker(false);
-		if (selectedDate) {
-			setStartDate(selectedDate);
-		}
-	};
-
 	const onEndDateChange = (_: DateTimePickerEvent, selectedDate?: Date) => {
 		setShowEndPicker(false);
 		if (selectedDate) {
@@ -183,51 +176,23 @@ export default function AdminQuestPage() {
 					placeholder="Enter quest description"
 				/>
 
-				<Toggle
+				<CheckBox
 					checked={isPublic}
 					onChange={setIsPublic}
-					style={styles.toggle}
+					style={styles.checkbox}
 				>
-					{`Quest is ${isPublic ? 'public' : 'private'}`}
-				</Toggle>
+					<Text style={styles.checkboxLabel}>Make quest public</Text>
+				</CheckBox>
+
 
 				<View style={styles.dateContainer}>
-					<Button
-						appearance="outline"
-						status="basic"
-						onPress={() => setShowStartPicker(true)}
-						style={styles.dateButton}
-					>
-						Start Date: {startDate.toLocaleDateString()}
-					</Button>
-
-					<Button
-						appearance="outline"
-						status="basic"
-						onPress={() => setShowEndPicker(true)}
-						style={styles.dateButton}
-					>
-						End Date: {endDate.toLocaleDateString()}
-					</Button>
-
-
-					{showStartPicker && (
-						<DateTimePicker
-							value={startDate}
-							mode="date"
-							onChange={onStartDateChange}
-							minimumDate={new Date()}
-						/>
-					)}
-
-					{showEndPicker && (
-						<DateTimePicker
-							value={endDate}
-							mode="date"
-							onChange={onEndDateChange}
-							minimumDate={startDate}
-						/>
-					)}
+					<Text category="h6">Select end date</Text>
+					<DateTimePicker
+						value={endDate}
+						mode="date"
+						onChange={onEndDateChange}
+						minimumDate={startDate}
+					/>
 				</View>
 
 				<View style={styles.buttonContainer}>
@@ -242,7 +207,7 @@ export default function AdminQuestPage() {
 					<Button
 						onPress={handleDelete}
 						status="danger"
-						style={styles.button}
+					// style={styles.button}
 					>
 						Delete Quest
 					</Button>
@@ -270,6 +235,7 @@ const styles = StyleSheet.create({
 	},
 	input: {
 		marginBottom: 12,
+		borderColor: "#c8c8c8ff"
 	},
 	toggle: {
 		marginBottom: 16,
@@ -285,6 +251,18 @@ const styles = StyleSheet.create({
 		gap: 8,
 	},
 	button: {
-		marginVertical: 4,
+		backgroundColor: "#32908F",
+		borderColor: "white",
+		marginTop: 10,
 	},
+	checkbox: {
+		marginBottom: 16,
+		borderColor: '#32908F',
+	},
+
+	checkboxLabel: {
+		color: '#32908F',
+		fontWeight: '500',
+	},
+
 });

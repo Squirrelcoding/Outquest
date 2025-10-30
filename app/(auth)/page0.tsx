@@ -50,7 +50,7 @@ export default function Page0() {
 				autoCapitalize="none"
 			/>
 		</View>
-		<Button onPress={submitForm}>
+		<Button style={styles.button} onPress={submitForm}>
 			<Text>Unlike</Text>
 		</Button>
 	</>

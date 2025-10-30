@@ -205,7 +205,7 @@ export default function BrowseQuests() {
 						/>
 					</View>
 
-					<View style={styles.inputGroup}>
+					{/* <View style={styles.inputGroup}>
 						<Text category="s1" style={styles.inputLabel}>
 							Search Radius (km)
 						</Text>
@@ -216,25 +216,27 @@ export default function BrowseQuests() {
 							onChangeText={(str) => setRadius(str ? Number(str) : null)}
 							keyboardType="numeric"
 						/>
-					</View>
+					</View> */}
 
 					<View style={styles.inputGroup}>
 						<Text category="s1" style={styles.inputLabel}>
 							Deadline
 						</Text>
-						<Button
-							style={styles.dateButton}
-							onPress={showDatepicker}
-							appearance="outline"
-						>
-							{deadline.toDateString()}
-						</Button>
+						<DateTimePicker
+							testID="dateTimePicker"
+							value={deadline}
+							mode="date"
+							onChange={onChange}
+						/>
 					</View>
 
 					<View style={styles.inputGroup}>
 						<View style={styles.checkboxContainer}>
 							<Button
-								style={styles.checkbox}
+								style={[
+									styles.checkbox,
+									showExpired ? styles.checkboxChecked : styles.checkboxUnchecked
+								]}
 								appearance={showExpired ? "filled" : "outline"}
 								onPress={() => setShowExpired(!showExpired)}
 							>
@@ -246,14 +248,6 @@ export default function BrowseQuests() {
 						</View>
 					</View>
 
-					{showDatePicker && (
-						<DateTimePicker
-							testID="dateTimePicker"
-							value={deadline}
-							mode="date"
-							onChange={onChange}
-						/>
-					)}
 
 					<View style={styles.buttonGroup}>
 						<Button
@@ -415,6 +409,15 @@ const styles = StyleSheet.create({
 		height: 24,
 		borderRadius: 4,
 	},
+	checkboxUnchecked: {
+		backgroundColor: 'transparent',
+		borderColor: "#32908F",
+		borderWidth: 2,
+	},
+	checkboxChecked: {
+		backgroundColor: "#32908F",
+		borderColor: "#32908F",
+	},
 	checkboxLabel: {
 		color: '#333',
 		flex: 1,
@@ -450,5 +453,16 @@ const styles = StyleSheet.create({
 	},
 	greenTextStyle: {
 		color: "#32908F",
-	}
+	},
+	datePickerButton: {
+		position: 'relative',
+	},
+	datePickerOverlay: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		backgroundColor: 'transparent',
+	},
 });

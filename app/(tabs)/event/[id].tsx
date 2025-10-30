@@ -504,7 +504,7 @@ export default function QuestBox() {
 						{/* Like quest */}
 						<Card style={styles.promptCard}>
 							<Text>{questLikes} {questLikes === 1 ? "like" : "likes"}</Text>
-							<Button onPress={setLike}>
+							<Button onPress={setLike} style={styles.button}>
 								<Text>{liked ? "Unlike" : "Like"}</Text>
 							</Button>
 						</Card>
@@ -555,7 +555,7 @@ export default function QuestBox() {
 							placeholder='Type your comment here'
 							onChangeText={setCommentInput}
 						/>
-						<Button onPress={postComment}><Text>Post comment</Text></Button>
+						<Button onPress={postComment} style={styles.button}><Text>Post comment</Text></Button>
 
 						<Text category="h6" style={styles.sectionTitle}>Comments</Text>
 						{comments && <View>

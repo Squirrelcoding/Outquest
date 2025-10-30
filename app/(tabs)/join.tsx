@@ -88,7 +88,7 @@ export default function JoinByCode() {
 				style={styles.input}
 			/>
 
-			<Button onPress={handleJoin} disabled={submitting || !code.trim()} style={styles.button}>
+			<Button onPress={handleJoin} disabled={submitting || !code.trim()} style={styles.actionButton}>
 				{submitting ? 'Joining…' : 'Join'}
 			</Button>
 		</View>
@@ -111,7 +111,9 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		fontSize: 16,
 	},
-	button: {
-		marginTop: 8,
-	},
+	actionButton: {
+		backgroundColor: "#32908F",
+		borderColor: "white",
+		marginTop: 10,
+	}
 })

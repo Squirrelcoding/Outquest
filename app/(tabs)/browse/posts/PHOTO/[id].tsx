@@ -40,10 +40,10 @@ export default function QuestBox() {
 	// Function to check and award achievement when quest is completed
 	const checkQuestCompletion = async (updatedSubquestsCompleted: number[]) => {
 		if (!session) return;
-		
+
 		// Only run if user has completed all subquests
 		if (updatedSubquestsCompleted.length !== subquests.length || subquests.length === 0) return;
-		
+
 
 	};
 
@@ -267,7 +267,7 @@ export default function QuestBox() {
 							</Text>
 						</View>
 						<View>
-							<Button onPress={() => router.push(`/(tabs)/browse/completion/${id}`)}>Click here to see everybody who has completed the quest so far</Button>
+							<Button onPress={() => router.push(`/(tabs)/browse/completion/${id}`)} style={styles.actionButton}>See completed list</Button>
 						</View>
 						<View>
 							<Text category='s1' style={styles.infoLabel}>
@@ -286,7 +286,7 @@ export default function QuestBox() {
 				{/* Give Kudos */}
 				<Card style={styles.promptCard}>
 					<Text>{questKudos} {questKudos === 1 ? "kudos" : "kudos"}</Text>
-					<Button onPress={giveKudos}>
+					<Button onPress={giveKudos} style={styles.actionButton}>
 						<Text>{gavekudos ? "Remove Kudos" : "Give Kudos"}</Text>
 					</Button>
 				</Card>
@@ -324,7 +324,7 @@ export default function QuestBox() {
 					placeholder='Share your reflection on this quest...'
 					onChangeText={setReflectionInput}
 				/>
-				<Button onPress={postReflection}><Text>Post Reflection</Text></Button>
+				<Button onPress={postReflection} style={styles.actionButton}><Text>Post Reflection</Text></Button>
 
 				<Text category="h6" style={styles.sectionTitle}>Reflections</Text>
 				{reflections && <View>
@@ -429,4 +429,9 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		backgroundColor: '#fff',
 	},
+	actionButton: {
+		backgroundColor: "#32908F",
+		borderColor: "white",
+		marginTop: 10,
+	}
 });

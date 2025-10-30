@@ -10,6 +10,7 @@ import {
 import { Card, Text, Layout, Button } from '@ui-kitten/components';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { LeaderboardMetaRow, Profile } from '@/types';
+import * as Clipboard from 'expo-clipboard';
 
 export default function LeaderboardDetail() {
 	const { session, loading } = useAuth();
@@ -267,9 +268,6 @@ export default function LeaderboardDetail() {
 
 			{/* Share Section */}
 			<Card style={styles.section}>
-				<Text category="h6" style={styles.sectionTitle}>
-					Share Leaderboard
-				</Text>
 				<Text category="p1" style={styles.shareText}>
 					Share this leaderboard ID with friends:
 				</Text>
@@ -279,11 +277,12 @@ export default function LeaderboardDetail() {
 				<Button 
 					style={styles.shareButton}
 					onPress={() => {
-						// You can implement actual sharing functionality here
-						Alert.alert('Share', `Leaderboard ID: ${id}`);
+						(async () => {
+							await Clipboard.setStringAsync(id);
+						})();
 					}}
 				>
-					Share Leaderboard
+					Copy code
 				</Button>
 			</Card>
 		</ScrollView>
@@ -440,6 +439,8 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 	},
 	shareButton: {
-		width: '100%',
+		backgroundColor: "#32908F",
+		borderColor: "white",
+		marginTop: 10,
 	},
 });

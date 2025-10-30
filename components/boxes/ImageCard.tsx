@@ -366,6 +366,8 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	pickImageButton: {
+		backgroundColor: "#32908F",
+		borderColor: "white",
 		width: '100%',
 	},
 	selectedImageContainer: {

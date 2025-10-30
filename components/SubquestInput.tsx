@@ -7,14 +7,14 @@ interface SubquestInputFormat {
 	setPrompts: React.Dispatch<React.SetStateAction<string[]>>
 }
 
-export default function SubquestInput({idx, prompts, setPrompts}: SubquestInputFormat) {
+export default function SubquestInput({ idx, prompts, setPrompts }: SubquestInputFormat) {
 	const updatePrompts = (content: string) => {
 		console.log(`Text changed at index ${idx}. Content: ${content}`);
 		let newPrompts = [...prompts];
 		newPrompts[idx] = content;
 		setPrompts(newPrompts);
 	}
-	
+
 	const deletePrompt = () => {
 		if (prompts.length === 1) return;
 		let newPrompts = [...prompts];
@@ -36,7 +36,13 @@ export default function SubquestInput({idx, prompts, setPrompts}: SubquestInputF
 				placeholder="Must be a black bike with visible wheels and frame."
 				numberOfLines={3}
 			/>
-			<Button onPress={deletePrompt}>Delete prompt</Button>
+			<Button
+				onPress={deletePrompt}
+				style={styles.deleteButton}
+				appearance="filled"
+			>
+				Delete prompt
+			</Button>
 		</View>
 
 	</>
@@ -110,5 +116,10 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		color: '#666',
 		fontStyle: 'italic',
+	},
+	deleteButton: {
+		flex: 1,
+		backgroundColor: "#32908F",
+		borderColor: "white",
 	},
 });

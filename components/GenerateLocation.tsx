@@ -67,6 +67,7 @@ export default function SubquestInput({ idx, prompts, setPrompts }: SubquestInpu
 				<Select
 					selectedIndex={selectedIndex}
 					onSelect={index => setSelectedIndex(index)}
+					style={{ borderColor: "white" }}
 				>
 					<SelectItem title='Scan something' />
 					<SelectItem title='Find something at this location within a radius' />
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#f5f5f5',
+		borderColor: "white"
 	},
 	loadingContainer: {
 		flex: 1,

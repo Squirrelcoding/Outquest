@@ -156,7 +156,7 @@ export default function CreateClassicQuest({ session }: CreateQuestProps) {
 				Create New Quest
 			</Text>
 			<Text category="s1" style={styles.headerSubtitle}>
-				Design a challenge for other adventurers
+				Make a quest for other users!
 			</Text>
 		</Layout>
 

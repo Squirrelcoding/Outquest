@@ -1,5 +1,5 @@
 import CreateClassicQuest from '@/components/create_quest/CreateClassicQuest';
-import CreateCommunityQuest from '@/components/create_quest/CreateLocationQuest';
+import CreateCommunityQuest from '@/components/create_quest/CreateEventQuest';
 import { useAuth } from '@/context/Auth';
 import { Button, Text } from "@ui-kitten/components";
 import { Redirect } from 'expo-router';

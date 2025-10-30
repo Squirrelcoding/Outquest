@@ -191,8 +191,8 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 					code,
 				});
 
-				if (insertSubquestError){
-					throw insertSubquestError;		
+				if (insertSubquestError) {
+					throw insertSubquestError;
 				}
 			}
 
@@ -273,7 +273,7 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 				<View style={styles.dragHandleContainer} {...panResponder.panHandlers}>
 					<View style={styles.dragHandle} />
 					<Text category="h5" style={styles.sheetTitle}>
-						Create Community Quest
+						Create Event Quest
 					</Text>
 				</View>
 
@@ -284,7 +284,7 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 					showsVerticalScrollIndicator={false}
 				>
 					<Text category="s1" style={styles.subtitle}>
-						Design a Community-based challenge for other adventurers
+						Make an event for other users!
 					</Text>
 
 					{/* Quest Details */}
@@ -294,30 +294,6 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 							Quest Information
 						</Text>
 
-						<View style={styles.inputGroup}>
-							<Text category="s1" style={styles.inputLabel}>
-								Quest Visibility *
-							</Text>
-							<View style={styles.visibilityContainer}>
-								<Button
-									style={[styles.visibilityButton, isPublic && styles.visibilityButtonActive]}
-									appearance={isPublic ? 'filled' : 'outline'}
-									onPress={() => setIsPublic(true)}
-								>
-									Public
-								</Button>
-								<Button
-									style={[styles.visibilityButton, !isPublic && styles.visibilityButtonActive]}
-									appearance={!isPublic ? 'filled' : 'outline'}
-									onPress={() => setIsPublic(false)}
-								>
-									Private
-								</Button>
-							</View>
-							<Text category="c1" style={styles.helperText}>
-								{isPublic ? 'Anyone can discover and join this quest' : 'Only you can see and complete this quest'}
-							</Text>
-						</View>
 
 						<View style={styles.inputGroup}>
 							<Text category="s1" style={styles.inputLabel}>
@@ -349,7 +325,7 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 					{/* Community Code Messages */}
 					<Card style={styles.section}>
 						<Text category="h6" style={styles.sectionTitle}>
-							Community Code Messages ({markers.length})
+							Subquests ({markers.length})
 						</Text>
 						<Text style={styles.helperText}>
 							Tap on the map to add a new point
@@ -372,34 +348,20 @@ export default function CreateCommunityQuest({ session }: CreateCommunityQuestPr
 						</Text>
 
 						<View style={styles.inputGroup}>
-							<Button
-								style={styles.dateButton}
-								onPress={showDatepicker}
-								appearance="outline"
-							>
-								{deadline.toLocaleDateString()}
-							</Button>
-
-							{showDatePicker && (
-								<DateTimePicker
-									testID="dateTimePicker"
-									value={deadline}
-									mode="date"
-									onChange={(event, date) => onChange(event, date!)}
-									minimumDate={new Date()}
-								/>
-							)}
-
-							<Text category="c1" style={styles.dateInfo}>
-								Selected: {deadline.toLocaleDateString()}
-							</Text>
+							<DateTimePicker
+								testID="dateTimePicker"
+								value={deadline}
+								mode="date"
+								onChange={(event, date) => onChange(event, date!)}
+								minimumDate={new Date()}
+							/>
 						</View>
 					</Card>
 
 					{/* Submit Button */}
 					<Card style={styles.section}>
 						<Button
-							style={styles.submitButton}
+							style={styles.actionButton}
 							onPress={submitQuest}
 							disabled={submitting || !title.trim() || prompts.length === 0}
 						>
@@ -540,4 +502,9 @@ const styles = StyleSheet.create({
 	visibilityButtonActive: {
 		borderWidth: 2,
 	},
+	actionButton: {
+		backgroundColor: "#32908F",
+		borderColor: "white",
+		marginTop: 10,
+	}
 });

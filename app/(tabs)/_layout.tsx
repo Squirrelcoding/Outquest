@@ -66,11 +66,22 @@ export default function TabsLayout() {
 			/>
 
 			<Tabs.Screen
+				name="join"
+				options={{
+					title: 'Join',
+					tabBarIcon: ({ color, size }) => (
+						<Ionicons name="people-outline" size={size} color={color} />
+					),
+					tabBarIconStyle: { marginBottom: -3 },
+				}}
+			/>
+
+			<Tabs.Screen
 				name="leaderboard/index"
 				options={{
-					title: 'Leaderboard',
+					title: 'Rankings',
 					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="people" size={size} color={color} />
+						<Ionicons name="cellular-outline" size={size} color={color} />
 					),
 					tabBarIconStyle: { marginBottom: -3 },
 				}}
@@ -86,6 +97,9 @@ export default function TabsLayout() {
 					tabBarIconStyle: { marginBottom: -3 },
 				}}
 			/>
+
+
+
 			{/* 
 		<Tabs.Screen
 			name="debug"

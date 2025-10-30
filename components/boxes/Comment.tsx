@@ -62,10 +62,10 @@ export default function Comment({ comment, session }: CommentProps) {
 			</View>
 			<Text>{kudos} kudos</Text>
 			{gaveKudos ?
-				<Button onPress={() => removeKudosFromReflection(comment.comment.id)}>
+				<Button onPress={() => removeKudosFromReflection(comment.comment.id)} style={styles.button}>
 					<Text>Remove Kudos</Text>
 				</Button> :
-				<Button onPress={() => giveKudosToReflection(comment.comment.id)}>
+				<Button onPress={() => giveKudosToReflection(comment.comment.id)} style={styles.button}>
 					<Text>Give Kudos</Text>
 				</Button>
 			}
@@ -206,5 +206,9 @@ const styles = StyleSheet.create({
 	resultText: {
 		lineHeight: 20,
 		textAlign: 'center',
+	},
+	button: {
+		backgroundColor: "#32908F",
+		borderColor: "white"
 	},
 });
