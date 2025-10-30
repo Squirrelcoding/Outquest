@@ -19,7 +19,7 @@ interface ImageCardParams {
 	submittedSubquests: number[],
 	setSubmittedSubquests: React.Dispatch<React.SetStateAction<number[]>>,
 	totalSubquests: number,
-	onSubmissionComplete: any
+	onCompletion: any,
 }
 
 export default function ImageCard({
@@ -30,7 +30,7 @@ export default function ImageCard({
 	submittedSubquests,
 	setSubmittedSubquests,
 	totalSubquests,
-	onSubmissionComplete
+	onCompletion
 }: ImageCardParams) {
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -56,127 +56,137 @@ export default function ImageCard({
 		}
 	};
 
+	const handleWinner = async () => {
+		const { error: submissionError } = await supabase.from("submission").insert({
+			user_id: session.user.id,
+			subquest_id: subquest.id,
+			time: new Date()
+		});
+
+		if (submissionError) {
+			console.error('Submission error:', submissionError);
+			Alert.alert('Error', 'Failed to record submission');
+			return;
+		}
+
+		// Check whether completing this quest completes the entire quest
+		const newSubmitted = [...submittedSubquests, subquest.id];
+		setSubmittedSubquests(newSubmitted);
+		console.log(newSubmitted, totalSubquests);
+		
+		if (newSubmitted.length === totalSubquests) {
+			const { error } = await supabase.from("completion")
+				.insert({
+					quest_id: quest.id,
+					user_id: session.user.id
+				});
+			console.log("HERE");
+			if (error) throw error;
+
+		}
+
+
+		setIsSubmissionValid(true);
+		Alert.alert('Success!', 'Your submission has been accepted!');
+
+
+		// Check if the user is the first to complete the quest
+
+		console.log("Running quest completion function");
+
+		// Get the number of people who already completed the quest.
+		const { data: winners } = await supabase.from("completion")
+			.select("*", { head: false, count: 'exact' })
+			.eq("quest_id", quest.id);
+
+		console.log(`Past winners: ${JSON.stringify(winners)}`);
+		console.log(!winners);
+		console.log(winners!.length);
+		// The winners list is empty so the user is the first to complete it
+		if (!winners || winners.length === 1) {
+			console.log("USER IS FIRST. AWARDING ACHIEVEMENT...");
+			// Award a user an achievement
+			const { error: achievementError } = await supabase.from("achievement").insert({
+				user_id: session.user.id,
+				achievement_name: 2,
+				announced: true
+			});
+			if (achievementError) throw achievementError;
+		}
+
+		await onCompletion(newSubmitted);
+	};
+
+	const processImage = async () => {
+		if (!selectedImage || !session || !quest) {
+			Alert.alert('Error', 'Please select an image first');
+			return;
+		}
+		// Convert image to base64
+		const base64 = await FileSystem.readAsStringAsync(selectedImage, {
+			encoding: FileSystem.EncodingType.Base64,
+		});
+
+		// Upload image to storage
+		const fileName = `${session.user.id}/${quest.id}/${subquest.id}.jpg`;
+		const { error: uploadError } = await supabase.storage
+			.from('quest-upload')
+			.upload(fileName, decode(base64), {
+				contentType: 'image/jpeg',
+				upsert: true
+			});
+
+		if (uploadError) {
+			console.error('Upload error:', uploadError);
+			Alert.alert('Error', 'Failed to upload image');
+			return;
+		}
+		return fileName;
+	};
+
 	// Submit quest entry
 	const submitEntry = async () => {
 		if (!selectedImage || !session || !quest) {
 			Alert.alert('Error', 'Please select an image first');
 			return;
 		}
+		setIsUploading(true);
 
-		try {
-			setIsUploading(true);
+		const fileName = await processImage();
+		console.log(`FILE NAME`);
+		console.log(fileName);
+		console.log(`FILE NAME`);
 
-			// Convert image to base64
-			const base64 = await FileSystem.readAsStringAsync(selectedImage, {
-				encoding: FileSystem.EncodingType.Base64,
-			});
+		setIsUploading(false);
+		setIsJudging(true);
 
-			// Upload image to storage
-			const fileName = `${session.user.id}/${quest.id}/${subquest.id}.jpg`;
-			const { error: uploadError } = await supabase.storage
-				.from('quest-upload')
-				.upload(fileName, decode(base64), {
-					contentType: 'image/jpeg',
-					upsert: true
-				});
+		// Judge the submission using AI
+		console.log(`Does the image match the following description? Reply YES or NO. ${subquest.prompt}`)
+		const { data: judgmentData, error: judgmentError } = await supabase.functions.invoke('replicate-call', {
+			body: {
+				image: fileName,
+				question: `Does the image match the following description? Reply YES or NO. ${subquest.prompt}`
+			},
+		});
 
-			if (uploadError) {
-				console.error('Upload error:', uploadError);
-				Alert.alert('Error', 'Failed to upload image');
-				return;
-			}
-
-			setIsUploading(false);
-			setIsJudging(true);
-
-			// Judge the submission using AI
-			console.log(`Does the image match the following description? Reply YES or NO. ${subquest.prompt}`)
-			const { data: judgmentData, error: judgmentError } = await supabase.functions.invoke('replicate-call', {
-				body: {
-					image: fileName,
-					question: `Does the image match the following description? Reply YES or NO. ${subquest.prompt}`
-				},
-			});
-
-			if (judgmentError) {
-				console.error('Judgment error:', judgmentError);
-				Alert.alert('Error', 'Failed to judge submission');
-				return;
-			}
-
-			setIsJudging(false);
-			setJudgmentResult(judgmentData);
-
-			// If submission is valid, record it in database
-			if (judgmentData === "YES") {
-				const { error: submissionError } = await supabase.from("submission").insert({
-					user_id: session.user.id,
-					subquest_id: subquest.id,
-					time: new Date()
-				});
-
-				if (submissionError) {
-					console.error('Submission error:', submissionError);
-					Alert.alert('Error', 'Failed to record submission');
-					return;
-				}
-
-				// Check whether completing this quest completes the entire quest
-				const newSubmitted = [...submittedSubquests, subquest.id];
-				setSubmittedSubquests(newSubmitted);
-				console.log(newSubmitted, totalSubquests);
-				if (newSubmitted.length === totalSubquests) {
-					const { error } = await supabase.from("completion")
-						.insert({
-							quest_id: quest.id,
-							user_id: session.user.id
-						});
-					console.log("HERE");
-					if (error) throw error;
-
-				}
-
-
-				setIsSubmissionValid(true);
-				Alert.alert('Success!', 'Your submission has been accepted!');
-
-
-				// Check if the user is the first to complete the quest
-
-				console.log("Running quest completion function");
-				
-				// Get the number of people who already completed the quest.
-				const { data: winners } = await supabase.from("completion")
-					.select("*", {head: false, count: 'exact'})
-					.eq("quest_id", quest.id);
-				
-				console.log(`Past winners: ${JSON.stringify(winners)}`);
-				console.log(!winners);
-				console.log(winners!.length);
-				// The winners list is empty so the user is the first to complete it
-				if (!winners || winners.length === 1) {
-					console.log("USER IS FIRST. AWARDING ACHIEVEMENT...");
-					// Award a user an achievement
-					const { error: achievementError } = await supabase.from("achievement").insert({
-						user_id: session.user.id,
-						achievement_name: 2,
-						announced: true
-					});
-					if (achievementError) throw achievementError;
-				}
-
-				// Call the function that 
-				onSubmissionComplete();
-			} else {
-				Alert.alert('Submission Rejected', 'Your image does not match the quest requirements. Please try again.');
-			}
-		} catch (error) {
-			console.error('Error submitting entry:', error);
-			Alert.alert('Error', 'Failed to submit entry');
-		} finally {
-			setIsUploading(false);
-			setIsJudging(false);
+		if (judgmentError) {
+			console.error('Judgment error:', judgmentError);
+			Alert.alert('Error', 'Failed to judge submission');
+			return;
 		}
+
+		setIsJudging(false);
+		setJudgmentResult(judgmentData);
+
+		// If submission is valid, record it in database
+		if (judgmentData === "YES") {
+			await handleWinner();
+		} else {
+			Alert.alert('Submission Rejected', 'Your image does not match the quest requirements. Please try again.');
+		}
+
+		setIsUploading(false);
+		setIsJudging(false);
 	};
 
 	return <>

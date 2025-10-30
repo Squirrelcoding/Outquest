@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Text } from "@ui-kitten/components";
@@ -18,8 +18,11 @@ interface LocationCardParams {
 	hasSubmitted: boolean,
 	submittedSubquests: number[],
 	setSubmittedSubquests: React.Dispatch<React.SetStateAction<number[]>>,
-	totalSubquests: number
+	totalSubquests: number,
+	onCompletion: any,
 }
+
+const TOLERANCE_RADIUS_METERS = 50;
 
 export default function LocationCard({
 	session,
@@ -29,10 +32,10 @@ export default function LocationCard({
 	submittedSubquests,
 	setSubmittedSubquests,
 	totalSubquests,
-	location
+	location,
+	onCompletion
 }: LocationCardParams) {
 
-	const [verificationResult, setVerificationResult] = useState<boolean>(false);
 	const [isSubmissionValid, setIsSubmissionValid] = useState<boolean>(false);
 	const [isJudging, setIsJudging] = useState<boolean>(false);
 
@@ -42,16 +45,19 @@ export default function LocationCard({
 	const goalLat = subquest.latitude!;
 	const goalLon = subquest.longitude!;
 
-	console.log(userLat, userLon, goalLat, goalLon)
-
 	// Submit quest entry
 	const submitEntry = async () => {
 		setIsJudging(true);
 		const distanceMeters = haversineDistance([userLat, userLon], [goalLat, goalLon]) * 1000;
-		if (distanceMeters > 10) {
+
+		console.log(`user lat: ${userLat} | goal lat: ${goalLat}`);
+		console.log(`user lon: ${userLon} | goal lon: ${goalLon}`);
+		console.log(`Calculated distance: ${distanceMeters}`)
+
+		if (distanceMeters > TOLERANCE_RADIUS_METERS) {
 			setIsJudging(false);
+			Alert.alert("Your location did not match the required one. Try again.");
 			setIsSubmissionValid(false);
-			setVerificationResult(true);
 		} else {
 			// Add location
 			const { error } = await supabase.from("submission")
@@ -78,64 +84,37 @@ export default function LocationCard({
 				console.error(error);
 				throw error;
 			}
-			setVerificationResult(true);
 			setIsSubmissionValid(true);
-
+			await onCompletion(newSubmitted);
 		}
 	}
-
-	const details = subquest.prompt!;
 
 	return <>
 		<Card style={styles.imageCard}>
 			{hasSubmitted ? <>
-				<Text>Image submitted! </Text>
+				{/* Submission Status */}
+
+				<Card style={styles.submittedCard}>
+					<Text category="h6" style={styles.sectionTitle}>
+						✅ Quest Completed!
+					</Text>
+				</Card>
 			</>
 				: <>
 					<Text category="h6" style={styles.sectionTitle}>
 						{subquest.prompt} {'\n'}
-						Longitude: {goalLon} {'\n'}
-						Latitude: {goalLat}
+					</Text>
+					<Text>
+						Visit the coordinates {goalLon}, {goalLat}
 					</Text>
 
 					<Button
 						style={styles.submitButton}
 						onPress={submitEntry}
-						disabled={verificationResult || isJudging}
+						disabled={isJudging}
 					>
-						{isJudging ? 'Judging...' : 'Verify location'}
+						{isJudging ? 'Judging...' : 'I\'m here'}
 					</Button>
-					{/* Submission Status */}
-					{hasSubmitted && (
-						<Card style={styles.submittedCard}>
-							<Text category="h6" style={styles.sectionTitle}>
-								✅ Quest Completed!
-							</Text>
-							<Text category="p1" style={styles.submittedText}>
-								You have already completed this quest.
-							</Text>
-							<Button
-								style={styles.viewSubmissionButton}
-
-								onPress={() => router.push(`/browse/submission/${session.user.id}/${quest.id}`)}
-							>
-								View Your Submission
-							</Button>
-						</Card>
-					)}
-					{verificationResult && !hasSubmitted && (
-						<Card style={styles.resultCard}>
-							<Text category="h6" style={styles.sectionTitle}>
-								{isSubmissionValid ? '🎉 Success!' : '❌ Submission Rejected'}
-							</Text>
-							<Text category="p1" style={styles.resultText}>
-								{isSubmissionValid
-									? 'Your submission has been accepted! Great job!'
-									: 'Your image does not match the quest requirements. Please try again with a different image.'
-								}
-							</Text>
-						</Card>
-					)}
 				</>}
 		</Card>
 	</>
@@ -198,7 +177,6 @@ const styles = StyleSheet.create({
 	},
 	sectionTitle: {
 		fontWeight: 'bold',
-		marginBottom: 10,
 	},
 	description: {
 		lineHeight: 22,

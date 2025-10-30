@@ -11,16 +11,7 @@ import { View, StyleSheet, ScrollView, Alert, Pressable, TextInput } from 'react
 import Comment from '@/components/boxes/Comment';
 import LocationCard from '@/components/boxes/LocationCard';
 import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
-
-// The event page is one where the user is temporarily "locked" into one event. They cannot complete any other quests as long as they are here.
-// It's a special type of quest.
-
-
-interface MainScreenProps {
-	session: any,
-	location: any,
-	id: number
-}
+import ImageCard from '@/components/boxes/ImageCard';
 
 interface CommentType {
 	comment: DBComment,
@@ -34,7 +25,6 @@ export default function QuestBox() {
 	const { location, } = useLocation();
 	const { id } = useLocalSearchParams();
 
-	console.log(`event:${id}`)
 	const channel = supabase.channel(`event:${id}`);
 	const [state, setState] = useState<number>(0);
 
@@ -45,7 +35,6 @@ export default function QuestBox() {
 	const [comments, setComments] = useState<CommentType[]>([]);
 	const [commentInput, setCommentInput] = useState<string | null>(null);
 	const [liked, setLiked] = useState<boolean>(false);
-	const [joined, setJoined] = useState<boolean>(false);
 	const [questLikes, setQuestLikes] = useState<number>(0);
 	const [chatMessages, setChatMessages] = useState<string[]>([]);
 	const [message, setMessage] = useState<string>("");
@@ -56,18 +45,6 @@ export default function QuestBox() {
 
 
 	// When session is done loading send a new message to the big chat
-	if (!authLoading && !joined) {
-		channel.send({
-			type: "broadcast",
-			event: "join",
-			payload: {
-				user_id: session?.user.id,
-			}
-		});
-		setJoined(true);
-	}
-
-
 
 	useEffect(() => {
 		if (authLoading || !session || !id) return;
@@ -85,11 +62,13 @@ export default function QuestBox() {
 					msg = `Someone joined the event!`;
 				} else {
 					msg = payload["payload"]["message"];
+					console.log(`Someone sent a message: ${msg}`);
 				}
-				setChatMessages([...chatMessages, msg]);
+				setChatMessages(prev => [...prev, msg]);
 			})
 			.subscribe((status) => {
 				if (status === 'SUBSCRIBED') {
+					console.log("Joined!");
 					// Send join message after successfully subscribed
 					channel.send({
 						type: "broadcast",
@@ -98,7 +77,6 @@ export default function QuestBox() {
 							user_id: session.user.id,
 						}
 					});
-					setJoined(true);
 				}
 			});
 
@@ -106,32 +84,7 @@ export default function QuestBox() {
 		return () => {
 			channel.unsubscribe();
 		};
-	}, [id, session, authLoading, chatMessages]);
-
-	// Run this code when the user completes the quest
-	useEffect(() => {
-		if (!session) return;
-		(async () => {
-			if (subquestsCompleted.length === subquests.length) {
-				// Check if user already completed quest
-				const { data: winners } = await supabase.from("completion")
-					.select("*")
-					.eq("quest_id", id)
-					.order("created_at", { ascending: true })
-				const winnerIDs = winners!.map((winner) => winner.user_id)!;
-				if (winnerIDs.includes(session.user.id)) {
-
-
-					return;
-				}
-
-				// If quest is not completed, get the number of people who completed the quest before
-				const place = winners!.length;
-				console.log(`USER GOT PLACE: ${place}`)
-				// Get the appropiate winner message.
-			}
-		})();
-	}, [subquestsCompleted, subquests, session, id]);
+	}, [id, session, authLoading]);
 
 	// Load quest details and check submission status
 	useEffect(() => {
@@ -300,7 +253,48 @@ export default function QuestBox() {
 			}
 		});
 		setMessage("");
-		setChatMessages([...chatMessages, message]);
+		setChatMessages(prev => [...prev, message]);
+	}
+
+	const onSubquestCompletion = async (newCompletedList: number[]) => {
+		console.log("HERE!!! SUBQUEST COMPLETE!!!");
+		if (!session) return;
+		if (newCompletedList.length === 0) return;
+		console.log("STILL HERE");
+		channel.send({
+			"event": "complete",
+			"type": "broadcast",
+			"payload": {
+				"message": `Somebody just completed a subquest!`
+			}
+		});
+		setChatMessages(prev => [...prev, "Somebody just completed a subquest!"]);
+		console.log("SENT MESSAGE");
+
+		// When the user completes all the subquests
+		if (newCompletedList.length === subquests.length) {
+			console.log("user finished all the subquests");
+			// Check if user already completed quest
+			const { data: winners } = await supabase.from("completion")
+				.select("*")
+				.eq("quest_id", id)
+				.order("created_at", { ascending: true })
+			const winnerIDs = winners!.map((winner) => winner.user_id)!;
+			if (winnerIDs.includes(session.user.id)) return;
+
+			channel.send({
+				"event": "complete",
+				"type": "broadcast",
+				"payload": {
+					"message": `Somebody just finished the ENTIRE QUEST!!!`
+				}
+			});
+
+			// If quest is not completed, get the number of people who completed the quest before
+			const place = winners!.length;
+			console.log(`USER GOT PLACE: ${place}`)
+			// Get the appropiate winner message.
+		}
 	}
 
 	if (!session) return <Redirect href="/(auth)" />;
@@ -394,7 +388,21 @@ export default function QuestBox() {
 							</Text>
 						</Card>
 
+						{/* The actual subquests */}
 						{subquests.map((subquest, idx) => {
+							if (subquest.type === "PHOTO") {
+								return <ImageCard
+									key={idx}
+									session={session}
+									quest={quest}
+									subquest={subquest}
+									hasSubmitted={subquestsCompleted.includes(subquest.id)}
+									submittedSubquests={subquestsCompleted}
+									setSubmittedSubquests={setSubquestsCompleted}
+									totalSubquests={subquests.length}
+									onCompletion={onSubquestCompletion}
+								/>
+							}
 							return <LocationCard
 								key={idx}
 								session={session}
@@ -405,6 +413,7 @@ export default function QuestBox() {
 								submittedSubquests={subquestsCompleted}
 								setSubmittedSubquests={setSubquestsCompleted}
 								totalSubquests={subquests.length}
+								onCompletion={onSubquestCompletion}
 							/>
 						})}
 
