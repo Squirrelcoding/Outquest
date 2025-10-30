@@ -23,6 +23,7 @@ export default function AdminQuestPage() {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [quest, setQuest] = useState<Quest | null>(null);
+	const [joinCode, setJoinCode] = useState<string | null>(null);
 
 	// Form state
 	const [title, setTitle] = useState('');
@@ -30,8 +31,6 @@ export default function AdminQuestPage() {
 	const [isPublic, setIsPublic] = useState(false);
 	const [startDate, setStartDate] = useState(new Date());
 	const [endDate, setEndDate] = useState(new Date());
-	const [showStartPicker, setShowStartPicker] = useState(false);
-	const [showEndPicker, setShowEndPicker] = useState(false);
 
 	useEffect(() => {
 		(async () => {
@@ -56,6 +55,23 @@ export default function AdminQuestPage() {
 				setIsPublic(data.is_public);
 				setStartDate(new Date(data.created_at));
 				setEndDate(new Date(data.deadline));
+
+				// Try to load an invitation/join code for this quest (if one exists)
+				try {
+					const { data: codeRow, error: codeError } = await supabase
+						.from('code')
+						.select('code')
+						.eq('quest_id', id)
+						.maybeSingle();
+
+					if (codeError) {
+						console.error('Error loading join code:', codeError);
+					} else {
+						setJoinCode(codeRow?.code ?? null);
+					}
+				} catch (err) {
+					console.error('Error fetching join code:', err);
+				}
 			}
 		} catch (error) {
 			console.error('Error fetching quest:', error);
@@ -149,7 +165,6 @@ export default function AdminQuestPage() {
 	}
 
 	const onEndDateChange = (_: DateTimePickerEvent, selectedDate?: Date) => {
-		setShowEndPicker(false);
 		if (selectedDate) {
 			setEndDate(selectedDate);
 		}
@@ -159,6 +174,17 @@ export default function AdminQuestPage() {
 		<ScrollView style={styles.container}>
 			<Card style={styles.card}>
 				<Text category="h5" style={styles.header}>Edit Quest</Text>
+
+				{/* Invitation / join code (if present) */}
+				{joinCode ? (
+					<Text category="s1" style={styles.joinCode}>
+						Invitation Code: {joinCode}
+					</Text>
+				) : (
+					<Text category="c1" style={styles.joinCodeNone}>
+						No invitation code set for this quest
+					</Text>
+				)}
 
 				<Input
 					label="Title"
@@ -263,6 +289,18 @@ const styles = StyleSheet.create({
 	checkboxLabel: {
 		color: '#32908F',
 		fontWeight: '500',
+	},
+
+	joinCode: {
+		marginBottom: 12,
+		fontWeight: '600',
+		color: '#222',
+	},
+
+	joinCodeNone: {
+		marginBottom: 12,
+		color: '#666',
+		fontStyle: 'italic',
 	},
 
 });
