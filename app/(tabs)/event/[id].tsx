@@ -68,7 +68,7 @@ export default function QuestBox() {
 				}
 				if (payload["event"] === "complete") {
 					console.log("SOMEONE COMPLETED SUBQUEST!!!!")
-					// just set it itself to trigger the update i dont care about best practices
+					setSubquests(prev => [...prev]);
 					updateLeaderboard();
 				}
 				if (payload["event"] === "message") {

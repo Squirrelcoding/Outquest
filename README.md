@@ -1,10 +1,10 @@
 # OutQuest 🌎
 
-OutQuest is an app where you can complete and create quests in your local area! Think of it as a more accessible version of Geocaching, where users hide objects called _*geocaches*_ in specific locations, and others are tasked with finding them.
+Outquest is focused on helping users with anxiety cope with it by encouraging them to go outside and engage with their local communities by creating fun daily quests and challenges to complete! For example, one quest could be to find a white squirrel. The user is required to go outside and explore their surroundings to find one, take a picture, and upload it to Outquest. An AI judge is then used to evaluate the user's submission. There are also other modes of submitting images, such as entering codes and visiting locations (work in progress).
 
-But in Outquest, you don't need to buy geocaches or trek deep into the woods. All you need is your phone! Simply create an account and get started by browsing local quests to complete. These quests can vary in their goal and difficulty.
+Furthermore, users can create event-style quests where many people can participate at the same time, climbing leaderboards in real-time, and engage with each other in a live chat. 
 
-Some of them are as simple as taking a picture of a red car outside, while others involve scanning QR codes at an event or completing timed scavenger hunts with prizes.
+Users can also form groups and leaderboards to hold each other accountable. Badges for streaks and being the first to complete an event-style quest are also awarded to encourage people to keep going!
 
 This app is being submitted to the Congressional App Challenge.
 

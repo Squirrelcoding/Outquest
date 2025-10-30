@@ -28,8 +28,7 @@ export default function CreateQuest() {
 			user_id: session.user.id
 		});
 		if (relationError) console.error(relationError);
-		Alert.alert("Your leaderboard has been created!");
-		router.back();
+		navigateToLeaderboard();	
 	}
 
 	const navigateToLeaderboard = () => {
@@ -53,7 +52,7 @@ export default function CreateQuest() {
 			/>
 			<Button
 				style={styles.goButton}
-				onPress={navigateToLeaderboard}
+				onPress={joinLeaderboard}
 				disabled={!leaderboardID.trim()}
 			>
 				Go to Leaderboard
