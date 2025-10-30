@@ -67,9 +67,6 @@ export default function QuestBox() {
 		setJoined(true);
 	}
 
-	const handlePayload = (payload: any) => {
-		console.log(payload)
-	};
 
 
 	useEffect(() => {
@@ -81,7 +78,15 @@ export default function QuestBox() {
 		// Subscribe to the channel
 		channel
 			.on("broadcast", { event: "*" }, (payload) => {
-				handlePayload(payload);
+				console.log(payload)
+				// const data = JSON.parse(payload);
+				let msg = "";
+				if (payload["event"] === "join") {
+					msg = `Someone joined the event!`;
+				} else {
+					msg = payload["payload"]["message"];
+				}
+				setChatMessages([...chatMessages, msg]);
 			})
 			.subscribe((status) => {
 				if (status === 'SUBSCRIBED') {
@@ -101,7 +106,7 @@ export default function QuestBox() {
 		return () => {
 			channel.unsubscribe();
 		};
-	}, [id, session, authLoading]);
+	}, [id, session, authLoading, chatMessages]);
 
 	// Run this code when the user completes the quest
 	useEffect(() => {
@@ -295,6 +300,7 @@ export default function QuestBox() {
 			}
 		});
 		setMessage("");
+		setChatMessages([...chatMessages, message]);
 	}
 
 	if (!session) return <Redirect href="/(auth)" />;
@@ -420,22 +426,44 @@ export default function QuestBox() {
 					</ScrollView>
 				</>
 			}
-			{state === 1 && <>
-				<ScrollView>
-					<Text>Chat!!</Text>
-				</ScrollView>
-				<View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
-					<Input
-						placeholder='Message'
-						style={{ flex: 1, marginRight: 10 }}
-						value={message}
-						onChangeText={setMessage}
-					/>
-					<Button onPress={sendMessage}>
-						Send
-					</Button>
+			{state === 1 && (
+				<View style={styles.chatContainer}>
+					<ScrollView
+						style={styles.messagesScrollView}
+						contentContainerStyle={{ flexGrow: 1 }}
+					>
+						{state === 1 && (
+							<View style={styles.chatContainer}>
+								<ScrollView style={styles.messagesScrollView}>
+									{chatMessages.map((msg, i) => (
+										<View
+											key={i}
+											style={[
+												styles.messageItem,
+												i % 2 === 0 ? styles.messageItemEven : styles.messageItemOdd
+											]}
+										>
+											<Text>{JSON.stringify(msg).replaceAll('"', '')}</Text>
+										</View>
+									))}
+								</ScrollView>
+
+								<View style={styles.inputContainer}>
+									<Input
+										placeholder='Message'
+										style={styles.messageInput}
+										value={message}
+										onChangeText={setMessage}
+									/>
+									<Button onPress={sendMessage} style={styles.sendButton}>
+										Send
+									</Button>
+								</View>
+							</View>
+						)}
+					</ScrollView>
 				</View>
-			</>}
+			)}
 			{state === 2 &&
 				<>
 					<Text>Leaderboard</Text>
@@ -540,5 +568,36 @@ const styles = StyleSheet.create({
 	button: {
 		backgroundColor: "#32908F",
 		borderColor: "white"
-	}
+	},
+	chatContainer: {
+		flex: 1,
+	},
+	messagesScrollView: {
+		flex: 1,
+	},
+	messageItem: {
+		padding: 12,
+	},
+	messageItemOdd: {
+		backgroundColor: '#efefef',
+	},
+	messageItemEven: {
+		backgroundColor: '#fff',
+	},
+	inputContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: 'rgba(0, 0, 0, 0.15)',
+		height: 48,
+	},
+	messageInput: {
+		flex: 1,
+		marginHorizontal: 4,
+		backgroundColor: '#fff',
+	},
+	sendButton: {
+		backgroundColor: '#333',
+		borderRadius: 3,
+		marginHorizontal: 4,
+	},
 });
