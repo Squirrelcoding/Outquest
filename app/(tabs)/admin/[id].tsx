@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/Auth';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import * as Clipboard from 'expo-clipboard';
 
 interface Quest {
 	id: number;
@@ -56,7 +57,6 @@ export default function AdminQuestPage() {
 				setStartDate(new Date(data.created_at));
 				setEndDate(new Date(data.deadline));
 
-				// Try to load an invitation/join code for this quest (if one exists)
 				try {
 					const { data: codeRow, error: codeError } = await supabase
 						.from('code')
@@ -173,18 +173,7 @@ export default function AdminQuestPage() {
 	return (
 		<ScrollView style={styles.container}>
 			<Card style={styles.card}>
-				<Text category="h5" style={styles.header}>Edit Quest</Text>
-
-				{/* Invitation / join code (if present) */}
-				{joinCode ? (
-					<Text category="s1" style={styles.joinCode}>
-						Invitation Code: {joinCode}
-					</Text>
-				) : (
-					<Text category="c1" style={styles.joinCodeNone}>
-						No invitation code set for this quest
-					</Text>
-				)}
+				<Text category="h5" style={styles.header}>Manage Quest</Text>
 
 				<Input
 					label="Title"
@@ -238,6 +227,32 @@ export default function AdminQuestPage() {
 						Delete Quest
 					</Button>
 				</View>
+			</Card>
+
+			<Card style={styles.section}>
+				{joinCode ? (
+					<>
+						<Text category="p1" style={styles.shareText}>
+							Share this invitation code with participants:
+						</Text>
+						<Text category="h6" style={styles.leaderboardId}>
+							{joinCode}
+						</Text>
+						<Button
+							style={styles.shareButton}
+							onPress={async () => {
+								await Clipboard.setStringAsync(joinCode);
+								Alert.alert('Copied', 'Invitation code copied to clipboard');
+							}}
+						>
+							Copy code
+						</Button>
+					</>
+				) : (
+					<Text category="c1" style={styles.joinCodeNone}>
+						No invitation code set for this quest
+					</Text>
+				)}
 			</Card>
 		</ScrollView>
 	);
@@ -301,6 +316,37 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 		color: '#666',
 		fontStyle: 'italic',
+	},
+
+	shareText: {
+		marginBottom: 10,
+		textAlign: 'center',
+	},
+
+	leaderboardId: {
+		textAlign: 'center',
+		fontWeight: 'bold',
+		color: '#32908F',
+		marginBottom: 15,
+		padding: 10,
+		backgroundColor: '#f0f0f0',
+		borderRadius: 8,
+	},
+
+	section: {
+		marginTop: 10,
+		marginBottom: 10,
+	},
+
+	sectionTitle: {
+		fontWeight: 'bold',
+		marginBottom: 8,
+	},
+
+	shareButton: {
+		backgroundColor: "#32908F",
+		borderColor: "white",
+		marginTop: 10,
 	},
 
 });
