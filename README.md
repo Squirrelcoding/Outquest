@@ -70,12 +70,10 @@ Whenever a user completes a quest, you can configure your quest to send them an 
 	- [x] Add registering functionality by October 15th
 	- [ ] Implement leaderboard by October 17th
 	- [ ] Implement time limit by October 18th
-	- [ ] Implement winner functionality by October 20th
+	- [x] Implement winner functionality by October 20th
 
 - [ ] Get rid of AI-generated UI by October 14th
-- [ ] Implement basic anti-cheating by October 22
-
-- [ ] Refactor code and add final features by October 23
+- [ ] Leaderboard
 
 - [ ] Work on presentation and submit by October 25
 

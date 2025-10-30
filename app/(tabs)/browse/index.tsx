@@ -49,7 +49,7 @@ export default function BrowseQuests() {
 		try {
 			if (!session?.user) throw new Error('No user on the session!')
 
-			let query = supabase.from('quest').select("*").eq("public", true);
+			let query = supabase.from('quest').select("*").eq("public", true).neq("type", "COMMUNITY");
 
 			// Filter out expired quests by default
 			if (!showExpired) {

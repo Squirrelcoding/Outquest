@@ -12,13 +12,13 @@ import Comment from '@/components/boxes/Comment';
 import LocationCard from '@/components/boxes/LocationCard';
 import { DBComment, Profile, Quest, Subquest, CommentLike } from '@/types';
 import ImageCard from '@/components/boxes/ImageCard';
+import EventProfileCard from '@/components/boxes/EventProfileCard';
 
 interface CommentType {
 	comment: DBComment,
 	commentAuthor: Profile;
 	likes: string[];
 }
-
 
 export default function QuestBox() {
 	const { session, loading: authLoading } = useAuth();
@@ -38,6 +38,10 @@ export default function QuestBox() {
 	const [questLikes, setQuestLikes] = useState<number>(0);
 	const [chatMessages, setChatMessages] = useState<string[]>([]);
 	const [message, setMessage] = useState<string>("");
+	const [loadingProfiles, setLoadingProfiles] = useState<boolean>(true);
+	const [profiles, setProfiles] = useState<Profile[]>([]);
+	const [subquestsCompletedByUsers, setSubquestsCompletedByUsers] = useState<number[]>([]);
+	const [loadingSubquests, setLoadingSubquests] = useState<boolean>(true);
 
 	// Photo upload state management
 	const [subquests, setSubquests] = useState<Subquest[]>([]);
@@ -60,11 +64,18 @@ export default function QuestBox() {
 				let msg = "";
 				if (payload["event"] === "join") {
 					msg = `Someone joined the event!`;
-				} else {
+					setChatMessages(prev => [...prev, msg]);
+				}
+				if (payload["event"] === "complete") {
+					console.log("SOMEONE COMPLETED SUBQUEST!!!!")
+					// just set it itself to trigger the update i dont care about best practices
+					updateLeaderboard();
+				}
+				if (payload["event"] === "message") {
 					msg = payload["payload"]["message"];
 					console.log(`Someone sent a message: ${msg}`);
+					setChatMessages(prev => [...prev, msg]);
 				}
-				setChatMessages(prev => [...prev, msg]);
 			})
 			.subscribe((status) => {
 				if (status === 'SUBSCRIBED') {
@@ -178,12 +189,14 @@ export default function QuestBox() {
 		};
 
 		const loadSubquests = async () => {
+			setLoadingSubquests(true);
 			let { data: rawSubquests } = await supabase.from("subquest")
 				.select("*")
 				.eq('quest_id', id);
 
 			const subquests: Subquest[] = rawSubquests!;
 
+			// Set subquests FIRST - this will trigger the useEffect to run updateLeaderboard
 			setSubquests(subquests);
 
 			const subquestIDS = subquests!.map((s) => s.id);
@@ -198,6 +211,7 @@ export default function QuestBox() {
 			});
 			console.log(submittedIDS);
 			setSubquestsCompleted(submittedIDS);
+			setLoadingSubquests(false);
 		}
 
 		loadQuestData();
@@ -265,9 +279,12 @@ export default function QuestBox() {
 			"event": "complete",
 			"type": "broadcast",
 			"payload": {
-				"message": `Somebody just completed a subquest!`
+				"message": session.user.id
 			}
 		});
+
+		// this triggers the subquests to update the leaderboard
+		await updateLeaderboard();
 		setChatMessages(prev => [...prev, "Somebody just completed a subquest!"]);
 		console.log("SENT MESSAGE");
 
@@ -282,13 +299,6 @@ export default function QuestBox() {
 			const winnerIDs = winners!.map((winner) => winner.user_id)!;
 			if (winnerIDs.includes(session.user.id)) return;
 
-			channel.send({
-				"event": "complete",
-				"type": "broadcast",
-				"payload": {
-					"message": `Somebody just finished the ENTIRE QUEST!!!`
-				}
-			});
 
 			// If quest is not completed, get the number of people who completed the quest before
 			const place = winners!.length;
@@ -296,6 +306,127 @@ export default function QuestBox() {
 			// Get the appropiate winner message.
 		}
 	}
+
+	const updateLeaderboard = async () => {
+		setLoadingProfiles(true);
+
+		try {
+			console.log(`Subquests used for the query`);
+			console.log(subquests);
+			console.log(`Subquests used for the query`);
+			const subquestIDs = subquests.map((subquest) => subquest.id);
+			const { data: completionData, error: completionError } = await supabase
+				.from('submission')
+				.select('*')
+				.in('subquest_id', subquestIDs);
+			if (completionError) throw completionError;
+
+			if (!completionData) {
+				setProfiles([]);
+				setSubquestsCompletedByUsers([]);
+				return;
+			}
+
+			// This stuff below gets the user IDs and number of subquests completed, orders them, and splits them into two lists
+			const freqMap = completionData!.reduce((acc, log) => {
+				acc[log.user_id] = (acc[log.user_id] || 0) + 1;
+				return acc;
+			}, {});
+
+			const sorted = Object.entries(freqMap).sort((a, b) => b[1] - a[1]);
+			const userListIDs = sorted.map(([user]) => user);
+			const subquestsCompleted = sorted.map(([_, freq]) => freq);
+
+
+			// Fetch profiles for each completion
+			const profileIds = userListIDs.map((c: any) => c).filter(Boolean);
+			if (profileIds.length === 0) {
+				setProfiles([]);
+				return;
+			}
+
+			const { data: profileData, error: profileError } = await supabase
+				.from('profile')
+				.select('*')
+				.in('id', profileIds as string[]);
+
+			if (profileError) throw profileError;
+
+			profileData.reverse();
+
+			setSubquestsCompletedByUsers(subquestsCompleted);
+			setProfiles(profileData || []);
+		} catch (err) {
+			console.error('Error loading completions:', err);
+			Alert.alert('Error', 'Failed to load completions');
+		} finally {
+			setLoadingProfiles(false);
+		}
+	}
+
+	// This is the code that gets all of the leaderboard data
+	useEffect(() => {
+		if (!session) return;
+
+		const update = async () => {
+			setLoadingProfiles(true);
+
+			try {
+				console.log(`Subquests used for the query`);
+				console.log(subquests);
+				console.log(`Subquests used for the query`);
+				const subquestIDs = subquests.map((subquest) => subquest.id);
+				const { data: completionData, error: completionError } = await supabase
+					.from('submission')
+					.select('*')
+					.in('subquest_id', subquestIDs);
+				if (completionError) throw completionError;
+
+				if (!completionData) {
+					setProfiles([]);
+					setSubquestsCompletedByUsers([]);
+					return;
+				}
+
+				// This stuff below gets the user IDs and number of subquests completed, orders them, and splits them into two lists
+				const freqMap = completionData!.reduce((acc, log) => {
+					acc[log.user_id] = (acc[log.user_id] || 0) + 1;
+					return acc;
+				}, {});
+
+				const sorted = Object.entries(freqMap).sort((a, b) => b[1] - a[1]);
+				const userListIDs = sorted.map(([user]) => user);
+				const subquestsCompleted = sorted.map(([_, freq]) => freq);
+
+
+				// Fetch profiles for each completion
+				const profileIds = userListIDs.map((c: any) => c).filter(Boolean);
+				if (profileIds.length === 0) {
+					setProfiles([]);
+					return;
+				}
+
+				const { data: profileData, error: profileError } = await supabase
+					.from('profile')
+					.select('*')
+					.in('id', profileIds as string[]);
+
+				if (profileError) throw profileError;
+
+				profileData.reverse();
+
+				setSubquestsCompletedByUsers(subquestsCompleted);
+				setProfiles(profileData || []);
+			} catch (err) {
+				console.error('Error loading completions:', err);
+				Alert.alert('Error', 'Failed to load completions');
+			} finally {
+				setLoadingProfiles(false);
+			}
+		}
+
+		update();
+	}, [session, id, subquests]);
 
 	if (!session) return <Redirect href="/(auth)" />;
 
@@ -389,7 +520,7 @@ export default function QuestBox() {
 						</Card>
 
 						{/* The actual subquests */}
-						{subquests.map((subquest, idx) => {
+						{!loadingSubquests && subquests.map((subquest, idx) => {
 							if (subquest.type === "PHOTO") {
 								return <ImageCard
 									key={idx}
@@ -476,6 +607,23 @@ export default function QuestBox() {
 			{state === 2 &&
 				<>
 					<Text>Leaderboard</Text>
+					<ScrollView style={styles.container}>
+						{loadingProfiles ? (
+							<Text style={{ padding: 20, textAlign: 'center' }}>Loading completed users...</Text>
+						) : profiles.length === 0 ? (
+							<Text style={{ padding: 20, textAlign: 'center' }}>No completions found for this quest.</Text>
+						) : (
+							profiles.map((p: Profile, idx: number) => {
+								return <EventProfileCard
+									key={p.id}
+									profile={p}
+									subquestsCompleted={subquestsCompletedByUsers[idx]}
+									totalSubquests={subquests.length}
+									rank={idx + 1}
+								/>
+							})
+						)}
+					</ScrollView>
 				</>
 			}
 		</>
